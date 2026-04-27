@@ -1,0 +1,18 @@
+[project]
+name = "fcacp"
+version = "0.1.0"
+description = "The platform for the Food Charity Association of Canada"
+authors = [
+    { name = "Erryl Galang", email = "egalang6@my.bcit.ca" },
+    { name = "Ramandeep Kaur", email = "rramandeepkaur11@my.bcit.ca" },
+    { name = "Alex Krantz", email = "alex@krantz.dev" },
+    { name = "Jiahong Xu", email = "jiahongxu1997@gmail.com" },
+]
+requires-python = ">=3.14"
+dependencies = [
+    "django>=6.0.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.4,<0.12.0"]
+build-backend = "uv_build"
