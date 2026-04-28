@@ -1,0 +1,46 @@
+name: Build
+
+"on":
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync
+
+      - name: manage.py test
+        run: uv run manage.py test
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          # TODO: switch to production registry
+          images: fcac/fcacp
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+
+      - uses: docker/build-push-action@v7.1.0
+        with:
+          # TODO: enable once production registry exists
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
