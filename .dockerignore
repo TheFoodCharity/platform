@@ -1,0 +1,6 @@
+.github/
+.venv/
+assets/
+.gitattributes
+.gitignore
+prek.toml
