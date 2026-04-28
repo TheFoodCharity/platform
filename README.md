@@ -12,6 +12,8 @@ Prerequisites:
 - [`uv`](https://docs.astral.sh/uv/)
 - [Docker](https://www.docker.com/)
 
+You'll need to have a Postgres database accessible. If you do not, one can be started using `docker compose up -d`.
+
 ```shell
 # Install dependencies and a compatible Python interpreter
 uv sync --dev
@@ -24,8 +26,11 @@ source .venv/bin/activate # Linux/MacOS
 # Register pre-commit hooks
 uv run prek install
 
+# Copy example environment file
+cp .env.example .env
+# Be sure to update this as needed
+
 # Start the development server
-# TODO: add information about database
 uv run ./manage.py migrate
 uv run ./manage.py runserver
 ```
