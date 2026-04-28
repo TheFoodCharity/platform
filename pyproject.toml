@@ -33,3 +33,4 @@ line-ending = "lf"
 
 [tool.ruff.lint]
 select = ["C4", "DJ", "E", "F", "I", "LOG", "PTH", "RUF", "TD", "TRY"]
+ignore = ["TRY003"]
