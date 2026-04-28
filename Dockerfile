@@ -17,7 +17,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY . /app
 
-RUN uv run manage.py collectstatic
+RUN set -ex; \
+    mkdir -p assets; \
+    uv run manage.py collectstatic --no-input
 
 FROM debian:trixie-slim
 
