@@ -29,6 +29,7 @@ SECRET_KEY = "django-insecure-ibsjbhz&kkkot0b751u1*wjo@2pn9cpd&=y!ou0f!e_csxs&1x
 DEBUG = True
 
 ALLOWED_HOSTS = []
+INTERNAL_IPS = ["127.0.0.1", "::1"]
 
 # Application definition
 
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
     # 1st-party
     "accounts",
     # 3rd-party
+    "debug_toolbar",
     "organizations",
     # Django
     "django.contrib.admin",
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
