@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Login</title>
+</head>
+<body>
+{{ form.non_field_errors }}
+
+<form action="{% url 'accounts:login' %}" method="post">
+    {% csrf_token %}
+
+    <div>
+        {{ form.username.errors }}
+        {{ form.username.label_tag }} {{ form.username }}
+    </div>
+    <div>
+        {{ form.password.errors }}
+        {{ form.password.label_tag }} {{ form.password }}
+        <input type="hidden" name="next" value="{{ next }}"/>
+    </div>
+
+    <input type="submit" value="Login"/>
+</form>
+</body>
+</html>
