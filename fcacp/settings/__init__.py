@@ -34,11 +34,11 @@ INTERNAL_IPS = ["127.0.0.1", "::1"]
 # Application definition
 
 INSTALLED_APPS = [
-    # 1st-party
-    "accounts",
     # 3rd-party
     "debug_toolbar",
     "organizations",
+    # 1st-party
+    "accounts",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
