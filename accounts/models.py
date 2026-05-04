@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import Group as AuthGroup
+from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
 
 
 class User(AbstractUser):

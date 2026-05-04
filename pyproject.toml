@@ -36,8 +36,12 @@ indent-style = "space"
 line-ending = "lf"
 
 [tool.ruff.lint]
-select = ["C4", "DJ", "E", "F", "I", "LOG", "PTH", "RUF", "TD", "TRY"]
+select = ["C4", "DJ", "E", "F", "I", "LOG", "PTH", "RUF", "TD", "TID", "TRY"]
 ignore = ["TRY003"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"django.contrib.auth.models.User".msg = "Import User from accounts.models instead."
+"django.contrib.auth.models.Group".msg = "Import Group from accounts.models instead."
 
 [tool.ruff.lint.per-file-ignores]
 "**/migrations/*.py" = ["E501", "RUF012"]
