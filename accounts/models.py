@@ -19,7 +19,13 @@ class Group(AuthGroup):
 
 
 class Organization(AbstractOrganization):
-    pass
+    @classmethod
+    def create(cls, name: str, owner: User) -> "Organization":
+        organization = cls.objects.create(name=name, is_active=False)
+        membership = Membership.objects.create(organization=organization, user=owner)
+        OrganizationOwner.objects.create(organization=organization, organization_user=membership)
+
+        return organization
 
 
 class Membership(AbstractOrganizationUser):
