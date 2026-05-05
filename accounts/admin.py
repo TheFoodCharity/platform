@@ -39,6 +39,8 @@ class OrganizationOwnerInline(BaseOwnerInline):
 
 @admin.register(Organization)
 class OrganizationAdmin(BaseOrganizationAdmin):
+    list_filter = ["status", "is_active"]
+    list_display = ["name", "status", "is_active"]
     inlines = [OrganizationOwnerInline]
 
 
