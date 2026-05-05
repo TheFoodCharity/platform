@@ -1,10 +1,10 @@
-{% load static %}
+{% load django_htmx %}
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <title>FCACP</title>
-    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    {% django_htmx_script %}
 </head>
 <body>
     {% block content %}{% endblock %}
