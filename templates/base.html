@@ -1,4 +1,4 @@
-{% load django_htmx %}
+{% load static django_htmx %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FCACP</title>
     <link rel="stylesheet" href="{% static 'css/site.css' %}">
-    <script src="{% static 'vendor/htmx.min.js' %}"></script>
-    {% django_htmx_script %}
+    {% htmx_script %}
 </head>
 <body>
     {% block content %}{% endblock %}
