@@ -8,6 +8,7 @@ from organizations.abstract import (
     AbstractOrganizationOwner,
     AbstractOrganizationUser,
 )
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class User(AbstractUser):
@@ -29,6 +30,10 @@ class Organization(AbstractOrganization):
         ARCHIVED = 5, "Archived"
 
     status = models.PositiveSmallIntegerField(choices=Status.choices, default=Status.PENDING, null=False)
+
+    email = models.EmailField(blank=True)
+    phone = PhoneNumberField(blank=True)
+    website = models.URLField(blank=True)
 
     @classmethod
     def create(cls, name: str, owner: User) -> "Organization":

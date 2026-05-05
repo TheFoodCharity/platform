@@ -36,6 +36,7 @@ INTERNAL_IPS = ["127.0.0.1", "::1"]
 INSTALLED_APPS = [
     # 3rd-party
     "debug_toolbar",
+    "phonenumber_field",
     # 1st-party
     "accounts",
     # Django
@@ -122,6 +123,11 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+# Use E.123 format for extension support
+# https://en.wikipedia.org/wiki/E.123#Telephone_number
+PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
+PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/

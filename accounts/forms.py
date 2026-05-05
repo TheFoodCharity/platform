@@ -14,4 +14,4 @@ class UserRegistrationForm(BaseUserCreationForm):
 class OrganizationRegistrationForm(ModelForm):
     class Meta:
         model = Organization
-        fields = ["name"]
+        fields = ["name", "email", "phone", "website"]
