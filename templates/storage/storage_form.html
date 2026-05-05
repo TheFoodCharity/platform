@@ -1,0 +1,12 @@
+<h1>{{ title }}</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+
+  <button type="submit">Save Storage Location</button>
+</form>
+
+<br>
+
+<a href="{% url 'storage:list' %}">Back to Storage Locations</a>
