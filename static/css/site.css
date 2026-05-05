@@ -1,0 +1,267 @@
+:root {
+    color-scheme: light;
+    --ink: #17211c;
+    --muted: #59645f;
+    --line: #d8ded9;
+    --surface: #ffffff;
+    --surface-alt: #f6f8f6;
+    --primary: #1f7a4d;
+    --primary-dark: #145935;
+    --accent: #d96b3b;
+    --danger: #b42318;
+    --success: #146c43;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    color: var(--ink);
+    background: var(--surface-alt);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.5;
+}
+
+a {
+    color: inherit;
+}
+
+.home-shell,
+.page-shell {
+    width: min(1080px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 48px 0;
+}
+
+.home-shell {
+    min-height: 100vh;
+    display: grid;
+    align-items: center;
+}
+
+.home-panel,
+.form-intro {
+    max-width: 720px;
+}
+
+.home-panel h1,
+.form-intro h1 {
+    margin: 0;
+    font-size: clamp(2rem, 5vw, 4.25rem);
+    line-height: 1.02;
+}
+
+.home-panel p,
+.form-intro p {
+    max-width: 620px;
+    color: var(--muted);
+    font-size: 1.1rem;
+}
+
+.eyebrow {
+    margin: 0 0 12px;
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.donation-form,
+.notice {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 14px 35px rgb(23 33 28 / 8%);
+}
+
+.donation-form {
+    padding: 28px;
+}
+
+fieldset {
+    margin: 0 0 28px;
+    padding: 0;
+    border: 0;
+}
+
+legend {
+    margin-bottom: 16px;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.form-field {
+    margin-bottom: 18px;
+}
+
+.form-field label,
+.checkbox-field label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 700;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid #b9c2bd;
+    border-radius: 6px;
+    font: inherit;
+}
+
+.form-field textarea {
+    resize: vertical;
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: var(--primary);
+    outline: 3px solid rgb(31 122 77 / 18%);
+}
+
+.errorlist {
+    margin: 7px 0 0;
+    padding: 0;
+    color: var(--danger);
+    font-size: 0.92rem;
+    list-style: none;
+}
+
+.has-error input,
+.has-error select,
+.has-error textarea {
+    border-color: var(--danger);
+}
+
+.checkbox-field {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 10px;
+    align-items: start;
+    margin-top: 4px;
+}
+
+.checkbox-field input {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+}
+
+.checkbox-field .errorlist {
+    grid-column: 2;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.submit-indicator {
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button.primary {
+    color: #fff;
+    background: var(--primary);
+}
+
+.button.primary:hover {
+    background: var(--primary-dark);
+}
+
+.button.secondary {
+    color: var(--ink);
+    background: #fff;
+    border-color: var(--line);
+}
+
+.notice {
+    padding: 18px 20px;
+}
+
+.notice h2 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+}
+
+.notice p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.notice.success {
+    border-color: rgb(20 108 67 / 35%);
+}
+
+.notice.error {
+    border-color: rgb(180 35 24 / 35%);
+}
+
+@media (max-width: 720px) {
+    .home-shell,
+    .page-shell {
+        width: min(100% - 24px, 1080px);
+        padding: 32px 0;
+    }
+
+    .field-grid {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .donation-form {
+        padding: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .button {
+        width: 100%;
+    }
+}
