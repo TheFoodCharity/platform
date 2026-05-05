@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="page-shell">
+    <section class="form-intro">
+        <p class="eyebrow">Food donation</p>
+        <h1>Tell us what food you can donate.</h1>
+        <p>
+            Submit the details below and our coordination team will follow up about
+            pickup, handling requirements, and next steps.
+        </p>
+    </section>
+
+    {% include "public/partials/donation_form.html" %}
+</main>
+{% endblock %}

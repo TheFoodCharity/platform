@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="home-shell">
+    <section class="home-panel">
+        <p class="eyebrow">Food Charity Association of Canada</p>
+        <h1>Turn surplus food into community support.</h1>
+        <p>
+            Share the details of a food donation so the team can review availability,
+            pickup timing, and safe redistribution needs.
+        </p>
+        <a class="button primary" href="{% url 'donate_food' %}">Start a food donation</a>
+    </section>
+</main>
+{% endblock %}
