@@ -1,7 +1,6 @@
 from django.contrib.auth.forms import BaseUserCreationForm
-from django.forms import ModelForm
 
-from .models import Organization, User
+from .models import User
 
 
 class UserRegistrationForm(BaseUserCreationForm):
@@ -10,7 +9,7 @@ class UserRegistrationForm(BaseUserCreationForm):
         fields = ["email", "first_name", "last_name"]
 
 
-class OrganizationRegistrationForm(ModelForm):
-    class Meta:
-        model = Organization
-        fields = ["name", "email", "phone", "website"]
+# class OrganizationRegistrationForm(ModelForm):
+#     class Meta:
+#         model = Organization
+#         fields = ["name", "email", "phone", "website"]

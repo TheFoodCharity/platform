@@ -9,7 +9,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from .models import Group, Invitation, Membership, Organization, OrganizationOwner, User
+from .models import Group, User
 
 
 def _redirect_admin_login(request: HttpRequest, extra_context: dict[str, Any] | None = None):
@@ -60,28 +60,3 @@ class UserAdmin(BaseUserAdmin):
 @admin.register(Group)
 class GroupAdmin(BaseGroupAdmin):
     pass
-
-
-class OrganizationOwnerInline(admin.StackedInline):
-    model = OrganizationOwner
-    raw_id_fields = ("organization_user",)
-
-
-@admin.register(Organization)
-class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ["name", "status", "is_active"]
-    list_filter = ["status", "is_active"]
-    search_fields = ["name"]
-    inlines = [OrganizationOwnerInline]
-
-
-@admin.register(Membership)
-class MembershipAdmin(admin.ModelAdmin):
-    list_display = ["user", "organization", "is_admin"]
-    raw_id_fields = ("user", "organization")
-
-
-@admin.register(Invitation)
-class InvitationAdmin(admin.ModelAdmin):
-    list_display = ("invitee_identifier", "invited_by", "created")
-    readonly_fields = ("guid", "created")

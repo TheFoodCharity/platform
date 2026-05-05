@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     # 1st-party
     "accounts",
+    "organizations",
     "public",
     "storage",
     # Django
