@@ -36,7 +36,6 @@ INTERNAL_IPS = ["127.0.0.1", "::1"]
 INSTALLED_APPS = [
     # 3rd-party
     "debug_toolbar",
-    "organizations",
     # 1st-party
     "accounts",
     # Django
