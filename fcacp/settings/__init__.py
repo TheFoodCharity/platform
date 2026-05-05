@@ -36,9 +36,11 @@ INTERNAL_IPS = ["127.0.0.1", "::1"]
 INSTALLED_APPS = [
     # 3rd-party
     "debug_toolbar",
+    "django_htmx",
     "phonenumber_field",
     # 1st-party
     "accounts",
+    "public",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -46,8 +48,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_htmx",
-    "public",
 ]
 
 MIDDLEWARE = [
