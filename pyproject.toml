@@ -14,7 +14,6 @@ dependencies = [
     "django-debug-toolbar>=6.3.0",
     "django-extensions>=3.2",
     "django-htmx>=1.27.0",
-    "django-organizations>=2.6.0",
     "django-phonenumber-field[phonenumberslite]>=8.4.0",
     "psycopg[binary,pool]>=3.3.3",
     "pydantic>=2.13.3",

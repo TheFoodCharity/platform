@@ -73,19 +73,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-organizations"
-version = "2.6.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-    { name = "django-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/82/1b/7d1d676a3f949bd53e72d58dc68e5658eb271c970c3951e3825865ae4696/django_organizations-2.6.0.tar.gz", hash = "sha256:ce3e64e5f6406b7af557a35bfd1f1081d68f0f64ce4c87326b77e4a66e7b39a9", size = 75999, upload-time = "2026-03-08T16:51:45.94Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f6/54/f484a7331872f5a337dc8e4b056c444235ad79ec54fb73735c5adb70f78a/django_organizations-2.6.0-py3-none-any.whl", hash = "sha256:6f1b17e010ae25674cfd4c6fed34ee14ea0c3d6449dfbaafb5da226a8362155f", size = 54938, upload-time = "2026-03-08T16:51:46.791Z" },
-]
-
-[[package]]
 name = "django-phonenumber-field"
 version = "8.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -111,7 +98,6 @@ dependencies = [
     { name = "django-debug-toolbar" },
     { name = "django-extensions" },
     { name = "django-htmx" },
-    { name = "django-organizations" },
     { name = "django-phonenumber-field", extra = ["phonenumberslite"] },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pydantic" },
@@ -133,7 +119,6 @@ requires-dist = [
     { name = "django-debug-toolbar", specifier = ">=6.3.0" },
     { name = "django-extensions", specifier = ">=3.2" },
     { name = "django-htmx", specifier = ">=1.27.0" },
-    { name = "django-organizations", specifier = ">=2.6.0" },
     { name = "django-phonenumber-field", extras = ["phonenumberslite"], specifier = ">=8.4.0" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.3.3" },
     { name = "pydantic", specifier = ">=2.13.3" },
