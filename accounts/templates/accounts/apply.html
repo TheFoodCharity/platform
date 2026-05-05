@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Apply to Join</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <fieldset>
+            <legend>Your details</legend>
+
+            {{ user_form.as_p }}
+        </fieldset>
+
+        <fieldset>
+            <legend>Your organization</legend>
+
+            {{ organization_form.as_p }}
+        </fieldset>
+
+        <button type="submit">Apply</button>
+    </form>
+{% endblock %}
