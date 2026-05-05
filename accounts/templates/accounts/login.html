@@ -6,7 +6,7 @@
 <body>
 {{ form.non_field_errors }}
 
-<form action="{% url 'accounts:login' %}" method="post">
+<form method="post">
     {% csrf_token %}
 
     <div>
