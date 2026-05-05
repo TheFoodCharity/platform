@@ -8,7 +8,6 @@ from django.http.request import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from organizations.base_admin import BaseOrganizationAdmin, BaseOrganizationUserAdmin, BaseOwnerInline
 
 from .models import Group, Invitation, Membership, Organization, OrganizationOwner, User
 
@@ -63,20 +62,23 @@ class GroupAdmin(BaseGroupAdmin):
     pass
 
 
-class OrganizationOwnerInline(BaseOwnerInline):
+class OrganizationOwnerInline(admin.StackedInline):
     model = OrganizationOwner
+    raw_id_fields = ("organization_user",)
 
 
 @admin.register(Organization)
-class OrganizationAdmin(BaseOrganizationAdmin):
-    list_filter = ["status", "is_active"]
+class OrganizationAdmin(admin.ModelAdmin):
     list_display = ["name", "status", "is_active"]
+    list_filter = ["status", "is_active"]
+    search_fields = ["name"]
     inlines = [OrganizationOwnerInline]
 
 
 @admin.register(Membership)
-class MembershipAdmin(BaseOrganizationUserAdmin):
-    pass
+class MembershipAdmin(admin.ModelAdmin):
+    list_display = ["user", "organization", "is_admin"]
+    raw_id_fields = ("user", "organization")
 
 
 @admin.register(Invitation)

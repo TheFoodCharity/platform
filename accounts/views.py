@@ -12,13 +12,13 @@ class ApplyView(TemplateView):
     success_url = "/"  # TODO(alex): switch to pending page
 
     def get_context_data(self, **kwargs):
-        kwargs.setdefault("user_form", UserRegistrationForm())
-        kwargs.setdefault("organization_form", OrganizationRegistrationForm())
+        kwargs.setdefault("user_form", UserRegistrationForm(prefix="user"))
+        kwargs.setdefault("organization_form", OrganizationRegistrationForm(prefix="org"))
         return super().get_context_data(**kwargs)
 
     def post(self, request: HttpRequest, *args, **kwargs):
-        user_form = UserRegistrationForm(request.POST)
-        organization_form = OrganizationRegistrationForm(request.POST)
+        user_form = UserRegistrationForm(request.POST, prefix="user")
+        organization_form = OrganizationRegistrationForm(request.POST, prefix="org")
 
         if not (user_form.is_valid() and organization_form.is_valid()):
             return self.render_to_response(
