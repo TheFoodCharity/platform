@@ -39,12 +39,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-<<<<<<< HEAD
     "storage",
-=======
     "django_htmx",
     "public",
->>>>>>> 834ec568617c942e7bb4f61b527c7cc3a676b6ee
 ]
 
 MIDDLEWARE = [
