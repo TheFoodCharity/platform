@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from organizations.base_admin import BaseOrganizationAdmin, BaseOrganizationUserAdmin, BaseOwnerInline
 
 from .models import Group, Invitation, Membership, Organization, OrganizationOwner, User
@@ -26,6 +27,35 @@ admin.site.unregister(AuthGroup)
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     model = User
+    fieldsets = (
+        (None, {"fields": ("email", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name")}),
+        (
+            _("Permissions"),
+            {
+                "fields": (
+                    "is_active",
+                    "is_staff",
+                    "is_superuser",
+                    "groups",
+                    "user_permissions",
+                )
+            },
+        ),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+    add_fieldsets = (
+        (
+            None,
+            {
+                "classes": ("wide",),
+                "fields": ("email", "first_name", "last_name", "password1", "password2"),
+            },
+        ),
+    )
+    list_display = ("email", "first_name", "last_name", "is_staff")
+    search_fields = ("email", "first_name", "last_name")
+    ordering = ("email",)
 
 
 @admin.register(Group)

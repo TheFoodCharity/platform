@@ -7,8 +7,7 @@ from .models import Organization, User
 class UserRegistrationForm(BaseUserCreationForm):
     class Meta:
         model = User
-        # TODO(alex): see if we can remove the username field
-        fields = ["username", "email", "first_name", "last_name"]
+        fields = ["email", "first_name", "last_name"]
 
 
 class OrganizationRegistrationForm(ModelForm):
