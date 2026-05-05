@@ -1,25 +1,21 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <title>Login</title>
-</head>
-<body>
-{{ form.non_field_errors }}
+{% extends "base.html" %}
 
-<form method="post">
-    {% csrf_token %}
+{% block content %}
+    {{ form.non_field_errors }}
 
-    <div>
-        {{ form.username.errors }}
-        {{ form.username.label_tag }} {{ form.username }}
-    </div>
-    <div>
-        {{ form.password.errors }}
-        {{ form.password.label_tag }} {{ form.password }}
-        <input type="hidden" name="next" value="{{ next }}"/>
-    </div>
+    <form method="post">
+        {% csrf_token %}
 
-    <input type="submit" value="Login"/>
-</form>
-</body>
-</html>
+        <div>
+            {{ form.username.errors }}
+            {{ form.username.label_tag }} {{ form.username }}
+        </div>
+        <div>
+            {{ form.password.errors }}
+            {{ form.password.label_tag }} {{ form.password }}
+            <input type="hidden" name="next" value="{{ next }}"/>
+        </div>
+
+        <input type="submit" value="Login"/>
+    </form>
+{% endblock %}

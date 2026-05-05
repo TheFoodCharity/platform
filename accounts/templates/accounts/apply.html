@@ -1,27 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Apply</title>
-</head>
-<body>
-<h1>Apply to Join</h1>
+{% extends "base.html" %}
 
-<form method="post">
-    {% csrf_token %}
+{% block content %}
+    <h1>Apply to Join</h1>
 
-    <fieldset>
-        <legend>Your details</legend>
+    <form method="post">
+        {% csrf_token %}
 
-        {{ user_form.as_p }}
-    </fieldset>
+        <fieldset>
+            <legend>Your details</legend>
 
-    <fieldset>
-        <legend>Your organization</legend>
+            {{ user_form.as_p }}
+        </fieldset>
 
-        {{ organization_form.as_p }}
-    </fieldset>
+        <fieldset>
+            <legend>Your organization</legend>
 
-    <button type="submit">Apply</button>
-</form>
-</body>
-</html>
+            {{ organization_form.as_p }}
+        </fieldset>
+
+        <button type="submit">Apply</button>
+    </form>
+{% endblock %}
