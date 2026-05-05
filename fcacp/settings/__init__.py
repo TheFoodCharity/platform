@@ -17,7 +17,7 @@ from .env import Environment
 environment = Environment()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -42,6 +42,8 @@ INSTALLED_APPS = [
     "django_browser_reload",
     "tailwind",
     "theme",
+    "django_htmx",
+    "public",
 ]
 
 TAILWIND_APP_NAME = "theme"
@@ -55,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "fcacp.urls"
@@ -62,7 +65,7 @@ ROOT_URLCONF = "fcacp.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -123,4 +126,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = "./assets"
+STATIC_ROOT = BASE_DIR / "assets"
