@@ -40,12 +40,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django_browser_reload",
     "tailwind",
     "theme",
     "django_htmx",
     "public",
 ]
+
+
+if DEBUG:
+    INSTALLED_APPS += ["django_browser_reload"]
 
 TAILWIND_APP_NAME = "theme"
 
@@ -60,9 +63,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
+
 
 ROOT_URLCONF = "fcacp.urls"
 
