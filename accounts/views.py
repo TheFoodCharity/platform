@@ -1,9 +1,15 @@
+from django.contrib.auth.views import LoginView as BaseLoginView
 from django.db import transaction
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
 from django.views.generic.base import TemplateView
 
 from .forms import UserRegistrationForm
+
+
+class LoginView(BaseLoginView):
+    template_name = "accounts/login.html"
+    redirect_authenticated_user = True
 
 
 class ApplyView(TemplateView):
