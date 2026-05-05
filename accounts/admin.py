@@ -3,6 +3,7 @@ from typing import Any
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
 from django.http.request import HttpRequest
 from django.shortcuts import redirect
@@ -14,6 +15,9 @@ from .models import Group, User
 
 def _redirect_admin_login(request: HttpRequest, extra_context: dict[str, Any] | None = None):
     next_url = request.GET.get("next", reverse("admin:index"))
+    if isinstance(request.user, AbstractUser) and not request.user.is_staff:
+        return redirect(reverse("organizations:dispatch"))
+
     return redirect(f"{reverse('accounts:login')}?next={next_url}")
 
 
