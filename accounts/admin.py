@@ -31,7 +31,7 @@ admin.site.unregister(AuthGroup)
 class UserAdmin(BaseUserAdmin):
     model = User
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("email", "email_verified", "password")}),
         (_("Personal info"), {"fields": ("first_name", "last_name")}),
         (
             _("Permissions"),
