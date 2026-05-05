@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 from .forms import FoodDonationForm
+from .models import FoodDonation
 
 
 def home(request):
@@ -12,6 +13,7 @@ def donate_food(request):
     submitted = False
 
     if request.method == "POST" and form.is_valid():
+        FoodDonation.objects.create(**form.cleaned_data)
         submitted = True
         form = FoodDonationForm()
 

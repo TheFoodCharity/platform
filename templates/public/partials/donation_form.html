@@ -5,7 +5,7 @@
             <p>Thank you. A coordinator will review the information and contact you soon.</p>
         </div>
     {% endif %}
-
+    {% if not submitted %}
     <form
         class="donation-form"
         method="post"
@@ -59,9 +59,9 @@
         </div>
 
         <div class="form-actions">
-            <span id="donation-submit-indicator" class="submit-indicator htmx-indicator">Submitting...</span>
             <a class="button secondary" href="{% url 'home' %}">Cancel</a>
             <button class="button primary" type="submit">Submit donation</button>
         </div>
     </form>
+    {% endif %}
 </section>
