@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "accounts",
     "public",
     # Django
+    
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
