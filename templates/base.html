@@ -1,10 +1,12 @@
-{% load static %}
+{% load static django_htmx %}
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FCACP</title>
-    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    {% htmx_script %}
 </head>
 <body>
     {% block content %}{% endblock %}
