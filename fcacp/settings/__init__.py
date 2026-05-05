@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     # 1st-party
     "accounts",
+    "organizations",
     "public",
     "storage",
     # Django
@@ -140,4 +141,4 @@ STATIC_ROOT = BASE_DIR / "assets"
 AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "/"  # TODO(alex): redirect to member dashboard
+LOGIN_REDIRECT_URL = "organizations:dispatch"
