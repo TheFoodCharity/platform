@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # 1st-party
     "accounts",
     "public",
+    "storage",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
