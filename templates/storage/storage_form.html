@@ -1,12 +1,23 @@
 <h1>{{ title }}</h1>
 
+<p>
+  Fill in the storage location details below.
+</p>
+
+<hr>
+
 <form method="post">
   {% csrf_token %}
+
   {{ form.as_p }}
 
-  <button type="submit">Save Storage Location</button>
+  <button type="submit">
+    Save Storage Location
+  </button>
 </form>
 
-<br>
+<hr>
 
-<a href="{% url 'storage:list' %}">Back to Storage Locations</a>
+<a href="{% url 'storage:list' %}">
+  Back to Storage Locations
+</a>

@@ -45,8 +45,19 @@ class StorageLocation(models.Model):
     region = models.CharField(max_length=100)
     province = models.CharField(max_length=100, default="British Columbia")
     postal_code = models.CharField(max_length=20, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        null=True,
+        blank=True,
+    )
 
     # Contact
     contact_person = models.CharField(max_length=255, blank=True)
@@ -58,12 +69,18 @@ class StorageLocation(models.Model):
         choices=StorageType.choices,
         default=StorageType.DRY,
     )
+
     accepted_food_types = models.TextField(blank=True)
 
     dry_capacity = models.PositiveIntegerField(null=True, blank=True)
     refrigerated_capacity = models.PositiveIntegerField(null=True, blank=True)
     frozen_capacity = models.PositiveIntegerField(null=True, blank=True)
-    available_space = models.PositiveIntegerField(null=True, blank=True)
+
+    available_space = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
     capacity_status = models.CharField(
         max_length=50,
         choices=CapacityStatus.choices,
@@ -84,8 +101,16 @@ class StorageLocation(models.Model):
     has_pallet_jack = models.BooleanField(default=False)
     has_floor_jack = models.BooleanField(default=False)
     has_hand_truck = models.BooleanField(default=False)
-    max_pallet_capacity = models.PositiveIntegerField(null=True, blank=True)
-    max_load_size = models.CharField(max_length=100, blank=True)
+
+    max_pallet_capacity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    max_load_size = models.CharField(
+        max_length=100,
+        blank=True,
+    )
 
     # Permission / admin workflow
     permission_level = models.CharField(
@@ -93,6 +118,7 @@ class StorageLocation(models.Model):
         choices=PermissionLevel.choices,
         default=PermissionLevel.ADMIN_ONLY,
     )
+
     approval_status = models.CharField(
         max_length=50,
         choices=ApprovalStatus.choices,
@@ -101,8 +127,17 @@ class StorageLocation(models.Model):
 
     # Verification / lifecycle
     is_active = models.BooleanField(default=True)
-    last_verified_at = models.DateTimeField(null=True, blank=True)
-    verification_requested_at = models.DateTimeField(null=True, blank=True)
+
+    last_verified_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    verification_requested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -110,6 +145,27 @@ class StorageLocation(models.Model):
         ordering = ["name"]
         verbose_name = "Storage Location"
         verbose_name_plural = "Storage Locations"
+
+    def update_capacity_status(self):
+        if self.available_space is None:
+            return
+
+        total_capacity = (
+            (self.dry_capacity or 0)
+            + (self.refrigerated_capacity or 0)
+            + (self.frozen_capacity or 0)
+        )
+
+        if total_capacity == 0:
+            self.capacity_status = self.CapacityStatus.UNAVAILABLE
+        elif self.available_space <= 0:
+            self.capacity_status = self.CapacityStatus.FULL
+        elif self.available_space <= total_capacity * 0.25:
+            self.capacity_status = self.CapacityStatus.LIMITED
+        else:
+            self.capacity_status = self.CapacityStatus.AVAILABLE
+
+        self.save(update_fields=["capacity_status"])
 
     def __str__(self):
         return self.name

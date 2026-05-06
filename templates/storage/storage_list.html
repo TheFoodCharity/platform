@@ -4,17 +4,89 @@
 
 <hr>
 
+<form method="get">
+  <label>Storage Type:</label>
+  <select name="storage_type">
+    <option value="">All</option>
+
+    {% for value, label in storage_type_choices %}
+      <option value="{{ value }}">
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Municipality:</label>
+  <input type="text" name="municipality">
+
+  <label>Region:</label>
+  <input type="text" name="region">
+
+  <label>Capacity Status:</label>
+  <select name="capacity_status">
+    <option value="">All</option>
+
+    {% for value, label in capacity_status_choices %}
+      <option value="{{ value }}">
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Filter</button>
+</form>
+
+<hr>
+
 {% for location in locations %}
   <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
-    <h2>{{ location.name }}</h2>
-    <p><strong>Municipality:</strong> {{ location.municipality }}</p>
-    <p><strong>Region:</strong> {{ location.region }}</p>
-    <p><strong>Storage Type:</strong> {{ location.get_storage_type_display }}</p>
-    <p><strong>Available Space:</strong> {{ location.available_space }}</p>
-    <p><strong>Capacity Status:</strong> {{ location.get_capacity_status_display }}</p>
+    <h2>
+      <a href="{% url 'storage:detail' location.id %}">
+        {{ location.name }}
+      </a>
+    </h2>
 
-    <a href="{% url 'storage:edit' location.id %}">Edit</a>
+    <p>
+      <strong>Municipality:</strong>
+      {{ location.municipality }}
+    </p>
+
+    <p>
+      <strong>Region:</strong>
+      {{ location.region }}
+    </p>
+
+    <p>
+      <strong>Storage Type:</strong>
+      {{ location.get_storage_type_display }}
+    </p>
+
+    <p>
+      <strong>Available Space:</strong>
+      {{ location.available_space }}
+    </p>
+
+    <p>
+      <strong>Capacity Status:</strong>
+      {{ location.get_capacity_status_display }}
+    </p>
+
+    <p>
+      <strong>Approval Status:</strong>
+      {{ location.get_approval_status_display }}
+    </p>
+
+    <a href="{% url 'storage:detail' location.id %}">
+      View Details
+    </a>
+
+    |
+
+    <a href="{% url 'storage:edit' location.id %}">
+      Edit
+    </a>
   </div>
+
 {% empty %}
   <p>No storage locations added yet.</p>
 {% endfor %}
