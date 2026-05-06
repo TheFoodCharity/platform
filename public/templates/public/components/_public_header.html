@@ -1,25 +1,50 @@
 {% load static %}
-<header class="relative z-50 mx-auto flex w-full max-w-[1720px] flex-col gap-4 px-6 py-4 md:h-24 md:flex-row md:items-center md:justify-between md:gap-0 md:py-0 lg:px-8">
-    <div class="flex w-full items-center gap-x-5 md:h-full md:w-auto">
+<header class="navbar sticky top-0 z-50 bg-white justify-between max-w-screen-xl mx-auto">
+    <div class="flex items-center gap-x-5 md:h-full md:w-auto md:flex-none">
         <a href="{% url 'home' %}" class="flex items-center py-0 md:h-full md:py-4">
-            <img src="{% static 'public/images/logo_w_text_primary.svg' %}" alt="The Food Charity Association of Canada logo" class="h-full w-auto max-h-16">
+            <img src="{% static 'public/images/logo_primary.svg' %}" alt="The Food Charity Association of Canada logo" class="h-full w-auto max-h-10 md:hidden">
+            <img src="{% static 'public/images/logo_w_text_primary.svg' %}" alt="The Food Charity Association of Canada logo" class="hidden h-full w-auto max-h-16 md:block">
         </a>
 
-        <nav class="hidden h-full items-center gap-10 text-base font-medium leading-none md:flex md:text-lg">
+        <nav class="flex-none hidden h-full items-center gap-10 text-base font-medium leading-none md:flex md:text-lg">
             <a href="#" class="text-primary transition-colors hover:opacity-80">Product</a>
             <a href="#" class="text-primary transition-colors hover:opacity-80">Solutions</a>
             <a href="#" class="text-primary transition-colors hover:opacity-80">Support</a>
             <a href="#" class="text-primary transition-colors hover:opacity-80">Pricing</a>
         </nav>
     </div>
+    <div class="flex items-center justify-end gap-3 text-sm font-medium md:h-full md:w-auto md:gap-6 md:text-lg">
 
-    <div class="flex w-full items-center justify-between gap-3 text-sm font-medium md:h-full md:w-auto md:justify-end md:gap-6 md:text-lg">
-        <svg class="hidden h-6 w-6 md:block stroke-primary" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"></circle>
-            <path d="M3 12h18"></path>
-            <path d="M12 3a14.5 14.5 0 0 1 0 18"></path>
-            <path d="M12 3a14.5 14.5 0 0 0 0 18"></path>
-        </svg>
+        <details class="dropdown relative hidden md:block z-50">
+            <summary class="flex cursor-pointer list-none items-center justify-center text-primary focus:outline-none hover:opacity-80 transition-opacity">
+                <span class="sr-only">Select language</span>
+                <svg class="h-5 w-5 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="1.5" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M3 12h18"></path>
+                    <path d="M12 3a14.5 14.5 0 0 1 0 18"></path>
+                    <path d="M12 3a14.5 14.5 0 0 0 0 18"></path>
+                </svg>
+            </summary>
+
+            <div class="dropdown-content absolute left-1/2 top-full mt-4 w-48 bg-base-100 py-2 shadow-lg rounded-sm text-sm z-[1]">
+                <label class="flex cursor-pointer items-center px-4 py-2.5 hover:bg-base-200 transition-colors text-primary">
+                    <span class="w-6 flex-shrink-0 flex justify-start">
+                        <svg class="h-4 w-4 stroke-current" fill="none" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </span>
+                    <span class="font-semibold">English</span>
+                    <input type="radio" name="language" checked class="hidden">
+                </label>
+
+                <label class="flex cursor-pointer items-center px-4 py-2.5 hover:bg-base-200 transition-colors text-primary">
+                    <span class="w-6 flex-shrink-0 flex justify-start"></span>
+                    <span class="font-semibold">Français</span>
+                    <input type="radio" name="language" class="hidden">
+                </label>
+            </div>
+        </details>
+
         <a href="#" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Contact Sales</a>
         <a href="#" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Log In</a>
         <a href="#" class="btn btn-primary text-base font-bold">Get Started</a>
@@ -37,17 +62,17 @@
                 </svg>
             </summary>
 
-            <nav class="absolute left-0 right-0 top-full z-40 w-full border-t border-slate-200 bg-white px-6 py-4 text-primary">
+            <nav class="absolute left-0 right-0 top-full z-40 w-full border-t border-slate-200 bg-base-100 px-6 py-4 text-primary">
                 <div class="flex flex-col space-y-2">
-                    <a href="#" class="block rounded-lg px-4 py-3 text-lg  hover:bg-slate-50">Product</a>
-                    <a href="#" class="block rounded-lg px-4 py-3 text-lg  hover:bg-slate-50">Solutions</a>
-                    <a href="#" class="block rounded-lg px-4 py-3 text-lg  hover:bg-slate-50">Support</a>
-                    <a href="#" class="block rounded-lg px-4 py-3 text-lg  hover:bg-slate-50">Pricing</a>
+                    <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Product</a>
+                    <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Solutions</a>
+                    <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Support</a>
+                    <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Pricing</a>
 
                     <hr class="my-2 border-slate-100">
 
-                    <a href="#" class="block rounded-lg px-4 py-3 text-lg  hover:bg-slate-50">Contact Sales</a>
-                    <a href="#" class="block rounded-lg px-4 py-3 text-lg  hover:bg-slate-50">Log In</a>
+                    <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Contact Sales</a>
+                    <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Log In</a>
                 </div>
             </nav>
         </details>
