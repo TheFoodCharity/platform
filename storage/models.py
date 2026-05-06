@@ -43,7 +43,10 @@ class StorageLocation(models.Model):
     approximate_location = models.CharField(max_length=255, blank=True)
     municipality = models.CharField(max_length=100)
     region = models.CharField(max_length=100)
-    province = models.CharField(max_length=100, default="British Columbia")
+    province = models.CharField(
+        max_length=100,
+        default="British Columbia",
+    )
     postal_code = models.CharField(max_length=20, blank=True)
 
     latitude = models.DecimalField(
@@ -52,6 +55,7 @@ class StorageLocation(models.Model):
         null=True,
         blank=True,
     )
+
     longitude = models.DecimalField(
         max_digits=9,
         decimal_places=6,
@@ -72,9 +76,20 @@ class StorageLocation(models.Model):
 
     accepted_food_types = models.TextField(blank=True)
 
-    dry_capacity = models.PositiveIntegerField(null=True, blank=True)
-    refrigerated_capacity = models.PositiveIntegerField(null=True, blank=True)
-    frozen_capacity = models.PositiveIntegerField(null=True, blank=True)
+    dry_capacity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    refrigerated_capacity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
+
+    frozen_capacity = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+    )
 
     available_space = models.PositiveIntegerField(
         null=True,
@@ -146,15 +161,14 @@ class StorageLocation(models.Model):
         verbose_name = "Storage Location"
         verbose_name_plural = "Storage Locations"
 
+    def __str__(self):
+        return self.name
+
     def update_capacity_status(self):
         if self.available_space is None:
             return
 
-        total_capacity = (
-            (self.dry_capacity or 0)
-            + (self.refrigerated_capacity or 0)
-            + (self.frozen_capacity or 0)
-        )
+        total_capacity = (self.dry_capacity or 0) + (self.refrigerated_capacity or 0) + (self.frozen_capacity or 0)
 
         if total_capacity == 0:
             self.capacity_status = self.CapacityStatus.UNAVAILABLE
@@ -166,6 +180,3 @@ class StorageLocation(models.Model):
             self.capacity_status = self.CapacityStatus.AVAILABLE
 
         self.save(update_fields=["capacity_status"])
-
-    def __str__(self):
-        return self.name
