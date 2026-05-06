@@ -5,10 +5,14 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
+from django.core.signing import BadSignature, TimestampSigner
 from django.db import models
+from django.template.loader import get_template
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+VERIFICATION_TOKEN_SALT = "email-verification.v1"
 VERIFICATION_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 VERIFICATION_CODE_LENGTH = 6
 VERIFICATION_TTL = timedelta(minutes=15)
@@ -48,6 +52,43 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["first_name", "last_name"]
 
     objects = UserManager()
+
+    def send_verification_email(self, request) -> None:
+        token = TimestampSigner(salt=VERIFICATION_TOKEN_SALT).sign(self.pk)
+        _instance, code = VerificationCode.issue(
+            self,
+            VerificationCode.Purpose.EMAIL_VERIFICATION,
+            ttl=VERIFICATION_TTL,
+        )
+
+        verify_url_base = reverse("accounts:verify")
+        verify_url = request.build_absolute_uri(f"{verify_url_base}?code={code}&token={token}")
+
+        context = {
+            "user": self,
+            "code": code,
+            "verify_url": verify_url,
+            "expires_minutes": int(VERIFICATION_TTL.total_seconds() // 60),
+        }
+        plain = get_template("email/verification.txt")
+        html = get_template("email/verification.html")
+        self.email_user(
+            subject=_("Verify your email"),
+            message=plain.render(context),
+            html_message=html.render(context),
+        )
+
+    def mark_email_verified(self) -> None:
+        self.email_verified = True
+        self.save(update_fields=["email_verified"])
+
+    @classmethod
+    def for_token(cls, token: str):
+        try:
+            pk = TimestampSigner(salt=VERIFICATION_TOKEN_SALT).unsign(token, max_age=VERIFICATION_TTL)
+            return cls.objects.get(pk=pk)
+        except BadSignature, cls.DoesNotExist:
+            return None
 
 
 class Group(AuthGroup):
