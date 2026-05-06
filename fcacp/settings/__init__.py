@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 from .env import Environment
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
+    "tailwind",
     # 1st-party
     "accounts",
     "organizations",
@@ -52,6 +54,15 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 ]
 
+
+if DEBUG:
+    INSTALLED_APPS += ["django_browser_reload"]
+
+TAILWIND_APP_NAME = "theme"
+
+if os.name == "nt":
+    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -63,6 +74,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
+
 
 ROOT_URLCONF = "fcacp.urls"
 
