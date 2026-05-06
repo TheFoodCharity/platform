@@ -30,20 +30,27 @@ SECRET_KEY = "django-insecure-ibsjbhz&kkkot0b751u1*wjo@2pn9cpd&=y!ou0f!e_csxs&1x
 DEBUG = True
 
 ALLOWED_HOSTS = []
+INTERNAL_IPS = ["127.0.0.1", "::1"]
 
 # Application definition
 
 INSTALLED_APPS = [
+    # 3rd-party
+    "debug_toolbar",
+    "django_htmx",
+    "phonenumber_field",
+    "tailwind",
+    # 1st-party
+    "accounts",
+    "public",
+    "theme",
+    # Django
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "tailwind",
-    "theme",
-    "django_htmx",
-    "public",
 ]
 
 
@@ -56,6 +63,7 @@ if os.name == "nt":
     NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 MIDDLEWARE = [
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -132,8 +140,19 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Use E.123 format for extension support
+# https://en.wikipedia.org/wiki/E.123#Telephone_number
+PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
+PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "assets"
+
+# Authentication
+AUTH_USER_MODEL = "accounts.User"
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "/"  # TODO(alex): redirect to member dashboard
