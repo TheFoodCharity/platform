@@ -1,0 +1,78 @@
+<h1>{{ location.name }}</h1>
+
+<hr>
+
+<h2>Basic Information</h2>
+
+<p><strong>Owner/Operator:</strong> {{ location.owner_operator }}</p>
+<p><strong>Municipality:</strong> {{ location.municipality }}</p>
+<p><strong>Region:</strong> {{ location.region }}</p>
+<p><strong>Province:</strong> {{ location.province }}</p>
+
+<hr>
+
+<h2>Storage Details</h2>
+
+<p>
+  <strong>Storage Type:</strong>
+  {{ location.get_storage_type_display }}
+</p>
+
+<p>
+  <strong>Accepted Food Types:</strong>
+  {{ location.accepted_food_types }}
+</p>
+
+<p>
+  <strong>Available Space:</strong>
+  {{ location.available_space }}
+</p>
+
+<p>
+  <strong>Capacity Status:</strong>
+  {{ location.get_capacity_status_display }}
+</p>
+
+<hr>
+
+<h2>Access and Restrictions</h2>
+
+<p><strong>Access Hours:</strong> {{ location.access_hours }}</p>
+<p><strong>Restrictions:</strong> {{ location.restrictions }}</p>
+<p><strong>Special Notes:</strong> {{ location.special_notes }}</p>
+
+<hr>
+
+<h2>Equipment</h2>
+
+<ul>
+  <li>Loading Dock: {{ location.has_loading_dock }}</li>
+  <li>Ramp Access: {{ location.has_ramp_access }}</li>
+  <li>Forklift: {{ location.has_forklift }}</li>
+  <li>Pallet Jack: {{ location.has_pallet_jack }}</li>
+  <li>Hand Truck: {{ location.has_hand_truck }}</li>
+</ul>
+
+<hr>
+
+<p>
+  <strong>Approval Status:</strong>
+  {{ location.get_approval_status_display }}
+</p>
+
+<p>
+  <strong>Permission Level:</strong>
+  {{ location.get_permission_level_display }}
+</p>
+
+<hr>
+
+<a href="{% url 'storage:edit' location.id %}">
+  Edit
+</a>
+
+|
+
+<a href="{% url 'storage:list' %}">
+  Back to Storage Locations
+</a>

@@ -5,6 +5,10 @@ from .models import StorageLocation
 
 @admin.register(StorageLocation)
 class StorageLocationAdmin(admin.ModelAdmin):
+    ordering = ("name",)
+    list_per_page = 25
+    empty_value_display = "-"
+
     list_display = (
         "name",
         "municipality",
