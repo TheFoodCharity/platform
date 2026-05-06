@@ -23,23 +23,87 @@ class TimestampedModel(models.Model):
         super().save(*args, **kwargs)
 
 
+class OrganizationType(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = _("organization type")
+        verbose_name_plural = _("organization types")
+
+    def __str__(self):
+        return self.name
+
+
+class LegalStatus(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = _("legal status")
+        verbose_name_plural = _("legal statuses")
+
+    def __str__(self):
+        return self.name
+
+
 class Organization(TimestampedModel):
     class Status(models.IntegerChoices):
-        PENDING = 0, "Pending"
-        APPROVED = 1, "Approved"
-        APPROVED_LIMITED = 2, "Approved with limited access"
-        NEEDS_INFO = 3, "Needs more information"
-        DECLINED = 4, "Declined"
-        ARCHIVED = 5, "Archived"
+        DRAFT = 0, "Draft"
+        PENDING = 1, "Pending"
+        APPROVED = 2, "Approved"
+        APPROVED_LIMITED = 3, "Approved with limited access"
+        NEEDS_INFO = 4, "Needs more information"
+        DECLINED = 5, "Declined"
+        ARCHIVED = 6, "Archived"
 
+    # Core identity
     name = models.CharField(max_length=200, help_text=_("The name of the organization"))
     is_active = models.BooleanField(default=True)
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="owned_organizations", on_delete=models.PROTECT)
-    status = models.PositiveSmallIntegerField(choices=Status, default=Status.PENDING, null=False)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="owned_organizations",
+        on_delete=models.PROTECT,
+        help_text=_("Primary internal contact responsible for membership, onboarding, and operational communication"),
+    )
+    status = models.PositiveSmallIntegerField(choices=Status, default=Status.DRAFT, null=False)
+    organization_type = models.ForeignKey(
+        OrganizationType,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_("organization type"),
+    )
+    legal_status = models.ForeignKey(
+        LegalStatus,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        verbose_name=_("legal / organizational status"),
+    )
+    description = models.TextField(blank=True, help_text=_("Brief organization description"))
+    interest_areas = models.TextField(blank=True, help_text=_("Main interest areas and project interests"))
 
-    email = models.EmailField(blank=True)
-    phone = PhoneNumberField(blank=True)
-    website = models.URLField(blank=True)
+    # Location
+    municipality = models.CharField(max_length=200, blank=True)
+    region = models.CharField(max_length=200, blank=True)
+    service_area = models.TextField(blank=True, help_text=_("Geographic or community area the organization serves"))
+
+    # Public-facing contact (shown to the public for organizations that provide direct public support)
+    email = models.EmailField(blank=True, help_text=_("Public-facing contact email"))
+    phone = PhoneNumberField(blank=True, help_text=_("Public-facing contact phone"))
+    website = models.URLField(blank=True, help_text=_("Public-facing website"))
+
+    # Operational profile (§4.5)
+    contact_via_email = models.BooleanField(default=False)
+    contact_via_phone = models.BooleanField(default=False)
+    internal_notes = models.TextField(blank=True)
+    is_publicly_visible = models.BooleanField(
+        default=False,
+        help_text=_("Whether this organization may appear on public maps or directories"),
+    )
 
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Membership", related_name="organizations")
 
@@ -54,12 +118,51 @@ class Organization(TimestampedModel):
     def is_member(self, user: "User") -> bool:
         return self.users.filter(pk=user.pk).exists()
 
+    def is_editable(self) -> bool:
+        return self.status not in (self.Status.DECLINED, self.Status.ARCHIVED)
+
     @classmethod
     def create(cls, name: str, owner: "User") -> "Organization":
         with transaction.atomic():
-            organization = cls.objects.create(name=name, is_active=False, owner=owner)
+            organization = cls.objects.create(name=name, is_active=False, owner=owner, status=cls.Status.DRAFT)
             Membership.objects.create(organization=organization, user=owner)
+            OrganizationApplication.objects.create(organization=organization)
         return organization
+
+
+class OrganizationApplication(TimestampedModel):
+    organization = models.OneToOneField(Organization, related_name="application", on_delete=models.CASCADE)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+
+    # §4.1 — automated review notice acknowledgement.
+    # acknowledged_by mirrors Organization.owner at the time of acknowledgement but is preserved
+    # in case ownership changes later.
+    acknowledged_at = models.DateTimeField(null=True, blank=True)
+    acknowledged_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="application_acknowledgements",
+        on_delete=models.PROTECT,
+    )
+
+    # Admin review
+    admin_notes = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name="reviewed_applications",
+        on_delete=models.PROTECT,
+    )
+
+    class Meta:
+        verbose_name = _("organization application")
+        verbose_name_plural = _("organization applications")
+
+    def __str__(self):
+        return str(self.organization)
 
 
 class Membership(TimestampedModel):
