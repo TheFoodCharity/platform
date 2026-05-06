@@ -1,8 +1,18 @@
+import secrets
+from datetime import timedelta
+
 from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+VERIFICATION_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+VERIFICATION_CODE_LENGTH = 6
+VERIFICATION_TTL = timedelta(minutes=15)
+VERIFICATION_MAX_ATTEMPTS = 5
 
 
 class UserManager(BaseUserManager):
@@ -43,3 +53,70 @@ class User(AbstractUser):
 class Group(AuthGroup):
     class Meta:
         proxy = True
+
+
+class VerificationCode(models.Model):
+    class Purpose(models.IntegerChoices):
+        EMAIL_VERIFICATION = 1, "Email verification"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="verification_codes")
+    purpose = models.PositiveSmallIntegerField(choices=Purpose.choices)
+    code_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField()
+    remaining_attempts = models.PositiveSmallIntegerField(default=VERIFICATION_MAX_ATTEMPTS)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "purpose"],
+                name="unique_active_code_per_user_purpose",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.get_purpose_display()} for {self.user} (expires {self.expires_at:%Y-%m-%d %H:%M} UTC)"
+
+    @classmethod
+    def issue(
+        cls,
+        user: User,
+        purpose: "VerificationCode.Purpose",
+        *,
+        ttl: timedelta,
+        max_attempts: int = VERIFICATION_MAX_ATTEMPTS,
+    ) -> tuple["VerificationCode", str]:
+        cls.objects.filter(user=user, purpose=purpose).delete()
+        plaintext = "".join(secrets.choice(VERIFICATION_CODE_ALPHABET) for _ in range(VERIFICATION_CODE_LENGTH))
+        instance = cls.objects.create(
+            user=user,
+            purpose=purpose,
+            code_hash=make_password(plaintext),
+            expires_at=timezone.now() + ttl,
+            remaining_attempts=max_attempts,
+        )
+        return instance, plaintext
+
+    @classmethod
+    def verify(cls, user: User, purpose: "VerificationCode.Purpose", code: str) -> None:
+        from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
+
+        code = code.strip().upper()
+        try:
+            instance = cls.objects.get(user=user, purpose=purpose)
+        except cls.DoesNotExist:
+            raise VerificationInvalid
+
+        if timezone.now() > instance.expires_at:
+            raise VerificationExpired
+
+        if instance.remaining_attempts == 0:
+            raise VerificationLocked
+
+        instance.remaining_attempts -= 1
+        instance.save(update_fields=["remaining_attempts"])
+
+        if not check_password(code, instance.code_hash):
+            raise VerificationInvalid
+
+        instance.delete()
