@@ -1,7 +1,7 @@
-from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth.views import LogoutView
 from django.urls import path
 
-from .views import ApplyView
+from .views import ApplyView, LoginView
 
 app_name = "accounts"
 

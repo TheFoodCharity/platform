@@ -1,0 +1,20 @@
+<h1>Storage Locations</h1>
+
+<a href="{% url 'storage:create' %}">Add Storage Location</a>
+
+<hr>
+
+{% for location in locations %}
+  <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
+    <h2>{{ location.name }}</h2>
+    <p><strong>Municipality:</strong> {{ location.municipality }}</p>
+    <p><strong>Region:</strong> {{ location.region }}</p>
+    <p><strong>Storage Type:</strong> {{ location.get_storage_type_display }}</p>
+    <p><strong>Available Space:</strong> {{ location.available_space }}</p>
+    <p><strong>Capacity Status:</strong> {{ location.get_capacity_status_display }}</p>
+
+    <a href="{% url 'storage:edit' location.id %}">Edit</a>
+  </div>
+{% empty %}
+  <p>No storage locations added yet.</p>
+{% endfor %}
