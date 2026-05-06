@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
 from django.core.signing import BadSignature, TimestampSigner
-from django.db import models
+from django.db import models, transaction
 from django.template.loader import get_template
 from django.urls import reverse
 from django.utils import timezone
@@ -127,15 +127,17 @@ class VerificationCode(models.Model):
         ttl: timedelta,
         max_attempts: int = VERIFICATION_MAX_ATTEMPTS,
     ) -> tuple["VerificationCode", str]:
-        cls.objects.filter(user=user, purpose=purpose).delete()
         plaintext = "".join(secrets.choice(VERIFICATION_CODE_ALPHABET) for _ in range(VERIFICATION_CODE_LENGTH))
-        instance = cls.objects.create(
-            user=user,
-            purpose=purpose,
-            code_hash=make_password(plaintext),
-            expires_at=timezone.now() + ttl,
-            remaining_attempts=max_attempts,
-        )
+
+        with transaction.atomic():
+            cls.objects.filter(user=user, purpose=purpose).delete()
+            instance = cls.objects.create(
+                user=user,
+                purpose=purpose,
+                code_hash=make_password(plaintext),
+                expires_at=timezone.now() + ttl,
+                remaining_attempts=max_attempts,
+            )
         return instance, plaintext
 
     @classmethod
