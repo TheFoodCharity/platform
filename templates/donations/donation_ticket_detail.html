@@ -1,0 +1,120 @@
+<h1>Donation Ticket Details</h1>
+
+<hr>
+
+<h2>Donation Information</h2>
+
+<p>
+  <strong>Donor Name:</strong>
+  {{ ticket.donor_name }}
+</p>
+
+<p>
+  <strong>Food Type:</strong>
+  {{ ticket.food_type }}
+</p>
+
+<p>
+  <strong>Food Category:</strong>
+  {{ ticket.get_food_category_display }}
+</p>
+
+<p>
+  <strong>Quantity:</strong>
+  {{ ticket.quantity }} {{ ticket.unit }}
+</p>
+
+<p>
+  <strong>Storage Requirement:</strong>
+  {{ ticket.get_storage_requirement_display }}
+</p>
+
+<p>
+  <strong>Status:</strong>
+  {{ ticket.get_status_display }}
+</p>
+
+<p>
+  <strong>Pickup Location:</strong>
+  {{ ticket.pickup_location }}
+</p>
+
+<p>
+  <strong>Pickup Window:</strong>
+  {{ ticket.pickup_window }}
+</p>
+
+<p>
+  <strong>Pickup Deadline:</strong>
+  {{ ticket.pickup_deadline }}
+</p>
+
+<p>
+  <strong>Special Handling Notes:</strong>
+  {{ ticket.special_handling_notes }}
+</p>
+
+<hr>
+
+<h2>Assigned Storage</h2>
+
+{% if ticket.assigned_storage %}
+  <p>
+    <strong>Storage Location:</strong>
+    {{ ticket.assigned_storage.name }}
+  </p>
+
+  <p>
+    <strong>Municipality:</strong>
+    {{ ticket.assigned_storage.municipality }}
+  </p>
+
+  <p>
+    <strong>Available Space:</strong>
+    {{ ticket.assigned_storage.available_space }}
+  </p>
+
+{% else %}
+  <p>No storage assigned yet.</p>
+{% endif %}
+
+<hr>
+
+<h2>Matching Storage Locations</h2>
+
+{% for storage in matching_storage %}
+  <div style="border: 1px solid #ccc; padding: 12px; margin-bottom: 12px;">
+    <p>
+      <strong>Name:</strong>
+      {{ storage.name }}
+    </p>
+
+    <p>
+      <strong>Storage Type:</strong>
+      {{ storage.get_storage_type_display }}
+    </p>
+
+    <p>
+      <strong>Municipality:</strong>
+      {{ storage.municipality }}
+    </p>
+
+    <p>
+      <strong>Available Space:</strong>
+      {{ storage.available_space }}
+    </p>
+
+    <a href="{% url 'donations:assign_storage' ticket.id storage.id %}">
+      Assign Storage
+    </a>
+  </div>
+
+{% empty %}
+  <p>No matching storage locations found.</p>
+{% endfor %}
+
+<hr>
+
+<a href="{% url 'donations:list' %}">
+  Back to Donation Tickets
+</a>

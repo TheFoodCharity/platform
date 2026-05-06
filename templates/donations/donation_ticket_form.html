@@ -1,0 +1,23 @@
+<h1>{{ title }}</h1>
+
+<p>
+  Fill in the donation ticket information below.
+</p>
+
+<hr>
+
+<form method="post">
+  {% csrf_token %}
+
+  {{ form.as_p }}
+
+  <button type="submit">
+    Save Donation Ticket
+  </button>
+</form>
+
+<hr>
+
+<a href="{% url 'donations:list' %}">
+  Back to Donation Tickets
+</a>

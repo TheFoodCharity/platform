@@ -1,0 +1,92 @@
+<h1>Donation Tickets</h1>
+
+<a href="{% url 'donations:create' %}">
+  Create Donation Ticket
+</a>
+
+<hr>
+
+<form method="get">
+  <label>Status:</label>
+
+  <select name="status">
+    <option value="">All</option>
+
+    {% for value, label in status_choices %}
+      <option value="{{ value }}">
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label>Storage Requirement:</label>
+
+  <select name="storage_requirement">
+    <option value="">All</option>
+
+    {% for value, label in storage_requirement_choices %}
+      <option value="{{ value }}">
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">
+    Filter
+  </button>
+</form>
+
+<hr>
+
+{% for ticket in tickets %}
+  <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
+    <h2>
+      <a href="{% url 'donations:detail' ticket.id %}">
+        {{ ticket.food_type }}
+      </a>
+    </h2>
+
+    <p>
+      <strong>Donor:</strong>
+      {{ ticket.donor_name }}
+    </p>
+
+    <p>
+      <strong>Food Category:</strong>
+      {{ ticket.get_food_category_display }}
+    </p>
+
+    <p>
+      <strong>Quantity:</strong>
+      {{ ticket.quantity }} {{ ticket.unit }}
+    </p>
+
+    <p>
+      <strong>Storage Requirement:</strong>
+      {{ ticket.get_storage_requirement_display }}
+    </p>
+
+    <p>
+      <strong>Status:</strong>
+      {{ ticket.get_status_display }}
+    </p>
+
+    <p>
+      <strong>Pickup Deadline:</strong>
+      {{ ticket.pickup_deadline }}
+    </p>
+
+    <a href="{% url 'donations:detail' ticket.id %}">
+      View Details
+    </a>
+
+    |
+
+    <a href="{% url 'donations:edit' ticket.id %}">
+      Edit
+    </a>
+  </div>
+
+{% empty %}
+  <p>No donation tickets found.</p>
+{% endfor %}

@@ -6,6 +6,7 @@ from .models import StorageLocation
 class StorageLocationForm(forms.ModelForm):
     class Meta:
         model = StorageLocation
+
         fields = [
             "name",
             "owner_operator",
@@ -15,6 +16,8 @@ class StorageLocationForm(forms.ModelForm):
             "region",
             "province",
             "postal_code",
+            "latitude",
+            "longitude",
             "contact_person",
             "contact_method",
             "storage_type",
@@ -27,6 +30,7 @@ class StorageLocationForm(forms.ModelForm):
             "access_hours",
             "restrictions",
             "special_notes",
+            "admin_notes",
             "has_loading_dock",
             "has_ramp_access",
             "has_liftgate_access",
@@ -36,4 +40,7 @@ class StorageLocationForm(forms.ModelForm):
             "has_hand_truck",
             "max_pallet_capacity",
             "max_load_size",
+            "permission_level",
+            "approval_status",
+            "is_active",
         ]
