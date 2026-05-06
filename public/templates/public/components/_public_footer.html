@@ -3,7 +3,7 @@
     <div class="mx-auto max-w-6xl px-6">
         <div class="flex flex-row items-center justify-between gap-4">
             <img src="{% static 'public/images/logo_white.svg' %}" alt="The Food Charity Association of Canada logo" class="h-full w-auto max-h-24">
-            <a href="#" class="inline-block rounded-full bg-white text-2xl px-4 py-2 text-lg font-bold text-primary">Contact</a>
+            <a href="#" class="inline-block rounded-full bg-white text-2xl px-4 py-2 text-xl font-bold text-primary">Contact</a>
         </div>
 
         <div class="mt-8 flex flex-col gap-8 md:flex-row md:justify-between">
@@ -16,28 +16,47 @@
             <div class="grid grid-cols-1 gap-8 text-sm text-xl md:grid-cols-3">
                 <div>
                     <p class="mb-3 font-semibold text-white">About Us</p>
-                    <p class="text-blue-100">Sponsors</p>
-                    <p class="text-blue-100">Partners</p>
-                    <p class="text-blue-100">History</p>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Sponsors</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Partners</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">History</a>
                 </div>
                 <div>
                     <p class="mb-3 font-semibold text-white">Join Us</p>
-                    <p class="text-blue-100">Careers</p>
-                    <p class="text-blue-100">Organization</p>
-                    <p class="text-blue-100">Supplier</p>
-                    <p class="text-blue-100">Storage</p>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Careers</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Organization</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Supplier</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Storage</a>
                 </div>
                 <div>
                     <p class="mb-3 font-semibold text-white">Resources</p>
-                    <p class="text-blue-100">Proposals</p>
-                    <p class="text-blue-100">Listings</p>
-                    <p class="text-blue-100">Blog</p>
-                    <p class="text-blue-100">Newsletter</p>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Proposals</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Listings</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Blog</a>
+                    <a href="#" class="block text-blue-100 hover:opacity-80">Newsletter</a>
                 </div>
             </div>
         </div>
+
+        <div class="mt-8 flex items-center gap-4">
+            <a href="#" class="public-social-link fill-primary" aria-label="Email">
+                <img src="{% static 'public/images/email_icon.svg' %}" alt="email_icon">
+            </a>
+            <a href="#" class="public-social-link" aria-label="YouTube">
+                <img src="{% static 'public/images/youtube_icon.svg' %}" alt="youtube_icon">
+            </a>
+            <a href="#" class="public-social-link" aria-label="LinkedIn">
+                <img src="{% static 'public/images/linkedin_icon.svg' %}" alt="linked_icon">
+            </a>
+            <a href="#" class="public-social-link" aria-label="Facebook">
+                <img src="{% static 'public/images/facebook_icon.svg' %}" alt="facebook_icon">
+            </a>
+        </div>
+
+        <hr class="hidden md:block mt-10 border-t border-white">
     </div>
-    <div class="mx-auto mt-10 max-w-6xl border-t border-blue-300 px-6 pt-4 text-base text-blue-100 text-center">
+
+
+    <div class="mx-auto mt-10 max-w-6xl px-6 pt-4 text-base text-blue-100 text-center">
         Copyright © 2025 The Food Charity Association of Canada. All Rights Reserved.
     </div>
 </footer>
