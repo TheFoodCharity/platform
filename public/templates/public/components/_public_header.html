@@ -1,5 +1,5 @@
 {% load static %}
-<header class="navbar sticky top-0 z-50 bg-white justify-between max-w-screen-xl mx-auto">
+<header id="public-site-header" class="navbar sticky top-0 z-50 bg-white justify-between max-w-screen-xl mx-auto transition-shadow">
     <div class="flex items-center gap-x-5 md:h-full md:w-auto md:flex-none">
         <a href="{% url 'home' %}" class="flex items-center py-0 md:h-full md:py-4">
             <img src="{% static 'public/images/logo_primary.svg' %}" alt="The Food Charity Association of Canada logo" class="h-full w-auto max-h-10 md:hidden">
@@ -15,7 +15,7 @@
     </div>
     <div class="flex items-center justify-end gap-3 text-sm font-medium md:h-full md:w-auto md:gap-6 md:text-lg">
 
-        <details class="dropdown relative hidden md:block z-50">
+        <details id="lang-menu" class="dropdown relative hidden md:block z-50">
             <summary class="flex cursor-pointer list-none items-center justify-center text-primary focus:outline-none hover:opacity-80 transition-opacity">
                 <span class="sr-only">Select language</span>
                 <svg class="h-5 w-5 stroke-current" viewBox="0 0 24 24" fill="none" stroke-width="1.5" aria-hidden="true">
