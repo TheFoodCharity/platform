@@ -48,3 +48,9 @@
   * the scope of this path.
   */
 @source "../../../**/*.{html,py,js}";
+
+.material-symbols-outlined,
+.material-symbols-rounded {
+  font-size: inherit;
+  line-height: 1;
+}
