@@ -134,6 +134,12 @@ class OrganizationApplication(TimestampedModel):
     organization = models.OneToOneField(Organization, related_name="application", on_delete=models.CASCADE)
     submitted_at = models.DateTimeField(null=True, blank=True)
 
+    # Form segment statuses
+    basics_last_updated = models.DateTimeField(null=True, blank=True)
+    location_last_updated = models.DateTimeField(null=True, blank=True)
+    contact_last_updated = models.DateTimeField(null=True, blank=True)
+    operations_last_updated = models.DateTimeField(null=True, blank=True)
+
     # §4.1 — automated review notice acknowledgement.
     # acknowledged_by mirrors Organization.owner at the time of acknowledgement but is preserved
     # in case ownership changes later.
