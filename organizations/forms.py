@@ -4,6 +4,12 @@ from django.forms.models import ModelForm
 from organizations.models import Organization
 
 
+class ApplicationCreateForm(ModelForm):
+    class Meta:
+        model = Organization
+        fields = ["name", "organization_type"]
+
+
 class ApplicationBasicDetailsForm(ModelForm):
     class Meta:
         model = Organization
@@ -29,4 +35,9 @@ class ApplicationOperationsForm(ModelForm):
 
 
 class ApplicationSubmitForm(forms.Form):
-    acknowledged = fields.BooleanField(required=True)
+    acknowledged = fields.BooleanField(required=False)
+
+    def __init__(self, *args, organization_status=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if organization_status == Organization.Status.DRAFT:
+            self.fields["acknowledged"].required = True

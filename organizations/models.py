@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
 from django.db import models, transaction
@@ -121,6 +121,11 @@ class Organization(TimestampedModel):
     def is_editable(self) -> bool:
         return self.status not in (self.Status.DECLINED, self.Status.ARCHIVED)
 
+    def submit(self):
+        if self.status in (self.Status.DRAFT, self.Status.NEEDS_INFO):
+            self.status = self.Status.PENDING
+            self.save(update_fields=["status"])
+
     @classmethod
     def create(cls, name: str, owner: "User") -> "Organization":
         with transaction.atomic():
@@ -169,6 +174,21 @@ class OrganizationApplication(TimestampedModel):
 
     def __str__(self):
         return str(self.organization)
+
+    def mark_section_updated(self, section: Literal["basics", "location", "contact", "operations"]):
+        field = f"{section}_last_updated"
+        setattr(self, field, timezone.now())
+        self.save(update_fields=[field])
+
+    def submit(self, by: "User"):
+        now = timezone.now()
+        self.submitted_at = now
+        update_fields = ["submitted_at"]
+        if not self.acknowledged_at:
+            self.acknowledged_at = now
+            self.acknowledged_by = by
+            update_fields += ["acknowledged_at", "acknowledged_by"]
+        self.save(update_fields=update_fields)
 
 
 class Membership(TimestampedModel):

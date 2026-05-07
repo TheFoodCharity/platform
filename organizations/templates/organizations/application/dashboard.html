@@ -1,0 +1,79 @@
+{% extends "organizations/application/base.html" %}
+
+{% block apply_content %}
+    <h2>{{ organization.name }}</h2>
+    <p>Status: {{ organization.get_status_display }}</p>
+
+    {% if organization.status == organization.Status.NEEDS_INFO %}
+        <section aria-label="Additional information requested">
+            <h3>Additional information requested</h3>
+            <p>{{ application.admin_notes }}</p>
+        </section>
+    {% endif %}
+
+    {% with section_action=organization.is_editable|yesno:"Edit,View" %}
+    <table>
+        <caption>Application sections</caption>
+        <thead>
+        <tr>
+            <th scope="col">Section</th>
+            <th scope="col">Status</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>Basic information</td>
+            <td>{% if application.basics_last_updated %}Complete{% else %}Not started{% endif %}</td>
+            <td><a href="{% url 'organizations:application_basic' organization.pk %}">{{ section_action }}</a></td>
+        </tr>
+        <tr>
+            <td>Location &amp; service area</td>
+            <td>{% if application.location_last_updated %}Complete{% else %}Not started{% endif %}</td>
+            <td><a href="{% url 'organizations:application_location' organization.pk %}">{{ section_action }}</a></td>
+        </tr>
+        <tr>
+            <td>Contact details</td>
+            <td>{% if application.contact_last_updated %}Complete{% else %}Not started{% endif %}</td>
+            <td><a href="{% url 'organizations:application_contact' organization.pk %}">{{ section_action }}</a></td>
+        </tr>
+        <tr>
+            <td>Interests &amp; preferences</td>
+            <td>{% if application.operations_last_updated %}Complete{% else %}Not started{% endif %}</td>
+            <td><a href="{% url 'organizations:application_operations' organization.pk %}">{{ section_action }}</a></td>
+        </tr>
+        </tbody>
+    </table>
+    {% endwith %}
+
+    {% if organization.is_editable %}
+        {% if organization.status == organization.Status.DRAFT or organization.status == organization.Status.NEEDS_INFO %}
+            <form method="post">
+                {% csrf_token %}
+                {% if organization.status == organization.Status.DRAFT %}
+                    <fieldset>
+                        <legend>Before you submit</legend>
+                        <p>
+                            To help keep the platform accurate and useful, your organization's admin contact will be
+                            automatically prompted every four months to review and confirm that your organization profile,
+                            contact information, public-facing service details, storage information, donor/supplier details,
+                            recipient capacity, and other relevant records are still current. This helps ensure members and
+                            the public are working with accurate information.
+                        </p>
+                        {{ form.acknowledged }}
+                        <label for="{{ form.acknowledged.id_for_label }}">
+                            I understand and agree to keep my organization's information current.
+                        </label>
+                        {% for error in form.acknowledged.errors %}
+                            <p role="alert">{{ error }}</p>
+                        {% endfor %}
+                    </fieldset>
+                {% endif %}
+                <button type="submit">Submit application</button>
+            </form>
+        {% elif organization.status == organization.Status.PENDING %}
+            <p>Your application has been submitted and is under review. You can still edit your information above while
+                you wait.</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}
