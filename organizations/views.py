@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
+from django.views.generic.list import ListView
 
 from .forms import (
     ApplicationBasicDetailsForm,
@@ -18,6 +19,10 @@ from .models import Organization
 from .services import organization_create
 
 
+class OrganizationsView(ListView):
+    model = Organization
+
+
 class DispatchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         match request.user.organizations.count():
@@ -27,7 +32,7 @@ class DispatchView(LoginRequiredMixin, View):
                 # TODO(alex): redirect to that org's dashboard once it exists
                 return redirect("/")
             case _:
-                return redirect(reverse("organizations:select"))
+                return redirect(reverse("organizations:list"))
 
 
 class ApplyView(LoginRequiredMixin, FormView):

@@ -1,5 +1,4 @@
 from django.urls import path
-from django.views.generic import TemplateView
 
 from .views import (
     ApplicationBasicDetailsView,
@@ -9,12 +8,13 @@ from .views import (
     ApplicationOperationsView,
     ApplyView,
     DispatchView,
+    OrganizationsView,
 )
 
 app_name = "organizations"
 
 urlpatterns = [
-    path("", TemplateView.as_view(template_name="organizations/select.html"), name="select"),
+    path("", OrganizationsView.as_view(), name="list"),
     path("dispatch", DispatchView.as_view(), name="dispatch"),
     path("apply", ApplyView.as_view(), name="apply"),
     path("<int:pk>/application", ApplicationDashboardView.as_view(), name="application"),

@@ -118,6 +118,9 @@ class Organization(TimestampedModel):
     def is_member(self, user: "User") -> bool:
         return self.users.filter(pk=user.pk).exists()
 
+    def is_approved(self) -> bool:
+        return self.status in (self.Status.APPROVED, self.Status.APPROVED_LIMITED)
+
     def is_editable(self) -> bool:
         return self.status not in (self.Status.DECLINED, self.Status.ARCHIVED)
 
