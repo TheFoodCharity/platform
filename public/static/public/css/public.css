@@ -1,0 +1,65 @@
+@keyframes public-orgs-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.public-orgs-marquee {
+  display: flex;
+  width: max-content;
+  gap: 0;
+  animation: public-orgs-marquee 100s linear infinite;
+  will-change: transform;
+}
+
+.public-orgs-row {
+  display: flex;
+  gap: 2.5rem;
+  padding-right: 2.5rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-orgs-marquee {
+    animation: none;
+  }
+}
+
+.public-orgs-fade {
+  position: relative;
+  background-color: #ffffff;
+}
+
+.public-orgs-fade::before,
+.public-orgs-fade::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0));
+}
+
+.public-orgs-fade::after {
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.public-orgs-fade::before {
+  left: 0;
+}
+
+.public-orgs-marquee {
+  position: relative;
+  z-index: 0;
+}
+
+.public-header-scrolled {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}

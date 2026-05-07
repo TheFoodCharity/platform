@@ -1,14 +1,15 @@
-{% load static django_htmx %}
+{% load django_htmx static tailwind_tags %}
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="fcacp">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FCACP</title>
-    <link rel="stylesheet" href="{% static 'css/site.css' %}">
-    {% htmx_script %}
+    {% block extra_head %}{% endblock %}
+    {% tailwind_css %}
+    {% django_htmx_script %}
 </head>
-<body>
+<body hx-boost="true" class="bg-white text-slate-900 antialiased">
     {% block content %}{% endblock %}
 </body>
 </html>
