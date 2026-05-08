@@ -2,13 +2,6 @@
         type="{{ widget.type }}"
         name="{{ widget.name }}"
         {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
-        class="col-start-1 row-start-1
-            block w-full rounded-md px-3 py-1.5 aria-invalid:pr-10 sm:aria-invalid:pr-9
-            text-base text-gray-900 sm:text-sm/6 aria-invalid:text-red-900 disabled:text-gray-500
-            bg-white disabled:bg-gray-50
-            outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 aria-invalid:outline-red-300 disabled:outline-gray-200
-            placeholder:text-gray-400 aria-invalid:placeholder:text-red-300
-            disabled:cursor-not-allowed
-            {{ widget.attrs.class|default:'' }}"
+        class="input w-full aria-invalid:input-error {{ widget.attrs.class|default:'' }}"
         {% include "django/forms/widgets/attrs.html" %}
 />

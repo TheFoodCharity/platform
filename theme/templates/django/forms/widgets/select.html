@@ -1,5 +1,5 @@
 <select name="{{ widget.name }}"
-        class="select"
+        class="select w-full aria-invalid:select-error {{ widget.attrs.class|default:'' }}"
         {% include "django/forms/widgets/attrs.html" %}
 >
     {% for group_name, group_choices, group_index in widget.optgroups %}

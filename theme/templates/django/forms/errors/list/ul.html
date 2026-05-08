@@ -1,11 +1,11 @@
 {% if errors|length == 1 %}
     {% with errors|first as error %}
-        <p id="{{ errors.field_id }}_error" class="mt-2 text-sm text-red-600">{{ error }}</p>
+        <p id="{{ errors.field_id }}_error" class="fieldset-label text-error">{{ error }}</p>
     {% endwith %}
 {% else %}
-    <ul class="mt-2 text-sm text-red-700 list-disc space-y-1 pl-5" id="{{ errors.field_id }}_error">
+    <ul class="list-disc space-y-1 pl-5" id="{{ errors.field_id }}_error">
         {% for error in errors %}
-            <li>{{ error }}</li>
+            <li class="text-error">{{ error }}</li>
         {% endfor %}
     </ul>
 {% endif %}
