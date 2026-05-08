@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name="user",
             name="email_verified",
             field=models.BooleanField(
