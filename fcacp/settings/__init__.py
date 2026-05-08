@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 from .env import Environment
@@ -38,11 +39,14 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
+    "tailwind",
     # 1st-party
     "accounts",
+    "organizations",
     "public",
     "storage",
     "donations",
+    "theme",
     # Django
     "django.contrib.admin",
     "django.contrib.auth",
@@ -51,6 +55,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 ]
+
+
+if DEBUG:
+    INSTALLED_APPS += ["django_browser_reload"]
+
+TAILWIND_APP_NAME = "theme"
+
+if os.name == "nt":
+    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
@@ -63,6 +76,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE.append("django_browser_reload.middleware.BrowserReloadMiddleware")
+
 
 ROOT_URLCONF = "fcacp.urls"
 
@@ -141,4 +158,4 @@ STATIC_ROOT = BASE_DIR / "assets"
 AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "/"  # TODO(alex): redirect to member dashboard
+LOGIN_REDIRECT_URL = "organizations:dispatch"

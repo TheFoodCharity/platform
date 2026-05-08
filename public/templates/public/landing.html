@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'public/css/public.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white flex flex-col">
+    {% include "public/components/_public_header.html" %}
+
+    <main class="flex-1">
+        <section class="mx-auto max-w-6xl px-6 pb-12 pt-8 text-center md:pt-14">
+            <h1 class="mx-auto max-w-3xl text-balance text-4xl font-bold leading-tight text-primary md:text-6xl">
+                The unified platform to increase food security across the globe.
+            </h1>
+            <p class="mx-auto mt-6 max-w-3xl text-lg text-slate-600">
+                Collaborate seamlessly with local suppliers, coordinate storage logistics,
+                and communicate with community partners all from a centralized dashboard.
+            </p>
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <a href="#" class="btn btn-primary text-xl">Get Started</a>
+                <button
+                    class="btn btn-outline btn-primary text-xl"
+                    hx-get="{% url 'demo_interest' %}"
+                    hx-target="#demo-feedback"
+                    hx-swap="innerHTML"
+                    type="button"
+                >
+                    View Demo
+                </button>
+            </div>
+            <div id="demo-feedback" class="mt-4 min-h-6"></div>
+        </section>
+
+        <section class="mx-auto max-w-6xl px-6">
+            <div class="public-card mx-auto max-w-6xl overflow-hidden shadow-secondary shadow-2xl rounded-3xl">
+                <img
+                    src="{% static 'public/images/landing-dashboard-placeholder.svg' %}"
+                    alt="Platform dashboard preview"
+                    class="block h-auto w-full"
+                >
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-6xl px-6 py-12 text-center">
+            <p class="text-base font-medium text-slate-500">Trusted by companies across Canada</p>
+            <div class="mt-6 overflow-hidden public-orgs-fade">
+                <div class="public-orgs-marquee text-xl font-semibold text-slate-500" aria-hidden="true">
+                    <div class="public-orgs-row">
+                        <span>Coquitlam</span>
+                        <span>Richmond</span>
+                        <span>Burnaby</span>
+                        <span>Vancouver</span>
+                        <span>Surrey</span>
+                        <span>Coquitlam</span>
+                        <span>Richmond</span>
+                        <span>Burnaby</span>
+                        <span>Vancouver</span>
+                        <span>Surrey</span>
+                    </div>
+                    <div class="public-orgs-row">
+                        <span>Coquitlam</span>
+                        <span>Richmond</span>
+                        <span>Burnaby</span>
+                        <span>Vancouver</span>
+                        <span>Surrey</span>
+                        <span>Coquitlam</span>
+                        <span>Richmond</span>
+                        <span>Burnaby</span>
+                        <span>Vancouver</span>
+                        <span>Surrey</span>
+                    </div>
+                </div>
+                <div class="sr-only">
+                    <span>Coquitlam</span>
+                    <span>Richmond</span>
+                    <span>Burnaby</span>
+                    <span>Vancouver</span>
+                    <span>Surrey</span>
+                </div>
+            </div>
+        </section>
+
+        {% include "public/components/_public_features.html" %}
+    </main>
+
+    {% include "public/components/_public_footer.html" %}
+</div>
+<script src="{% static 'public/js/public-header.js' %}" defer></script>
+{% endblock %}
