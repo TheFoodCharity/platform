@@ -62,7 +62,6 @@
             <tr>
               <th>User</th>
               <th>Role</th>
-              <th>Permission</th>
             </tr>
           </thead>
           <tbody>
@@ -70,13 +69,10 @@
               <tr>
                 <td>{{ membership.user }}</td>
                 <td>{{ membership.get_role_display }}</td>
-                <td>
-                  {{ membership.get_permission_level_display }}
-                </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="3">No user members yet.</td>
+                <td colspan="2">No user members yet.</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -88,7 +84,6 @@
             <tr>
               <th>Organization</th>
               <th>Role</th>
-              <th>Permission</th>
             </tr>
           </thead>
           <tbody>
@@ -96,13 +91,10 @@
               <tr>
                 <td>{{ membership.organization }}</td>
                 <td>{{ membership.get_role_display }}</td>
-                <td>
-                  {{ membership.get_permission_level_display }}
-                </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="3">No organization members yet.</td>
+                <td colspan="2">No organization members yet.</td>
               </tr>
             {% endfor %}
           </tbody>

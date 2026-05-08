@@ -107,7 +107,6 @@ class CollaborationSpaceRequest(models.Model):
                     space=space,
                     user=self.requested_by_user,
                     role=CollaborationSpaceUserMembership.Role.OWNER,
-                    permission_level=CollaborationSpaceUserMembership.PermissionLevel.FULL,
                     invited_by=reviewer,
                     joined_at=timezone.now(),
                 )
@@ -116,7 +115,6 @@ class CollaborationSpaceRequest(models.Model):
                         space=space,
                         organization=self.requested_by_org,
                         role=CollaborationSpaceOrganizationMembership.Role.MEMBER,
-                        permission_level=CollaborationSpaceOrganizationMembership.PermissionLevel.CONTRIBUTE,
                         invited_by=reviewer,
                     )
             return space
@@ -146,12 +144,12 @@ class CollaborationSpaceQuerySet(models.QuerySet):
                 | Q(
                     user_memberships__user=user,
                     user_memberships__left_at__isnull=True,
-                    user_memberships__can_view=True,
+                    user_memberships__role__in=CollaborationMembershipBase.view_roles(),
                 )
                 | Q(
                     organization_memberships__organization_id__in=organization_ids,
                     organization_memberships__left_at__isnull=True,
-                    organization_memberships__can_view=True,
+                    organization_memberships__role__in=CollaborationMembershipBase.view_roles(),
                 )
                 | Q(visibility_level=CollaborationSpace.VisibilityLevel.APPROVED_MEMBERS)
             )
@@ -239,12 +237,12 @@ class CollaborationSpace(models.Model):
         direct_membership_can_post = self.user_memberships.filter(
             user=user,
             left_at__isnull=True,
-            can_post=True,
+            role__in=CollaborationMembershipBase.post_roles(),
         ).exists()
         organization_membership_can_post = self.organization_memberships.filter(
             organization_id__in=user.organizations.values_list("id", flat=True),
             left_at__isnull=True,
-            can_post=True,
+            role__in=CollaborationMembershipBase.post_roles(),
         ).exists()
         return direct_membership_can_post or organization_membership_can_post
 
@@ -256,23 +254,7 @@ class CollaborationMembershipBase(models.Model):
         MEMBER = "member", "Member"
         READONLY = "readonly", "Read only"
 
-    class PermissionLevel(models.TextChoices):
-        FULL = "full", "Full access"
-        MODERATE = "moderate", "Moderate"
-        CONTRIBUTE = "contribute", "Contribute"
-        READONLY = "readonly", "Read only"
-
     role = models.CharField(max_length=50, choices=Role.choices, default=Role.MEMBER)
-    permission_level = models.CharField(
-        max_length=50,
-        choices=PermissionLevel.choices,
-        default=PermissionLevel.CONTRIBUTE,
-    )
-    can_view = models.BooleanField(default=True)
-    can_post = models.BooleanField(default=True)
-    can_invite = models.BooleanField(default=False)
-    can_upload = models.BooleanField(default=False)
-    can_moderate = models.BooleanField(default=False)
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="%(class)s_invitations_sent",
@@ -287,6 +269,14 @@ class CollaborationMembershipBase(models.Model):
 
     class Meta:
         abstract = True
+
+    @classmethod
+    def view_roles(cls):
+        return [cls.Role.OWNER, cls.Role.MODERATOR, cls.Role.MEMBER, cls.Role.READONLY]
+
+    @classmethod
+    def post_roles(cls):
+        return [cls.Role.OWNER, cls.Role.MODERATOR, cls.Role.MEMBER]
 
 
 class CollaborationSpaceUserMembership(CollaborationMembershipBase):
