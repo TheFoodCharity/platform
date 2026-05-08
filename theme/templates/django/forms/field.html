@@ -1,0 +1,30 @@
+{% if field.use_fieldset %}
+    <fieldset class="space-y-2">
+    {% if field.label %}{{ field.legend_tag }}{% endif %}
+{% else %}
+    <label for="{{ field.id_for_label }}" class="block text-sm/6 font-medium text-gray-900">
+        {{ field.label }}
+        {% if field.field.required %}<span aria-hidden="true" class="text-red-600">*</span>{% endif %}
+    </label>
+{% endif %}
+
+<div class="mt-2 grid grid-cols-1">
+    {{ field }}
+    {% if field.errors %}
+        {# exclamation icon #}
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"
+             class="pointer-events-none col-start-1 row-start-1 mr-3 size-5 self-center justify-self-end text-red-500 sm:size-4">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                  d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14ZM8 4a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-1.5 0v-3A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"></path>
+        </svg>
+    {% endif %}
+</div>
+
+{% if field.help_text and not field.errors %}
+    <div id="{{ field.auto_id }}_helptext"
+         class="mt-2 text-sm text-gray-500 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1">{{ field.help_text|safe }}</div>
+{% endif %}
+
+{{ field.errors }}
+
+{% if field.use_fieldset %}</fieldset>{% endif %}
