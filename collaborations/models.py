@@ -341,3 +341,22 @@ class CollaborationLinkedObject(models.Model):
 
     def __str__(self):
         return self.label
+
+
+class CollaborationChatMessage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    space = models.ForeignKey(CollaborationSpace, related_name="chat_messages", on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="collaboration_chat_messages",
+        on_delete=models.PROTECT,
+    )
+    body = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Chat message by {self.author} in {self.space}"
