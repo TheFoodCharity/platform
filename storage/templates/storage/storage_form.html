@@ -1,23 +1,27 @@
-<h1>{{ title }}</h1>
+{% extends "base.html" %}
 
-<p>
-  Fill in the storage location details below.
-</p>
+{% block content %}
+    <h1>{{ title }}</h1>
 
-<hr>
+    <p>
+        Fill in the storage location details below.
+    </p>
 
-<form method="post">
-  {% csrf_token %}
+    <hr>
 
-  {{ form.as_p }}
+    <form method="post">
+        {% csrf_token %}
 
-  <button type="submit">
-    Save Storage Location
-  </button>
-</form>
+        {{ form.as_p }}
 
-<hr>
+        <button type="submit">
+            Save Storage Location
+        </button>
+    </form>
 
-<a href="{% url 'storage:list' %}">
-  Back to Storage Locations
-</a>
+    <hr>
+
+    <a href="{% url 'storage:list' %}">
+        Back to Storage Locations
+    </a>
+{% endblock %}
