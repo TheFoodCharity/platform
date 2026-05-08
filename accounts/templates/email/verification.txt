@@ -1,0 +1,12 @@
+Hi {{ user.get_full_name|default:user.email }},
+
+Your verification code is:
+
+    {{ code }}
+
+This code expires in {{ expires_minutes }} minutes.
+
+You can also verify by visiting the link below and clicking Verify:
+{{ verify_url }}
+
+If you didn't create an account, you can ignore this email.

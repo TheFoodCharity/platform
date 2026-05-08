@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Verify your email</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <p>Enter the 6-character code sent to your email.</p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Verify</button>
+    </form>
+
+    <form method="post" action="{% url 'accounts:verify_resend' %}">
+        {% csrf_token %}
+        <button type="submit">Send a new code</button>
+    </form>
+{% endblock %}
