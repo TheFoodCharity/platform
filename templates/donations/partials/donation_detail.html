@@ -55,8 +55,10 @@
       <dd class="mt-1 text-slate-950">{{ donation.pickup_window }}</dd>
     </div>
     <div>
-      <dt class="text-sm font-semibold text-slate-500">Pickup Deadline</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.pickup_deadline }}</dd>
+      <dt class="text-sm font-semibold text-slate-500">Pickup Timing</dt>
+      <dd class="mt-1 text-slate-950">
+        {{ donation.get_pickup_day_display }}, {{ donation.get_pickup_ready_time_display }} to {{ donation.get_pickup_end_time_display }}
+      </dd>
     </div>
     <div class="md:col-span-2">
       <dt class="text-sm font-semibold text-slate-500">Special Handling Notes</dt>

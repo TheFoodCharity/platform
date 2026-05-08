@@ -118,11 +118,6 @@
             {{ form.pickup_end_time.errors }}
           </div>
           <div class="form-control">
-            {{ form.pickup_deadline.label_tag }}
-            {{ form.pickup_deadline }}
-            {{ form.pickup_deadline.errors }}
-          </div>
-          <div class="form-control">
             {{ form.pickup_window.label_tag }}
             {{ form.pickup_window }}
             {{ form.pickup_window.errors }}
@@ -321,5 +316,40 @@
     checkbox.addEventListener("change", syncDetails);
     syncDetails();
   });
+
+  const addressFields = [
+    document.querySelector("#{{ form.address_1.id_for_label }}"),
+    document.querySelector("#{{ form.address_2.id_for_label }}"),
+    document.querySelector("#{{ form.city.id_for_label }}"),
+    document.querySelector("#{{ form.province_or_state.id_for_label }}"),
+    document.querySelector("#{{ form.postal_code.id_for_label }}"),
+  ];
+  const pickupLocation = document.querySelector("#{{ form.pickup_location.id_for_label }}");
+  let lastAutoPickupLocation = "";
+  let pickupLocationWasEdited = Boolean(pickupLocation.value.trim());
+
+  function buildCompanyAddress() {
+    return addressFields
+      .map((field) => field.value.trim())
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  function syncPickupLocationFromAddress() {
+    const companyAddress = buildCompanyAddress();
+    const canSync = !pickupLocationWasEdited || pickupLocation.value === lastAutoPickupLocation;
+
+    if (canSync) {
+      pickupLocation.value = companyAddress;
+      lastAutoPickupLocation = companyAddress;
+      pickupLocationWasEdited = false;
+    }
+  }
+
+  pickupLocation.addEventListener("input", () => {
+    pickupLocationWasEdited = pickupLocation.value !== lastAutoPickupLocation;
+  });
+  addressFields.forEach((field) => field.addEventListener("input", syncPickupLocationFromAddress));
+  syncPickupLocationFromAddress();
 </script>
 {% endblock %}

@@ -16,6 +16,7 @@ class DonationFormTests(SimpleTestCase):
         self.assertIn("pickup_day", form.fields)
         self.assertIn("pickup_ready_time", form.fields)
         self.assertIn("pickup_end_time", form.fields)
+        self.assertNotIn("pickup_deadline", form.fields)
         self.assertIn("people_fed_estimate", form.fields)
         self.assertIn("fits_in_car", form.fields)
         self.assertIn("food_safety_agreement", form.fields)
@@ -60,7 +61,6 @@ class DonationIntakeViewTests(TestCase):
             "pickup_day": Donation.PickupDay.TODAY,
             "pickup_ready_time": Donation.PickupReadyTime.READY_NOW,
             "pickup_end_time": Donation.PickupEndTime.BEFORE_5PM,
-            "pickup_deadline": "2026-06-01T17:00",
             "pickup_window": "Today before 5pm",
             "storage_requirement": Donation.StorageRequirement.DRY,
             "people_fed_estimate": Donation.PeopleFedEstimate.FIFTY,
@@ -101,6 +101,7 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(donation.company_name, "Neighbourhood Market")
         self.assertEqual(donation.food_category, Donation.FoodCategory.PRODUCE)
         self.assertEqual(donation.quantity, 12)
+        self.assertIsNotNone(donation.pickup_deadline)
 
 
 class FoodRequestTests(TestCase):

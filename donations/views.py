@@ -1,9 +1,28 @@
+from datetime import datetime, time, timedelta
+
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from storage.models import StorageLocation
 
 from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestForm
 from .models import Donation, DonationFoodItem
+
+PICKUP_END_HOURS = {
+    Donation.PickupEndTime.BEFORE_2PM: 14,
+    Donation.PickupEndTime.BEFORE_3PM: 15,
+    Donation.PickupEndTime.BEFORE_4PM: 16,
+    Donation.PickupEndTime.BEFORE_5PM: 17,
+}
+
+
+def set_pickup_deadline_from_pickup_fields(donation):
+    pickup_date = timezone.localdate()
+    if donation.pickup_day == Donation.PickupDay.TOMORROW:
+        pickup_date += timedelta(days=1)
+
+    end_hour = PICKUP_END_HOURS.get(donation.pickup_end_time, 17)
+    donation.pickup_deadline = timezone.make_aware(datetime.combine(pickup_date, time(end_hour)))
 
 
 def sync_donation_summary_from_items(donation):
@@ -71,6 +90,7 @@ def donation_create(request):
             donation.food_type = []
             donation.quantity = 1
             donation.unit = Donation.QuantityUnit.ITEMS
+            set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
             save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
@@ -93,7 +113,9 @@ def donation_edit(request, pk):
         form = DonationForm(request.POST, instance=donation)
         formset = DonationFoodItemFormSet(request.POST, donation=donation)
         if form.is_valid() and formset.is_valid():
-            donation = form.save()
+            donation = form.save(commit=False)
+            set_pickup_deadline_from_pickup_fields(donation)
+            donation.save()
             save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)

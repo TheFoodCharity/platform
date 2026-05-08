@@ -7,7 +7,7 @@
                 <img src="{% static 'public/images/logo_w_text_primary.svg' %}" alt="The Food Charity Association of Canada logo" class="hidden h-full w-auto max-h-16 md:block">
             </a>
             <nav class="flex-none hidden h-full items-center gap-10 text-base font-medium leading-none md:flex md:text-lg">
-                <a href="{% url 'donations:create' %}" class="text-primary transition-colors hover:opacity-80">Supplier</a>
+                <a href="{% url 'donations:list' %}" class="text-primary transition-colors hover:opacity-80">Supplier</a>
                 <a href="{% url 'storage:list' %}" class="text-primary transition-colors hover:opacity-80">Storage</a>
                 <a href="{% url 'donations:available_list' %}" class="text-primary transition-colors hover:opacity-80">Listings</a>
             </nav>
@@ -55,7 +55,7 @@
                 </summary>
                 <nav class="absolute left-0 right-0 top-full z-40 w-full border-t border-slate-200 bg-base-100 px-6 py-4 text-primary">
                     <div class="flex flex-col space-y-2">
-                        <a href="{% url 'donations:create' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Supplier</a>
+                        <a href="{% url 'donations:list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Supplier</a>
                         <a href="{% url 'storage:list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Storage</a>
                         <a href="{% url 'donations:available_list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Listings</a>
                         <hr class="my-2 border-slate-100">

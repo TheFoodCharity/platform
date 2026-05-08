@@ -52,7 +52,6 @@ class DonationForm(forms.ModelForm):
             "pickup_day",
             "pickup_ready_time",
             "pickup_end_time",
-            "pickup_deadline",
             "pickup_window",
             "storage_requirement",
             "requires_van",
@@ -71,7 +70,6 @@ class DonationForm(forms.ModelForm):
         ]
 
         widgets = {
-            "pickup_deadline": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "pickup_day": forms.RadioSelect(),
             "fits_in_car": forms.RadioSelect(choices=[(True, "Yes"), (False, "No")]),
             "food_safety_agreement": forms.CheckboxInput(),
