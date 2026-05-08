@@ -1,0 +1,5 @@
+<textarea
+        name="{{ widget.name }}"
+        class="textarea w-full resize-y aria-invalid:textarea-error {{ widget.attrs.class|default:'' }}"
+        {% include "django/forms/widgets/attrs.html" %}
+>{% if widget.value %}{{ widget.value }}{% endif %}</textarea>
