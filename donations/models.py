@@ -35,6 +35,20 @@ class DonationTicket(models.Model):
         MIXED = "mixed", "Small Mixed Donation"
         OTHER = "other", "Other"
 
+    class QuantityUnit(models.TextChoices):
+        ITEMS = "items", "Items"
+        BOXES = "boxes", "Boxes"
+        CASES = "cases", "Cases"
+        BAGS = "bags", "Bags"
+        PALLETS = "pallets", "Pallets"
+        KILOGRAMS = "kg", "Kilograms"
+        POUNDS = "lb", "Pounds"
+        LITRES = "litres", "Litres"
+
+    class WeightUnit(models.TextChoices):
+        KILOGRAMS = "kg", "Kilograms"
+        POUNDS = "lb", "Pounds"
+
     donor_name = models.CharField(max_length=255)
     donor_contact = models.CharField(max_length=255, blank=True)
 
@@ -43,10 +57,11 @@ class DonationTicket(models.Model):
         choices=FoodCategory.choices,
         default=FoodCategory.OTHER,
     )
-    food_type = models.CharField(max_length=255)
+    food_type = models.JSONField(default=list)
     quantity = models.PositiveIntegerField()
-    unit = models.CharField(max_length=50, default="items")
+    unit = models.CharField(max_length=50, choices=QuantityUnit.choices, default=QuantityUnit.ITEMS)
     estimated_weight = models.PositiveIntegerField(null=True, blank=True)
+    estimated_weight_unit = models.CharField(max_length=20, choices=WeightUnit.choices, default=WeightUnit.POUNDS)
 
     pickup_location = models.CharField(max_length=255)
     pickup_window = models.CharField(max_length=255, blank=True)
@@ -94,7 +109,20 @@ class DonationTicket(models.Model):
         verbose_name_plural = "Donation Tickets"
 
     def __str__(self):
-        return f"{self.food_type} - {self.donor_name}"
+        return f"{self.food_type_display} - {self.donor_name}"
+
+    @property
+    def food_type_display(self):
+        labels = dict(self.FoodCategory.choices)
+        if isinstance(self.food_type, list):
+            return ", ".join(labels.get(food_type, food_type) for food_type in self.food_type)
+        return labels.get(self.food_type, self.food_type)
+
+    @property
+    def estimated_weight_display(self):
+        if self.estimated_weight is None:
+            return ""
+        return f"{self.estimated_weight} {self.get_estimated_weight_unit_display()}"
 
     def assign_storage(self, storage_location):
         self.assigned_storage = storage_location
