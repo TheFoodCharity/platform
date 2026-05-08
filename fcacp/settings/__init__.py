@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "tailwind",
     # 1st-party
     "accounts",
+    "collaborations",
     "organizations",
     "public",
     "storage",
