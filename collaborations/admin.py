@@ -1,4 +1,4 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from .models import (
     CollaborationChatMessage,
@@ -33,6 +33,53 @@ class CollaborationSpaceRequestAdmin(admin.ModelAdmin):
     list_filter = ["status", "topic_category", "visibility_preference"]
     search_fields = ["title", "purpose", "region", "municipality"]
     readonly_fields = ["created_at", "updated_at", "reviewed_at"]
+    actions = ["approve_requests", "reject_requests"]
+
+    @admin.action(description="Approve selected pending requests and create spaces")
+    def approve_requests(self, request, queryset):
+        pending_requests = queryset.filter(status=CollaborationSpaceRequest.Status.PENDING)
+        approved_count = 0
+
+        for collaboration_request in pending_requests:
+            collaboration_request.approve(request.user, "Approved from Django admin action.")
+            approved_count += 1
+
+        skipped_count = queryset.count() - approved_count
+        if approved_count:
+            self.message_user(
+                request,
+                f"Approved {approved_count} collaboration request(s) and created matching space(s).",
+                messages.SUCCESS,
+            )
+        if skipped_count:
+            self.message_user(
+                request,
+                f"Skipped {skipped_count} request(s) because they were not pending.",
+                messages.WARNING,
+            )
+
+    @admin.action(description="Reject selected pending requests")
+    def reject_requests(self, request, queryset):
+        pending_requests = queryset.filter(status=CollaborationSpaceRequest.Status.PENDING)
+        rejected_count = 0
+
+        for collaboration_request in pending_requests:
+            collaboration_request.decline(request.user, "Rejected from Django admin action.")
+            rejected_count += 1
+
+        skipped_count = queryset.count() - rejected_count
+        if rejected_count:
+            self.message_user(
+                request,
+                f"Rejected {rejected_count} collaboration request(s).",
+                messages.SUCCESS,
+            )
+        if skipped_count:
+            self.message_user(
+                request,
+                f"Skipped {skipped_count} request(s) because they were not pending.",
+                messages.WARNING,
+            )
 
 
 @admin.register(CollaborationSpace)
