@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  {% include "collaborations/_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<main class="collab-shell">
+  <header class="collab-page-header">
+    <div>
+      <h1>Collaborations</h1>
+      <p>Working groups, shared requests, and active coordination spaces.</p>
+    </div>
+    <a class="collab-button" href="{% url 'collaborations:request_create' %}">Request New Collaboration</a>
+  </header>
+
+  {% if request.user.is_staff %}
+    <section class="collab-section">
+      <h2 class="collab-section-title">Pending Requests</h2>
+      {% for collaboration_request in pending_requests %}
+        <article class="collab-card" style="margin-bottom: 12px;">
+          <h3>
+            <a class="collab-link" href="{% url 'collaborations:request_detail' collaboration_request.id %}">
+              {{ collaboration_request.title }}
+            </a>
+          </h3>
+          <p><strong>Status:</strong> <span class="collab-status">{{ collaboration_request.get_status_display }}</span></p>
+          <p><strong>Requested by:</strong> {{ collaboration_request.requested_by_user }}</p>
+          <p><strong>Region:</strong> {{ collaboration_request.region|default:"Not specified" }}</p>
+        </article>
+      {% empty %}
+        <p class="collab-empty">No pending collaboration requests.</p>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <section class="collab-section">
+    <h2 class="collab-section-title">Visible Collaboration Spaces</h2>
+    <div class="collab-grid">
+      {% for space in spaces %}
+        <article class="collab-card">
+          <h3>
+            <a class="collab-link" href="{% url 'collaborations:detail' space.id %}">
+              {{ space.title }}
+            </a>
+          </h3>
+          <p><strong>Status:</strong> <span class="collab-status">{{ space.get_status_display }}</span></p>
+          <p><strong>Topic:</strong> {{ space.get_topic_category_display }}</p>
+          <p><strong>Region:</strong> {{ space.region|default:"Not specified" }}</p>
+          <p><strong>Visibility:</strong> {{ space.get_visibility_level_display }}</p>
+          <a class="collab-link" href="{% url 'collaborations:detail' space.id %}">Open Detail</a>
+        </article>
+      {% empty %}
+        <p class="collab-empty">No collaboration spaces are visible to you yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="collab-section">
+    <h2 class="collab-section-title">Your Requests</h2>
+    <table class="collab-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for collaboration_request in user_requests %}
+          <tr>
+            <td>
+              <a class="collab-link" href="{% url 'collaborations:request_detail' collaboration_request.id %}">
+                {{ collaboration_request.title }}
+              </a>
+            </td>
+            <td>
+              <span class="collab-status">{{ collaboration_request.get_status_display }}</span>
+            </td>
+            <td>
+              {{ collaboration_request.created_at }}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="3">You have not submitted a collaboration request yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}
