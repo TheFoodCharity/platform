@@ -1,0 +1,8 @@
+<h1>Available Donations</h1>
+
+{% for ticket in tickets %}
+  {% url 'receivers:donation_detail' ticket.id as detail_url %}
+  {% include "donations/partials/ticket_summary.html" with ticket=ticket detail_url=detail_url show_donor=False show_status=False action_template="receivers/partials/ticket_actions.html" %}
+{% empty %}
+  <p>No donations are available right now.</p>
+{% endfor %}

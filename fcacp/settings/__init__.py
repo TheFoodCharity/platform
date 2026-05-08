@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "public",
     "storage",
     "donations",
+    "receivers",
     "theme",
     # Django
     "django.contrib.admin",
