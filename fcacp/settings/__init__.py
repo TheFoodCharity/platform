@@ -88,6 +88,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.debug",
             ],
         },
     },
@@ -167,3 +168,6 @@ LOGIN_REDIRECT_URL = "organizations:dispatch"
 # https://docs.djangoproject.com/en/6.0/topics/email/
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
+
+# Debugging
+DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
