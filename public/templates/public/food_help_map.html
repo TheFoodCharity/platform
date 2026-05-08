@@ -1,12 +1,14 @@
-]{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block content %}
-
+{% block extra_head %}
 <link
   rel="stylesheet"
   href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
 />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% endblock %}
 
+{% block content %}
 <section
   style="
     min-height: 100vh;
@@ -16,7 +18,6 @@
   "
 >
   <div style="max-width: 1400px; margin: 0 auto;">
-
     <div style="margin-bottom: 28px;">
       <p
         style="
@@ -62,14 +63,7 @@
         margin-bottom: 28px;
       "
     >
-      <form
-        method="get"
-        style="
-          display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-        "
-      >
+      <form method="get" style="display: flex; gap: 12px; flex-wrap: wrap;">
         <input
           type="text"
           name="municipality"
@@ -258,11 +252,8 @@
         </div>
       {% endfor %}
     </div>
-
   </div>
 </section>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
   const map = L.map("food-help-map").setView([49.1913, -122.8490], 10);
@@ -279,7 +270,6 @@
 
   {% for location in locations %}
     {% if location.latitude and location.longitude %}
-
       const marker{{ forloop.counter }} = L.marker([
         {{ location.latitude }},
         {{ location.longitude }}
@@ -293,7 +283,6 @@
       `);
 
       markers.push(marker{{ forloop.counter }});
-
     {% endif %}
   {% endfor %}
 
