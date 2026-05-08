@@ -59,11 +59,6 @@ INSTALLED_APPS = [
 if DEBUG:
     INSTALLED_APPS += ["django_browser_reload"]
 
-TAILWIND_APP_NAME = "theme"
-
-if os.name == "nt":
-    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
-
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -152,6 +147,12 @@ PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "assets"
+
+# Theming
+TAILWIND_APP_NAME = "theme"
+
+if os.name == "nt":
+    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
