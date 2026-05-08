@@ -1,0 +1,13 @@
+{% if errors %}
+    {% if errors|length == 1 %}
+        {% with errors|first as error %}
+            <p id="{{ errors.field_id }}_error" class="fieldset-label text-error">{{ error }}</p>
+        {% endwith %}
+    {% else %}
+        <ul class="list-disc space-y-1 pl-5" id="{{ errors.field_id }}_error">
+            {% for error in errors %}
+                <li class="text-error">{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endif %}
