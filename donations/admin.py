@@ -11,9 +11,11 @@ class DonationTicketAdmin(admin.ModelAdmin):
 
     list_display = (
         "donor_name",
-        "food_type",
+        "food_type_display",
         "food_category",
         "quantity",
+        "unit",
+        "estimated_weight_display",
         "storage_requirement",
         "assigned_storage",
         "status",
@@ -34,7 +36,6 @@ class DonationTicketAdmin(admin.ModelAdmin):
     search_fields = (
         "donor_name",
         "donor_contact",
-        "food_type",
         "pickup_location",
         "special_handling_notes",
     )

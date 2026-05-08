@@ -4,6 +4,11 @@ from .models import DonationTicket
 
 
 class DonationTicketForm(forms.ModelForm):
+    food_type = forms.MultipleChoiceField(
+        choices=DonationTicket.FoodCategory.choices,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
     class Meta:
         model = DonationTicket
 
@@ -15,6 +20,7 @@ class DonationTicketForm(forms.ModelForm):
             "quantity",
             "unit",
             "estimated_weight",
+            "estimated_weight_unit",
             "pickup_location",
             "pickup_window",
             "pickup_deadline",
@@ -31,7 +37,6 @@ class DonationTicketForm(forms.ModelForm):
             "special_handling_notes",
             "chain_of_custody_notes",
             "assigned_storage",
-            "status",
         ]
 
         widgets = {

@@ -11,7 +11,7 @@
 
 <p>
   <strong>Food Type:</strong>
-  {{ ticket.food_type }}
+  {{ ticket.food_type_display }}
 </p>
 
 <p>
@@ -21,7 +21,12 @@
 
 <p>
   <strong>Quantity:</strong>
-  {{ ticket.quantity }} {{ ticket.unit }}
+  {{ ticket.quantity }} {{ ticket.get_unit_display }}
+</p>
+
+<p>
+  <strong>Estimated Weight:</strong>
+  {{ ticket.estimated_weight_display }}
 </p>
 
 <p>
