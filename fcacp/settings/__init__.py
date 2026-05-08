@@ -159,3 +159,8 @@ AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "organizations:dispatch"
+
+# Email
+# https://docs.djangoproject.com/en/6.0/topics/email/
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
