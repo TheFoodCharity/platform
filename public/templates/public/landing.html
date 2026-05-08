@@ -19,7 +19,7 @@
                 and communicate with community partners all from a centralized dashboard.
             </p>
             <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <a href="#" class="btn btn-primary text-xl">Get Started</a>
+                <a href="{% url 'donations:create' %}" class="btn btn-primary text-xl">Get Started</a>
                 <button
                     class="btn btn-outline btn-primary text-xl"
                     hx-get="{% url 'demo_interest' %}"

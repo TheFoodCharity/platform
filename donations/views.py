@@ -2,69 +2,114 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from storage.models import StorageLocation
 
-from .forms import DonationTicketForm
-from .models import DonationTicket
+from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestForm
+from .models import Donation, DonationFoodItem
 
 
-def donation_ticket_list(request):
-    tickets = DonationTicket.objects.all().order_by("-created_at")
+def sync_donation_summary_from_items(donation):
+    first_item = donation.food_items.first()
+    if first_item is None:
+        return
+
+    donation.food_category = first_item.food_category
+    donation.food_type = list(donation.food_items.values_list("food_category", flat=True).distinct())
+    donation.quantity = first_item.quantity
+    donation.unit = first_item.packaging
+    donation.save(update_fields=["food_category", "food_type", "quantity", "unit"])
+
+
+def save_food_items(donation, formset):
+    donation.food_items.all().delete()
+
+    items = []
+    for form in formset:
+        if not form.cleaned_data.get("selected"):
+            continue
+
+        items.append(
+            DonationFoodItem(
+                donation=donation,
+                food_category=form.cleaned_data["food_category"],
+                packaging=form.cleaned_data["packaging"],
+                quantity=form.cleaned_data["quantity"],
+                description=form.cleaned_data["description"],
+            ),
+        )
+
+    DonationFoodItem.objects.bulk_create(items)
+
+
+def donation_list(request):
+    donations = Donation.objects.all().order_by("-created_at")
 
     status = request.GET.get("status")
     storage_requirement = request.GET.get("storage_requirement")
 
     if status:
-        tickets = tickets.filter(status=status)
+        donations = donations.filter(status=status)
 
     if storage_requirement:
-        tickets = tickets.filter(storage_requirement=storage_requirement)
+        donations = donations.filter(storage_requirement=storage_requirement)
 
     context = {
-        "tickets": tickets,
-        "status_choices": DonationTicket.Status.choices,
-        "storage_requirement_choices": DonationTicket.StorageRequirement.choices,
+        "donations": donations,
+        "status_choices": Donation.Status.choices,
+        "storage_requirement_choices": Donation.StorageRequirement.choices,
     }
 
-    return render(request, "donations/donation_ticket_list.html", context)
+    return render(request, "donations/donation_list.html", context)
 
 
-def donation_ticket_create(request):
+def donation_create(request):
     if request.method == "POST":
-        form = DonationTicketForm(request.POST)
-        if form.is_valid():
-            ticket = form.save(commit=False)
-            ticket.status = DonationTicket.Status.SUBMITTED
-            ticket.save()
-            return redirect("donations:detail", pk=ticket.pk)
+        form = DonationForm(request.POST)
+        formset = DonationFoodItemFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
+            donation = form.save(commit=False)
+            donation.status = Donation.Status.SUBMITTED
+            donation.food_category = Donation.FoodCategory.OTHER
+            donation.food_type = []
+            donation.quantity = 1
+            donation.unit = Donation.QuantityUnit.ITEMS
+            donation.save()
+            save_food_items(donation, formset)
+            sync_donation_summary_from_items(donation)
+            return redirect("donations:detail", pk=donation.pk)
     else:
-        form = DonationTicketForm()
+        form = DonationForm()
+        formset = DonationFoodItemFormSet()
 
     return render(
         request,
-        "donations/donation_ticket_form.html",
-        {"form": form, "title": "Create Donation Ticket"},
+        "donations/donation_form.html",
+        {"form": form, "formset": formset, "title": "Create Donation"},
     )
 
 
-def donation_ticket_edit(request, pk):
-    ticket = get_object_or_404(DonationTicket, pk=pk)
+def donation_edit(request, pk):
+    donation = get_object_or_404(Donation, pk=pk)
 
     if request.method == "POST":
-        form = DonationTicketForm(request.POST, instance=ticket)
-        if form.is_valid():
-            ticket = form.save()
-            return redirect("donations:detail", pk=ticket.pk)
+        form = DonationForm(request.POST, instance=donation)
+        formset = DonationFoodItemFormSet(request.POST, donation=donation)
+        if form.is_valid() and formset.is_valid():
+            donation = form.save()
+            save_food_items(donation, formset)
+            sync_donation_summary_from_items(donation)
+            return redirect("donations:detail", pk=donation.pk)
     else:
-        form = DonationTicketForm(instance=ticket)
+        form = DonationForm(instance=donation)
+        formset = DonationFoodItemFormSet(donation=donation)
 
     return render(
         request,
-        "donations/donation_ticket_form.html",
-        {"form": form, "title": "Edit Donation Ticket"},
+        "donations/donation_form.html",
+        {"form": form, "formset": formset, "title": "Edit Donation"},
     )
 
 
-def donation_ticket_detail(request, pk):
-    ticket = get_object_or_404(DonationTicket, pk=pk)
+def donation_detail(request, pk):
+    donation = get_object_or_404(Donation, pk=pk)
 
     matching_storage = StorageLocation.objects.filter(
         is_active=True,
@@ -72,29 +117,68 @@ def donation_ticket_detail(request, pk):
         capacity_status=StorageLocation.CapacityStatus.AVAILABLE,
     )
 
-    if ticket.storage_requirement != DonationTicket.StorageRequirement.NONE:
+    if donation.storage_requirement != Donation.StorageRequirement.NONE:
         matching_storage = matching_storage.filter(
-            storage_type=ticket.storage_requirement,
+            storage_type=donation.storage_requirement,
         )
 
     matching_storage = matching_storage.filter(
-        available_space__gte=ticket.quantity,
+        available_space__gte=donation.quantity,
     )
 
     return render(
         request,
-        "donations/donation_ticket_detail.html",
+        "donations/donation_detail.html",
         {
-            "ticket": ticket,
+            "donation": donation,
             "matching_storage": matching_storage,
         },
     )
 
 
-def donation_ticket_assign_storage(request, pk, storage_pk):
-    ticket = get_object_or_404(DonationTicket, pk=pk)
+def donation_assign_storage(request, pk, storage_pk):
+    donation = get_object_or_404(Donation, pk=pk)
     storage_location = get_object_or_404(StorageLocation, pk=storage_pk)
 
-    ticket.assign_storage(storage_location)
+    donation.assign_storage(storage_location)
 
-    return redirect("donations:detail", pk=ticket.pk)
+    return redirect("donations:detail", pk=donation.pk)
+
+
+def available_donation_list(request):
+    donations = Donation.objects.exclude(
+        status__in=[
+            Donation.Status.DRAFT,
+            Donation.Status.CANCELLED,
+            Donation.Status.EXPIRED,
+            Donation.Status.COMPLETED,
+        ],
+    ).order_by("-created_at")
+
+    return render(request, "donations/available_donation_list.html", {"donations": donations})
+
+
+def available_donation_detail(request, pk):
+    donation = get_object_or_404(Donation, pk=pk)
+
+    return render(request, "donations/available_donation_detail.html", {"donation": donation})
+
+
+def food_request_create(request, pk):
+    donation = get_object_or_404(Donation, pk=pk)
+
+    if request.method == "POST":
+        form = FoodRequestForm(request.POST)
+        if form.is_valid():
+            food_request = form.save(commit=False)
+            food_request.donation = donation
+            food_request.save()
+            return redirect("donations:request_thanks", pk=food_request.pk)
+    else:
+        form = FoodRequestForm()
+
+    return render(request, "donations/food_request_form.html", {"form": form, "donation": donation})
+
+
+def food_request_thanks(request, pk):
+    return render(request, "donations/food_request_thanks.html", {"request_id": pk})

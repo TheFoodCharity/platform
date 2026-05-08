@@ -5,13 +5,17 @@ from . import views
 app_name = "donations"
 
 urlpatterns = [
-    path("", views.donation_ticket_list, name="list"),
-    path("add/", views.donation_ticket_create, name="create"),
-    path("<int:pk>/", views.donation_ticket_detail, name="detail"),
-    path("<int:pk>/edit/", views.donation_ticket_edit, name="edit"),
+    path("", views.donation_list, name="list"),
+    path("add/", views.donation_create, name="create"),
+    path("available/", views.available_donation_list, name="available_list"),
+    path("available/<int:pk>/", views.available_donation_detail, name="available_detail"),
+    path("<int:pk>/", views.donation_detail, name="detail"),
+    path("<int:pk>/edit/", views.donation_edit, name="edit"),
+    path("<int:pk>/request/", views.food_request_create, name="request_create"),
+    path("requests/<int:pk>/thanks/", views.food_request_thanks, name="request_thanks"),
     path(
         "<int:pk>/assign-storage/<int:storage_pk>/",
-        views.donation_ticket_assign_storage,
+        views.donation_assign_storage,
         name="assign_storage",
     ),
 ]

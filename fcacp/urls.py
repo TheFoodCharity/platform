@@ -27,7 +27,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("storage/", include("storage.urls")),
     path("donations/", include("donations.urls")),
-    path("receivers/", include("receivers.urls")),
     *debug_toolbar_urls(),
 ]
 

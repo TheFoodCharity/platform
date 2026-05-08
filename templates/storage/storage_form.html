@@ -1,23 +1,93 @@
-<h1>{{ title }}</h1>
+{% extends "base.html" %}
 
-<p>
-  Fill in the storage location details below.
-</p>
+{% block content %}
+<main class="min-h-screen bg-base-200 px-4 py-10">
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8">
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">Storage network</p>
+      <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ title }}</h1>
+      <p class="mt-3 max-w-2xl text-lg text-slate-600">
+        Fill in the location, capacity, access, and approval details for this storage partner.
+      </p>
+    </div>
 
-<hr>
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
 
-<form method="post">
-  {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
 
-  {{ form.as_p }}
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="mb-6 text-2xl font-bold text-slate-950">Location</h2>
+        <div class="grid gap-5 md:grid-cols-2">
+          {% for field in form %}
+            {% if field.name in "name,owner_operator,address,approximate_location,municipality,region,province,postal_code,latitude,longitude,contact_person,contact_method" %}
+              <div class="form-control {% if field.name == 'address' or field.name == 'approximate_location' %}md:col-span-2{% endif %}">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
 
-  <button type="submit">
-    Save Storage Location
-  </button>
-</form>
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="mb-6 text-2xl font-bold text-slate-950">Capacity</h2>
+        <div class="grid gap-5 md:grid-cols-2">
+          {% for field in form %}
+            {% if field.name in "storage_type,accepted_food_types,dry_capacity,refrigerated_capacity,frozen_capacity,available_space,capacity_status,access_hours,restrictions,special_notes,admin_notes" %}
+              <div class="form-control {% if field.name == 'accepted_food_types' or field.name == 'access_hours' or field.name == 'restrictions' or field.name == 'special_notes' or field.name == 'admin_notes' %}md:col-span-2{% endif %}">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
 
-<hr>
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="mb-6 text-2xl font-bold text-slate-950">Access Equipment</h2>
+        <div class="grid gap-4 md:grid-cols-2">
+          {% for field in form %}
+            {% if field.name in "has_loading_dock,has_ramp_access,has_liftgate_access,has_forklift,has_pallet_jack,has_floor_jack,has_hand_truck,is_active" %}
+              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                <span class="font-medium text-slate-900">{{ field.label }}</span>
+                {{ field }}
+              </label>
+              {{ field.errors }}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
 
-<a href="{% url 'storage:list' %}">
-  Back to Storage Locations
-</a>
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="mb-6 text-2xl font-bold text-slate-950">Limits and Approval</h2>
+        <div class="grid gap-5 md:grid-cols-2">
+          {% for field in form %}
+            {% if field.name in "max_pallet_capacity,max_load_size,permission_level,approval_status" %}
+              <div class="form-control">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <a class="btn btn-outline btn-primary" href="{% url 'storage:list' %}">Back to Storage Locations</a>
+        <button type="submit" class="btn btn-primary">
+          <span class="material-symbols-rounded">save</span>
+          Save Storage Location
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+{% endblock %}
