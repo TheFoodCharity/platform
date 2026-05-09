@@ -28,7 +28,7 @@
           letter-spacing: 1px;
         "
       >
-        Public Food Help Map
+        Public Food Help Directory
       </p>
 
       <h1
@@ -49,8 +49,8 @@
           line-height: 1.6;
         "
       >
-        Search approved public food-support services and explore nearby food banks,
-        meal programs, and community support locations across the region.
+        Search approved public organizations offering food-support services and
+        community support across the region.
       </p>
     </div>
 
@@ -152,15 +152,17 @@
                 {{ location.name }}
               </h2>
 
-              <p
-                style="
-                  margin-top: 6px;
-                  color: #15803d;
-                  font-weight: 700;
-                "
-              >
-                {{ location.get_service_type_display }}
-              </p>
+              {% if location.organization_type %}
+                <p
+                  style="
+                    margin-top: 6px;
+                    color: #15803d;
+                    font-weight: 700;
+                  "
+                >
+                  {{ location.organization_type.name }}
+                </p>
+              {% endif %}
             </div>
 
             <span
@@ -186,20 +188,31 @@
               line-height: 1.6;
             "
           >
-            <p>
-              <strong>Address:</strong>
-              {{ location.address }}
-            </p>
-
-            <p>
-              <strong>Municipality:</strong>
-              {{ location.municipality }}
-            </p>
-
-            {% if location.hours_open %}
+            {% if location.description %}
               <p>
-                <strong>Hours:</strong>
-                {{ location.hours_open }}
+                <strong>Description:</strong>
+                {{ location.description }}
+              </p>
+            {% endif %}
+
+            {% if location.municipality %}
+              <p>
+                <strong>Municipality:</strong>
+                {{ location.municipality }}
+              </p>
+            {% endif %}
+
+            {% if location.region %}
+              <p>
+                <strong>Region:</strong>
+                {{ location.region }}
+              </p>
+            {% endif %}
+
+            {% if location.service_area %}
+              <p>
+                <strong>Service Area:</strong>
+                {{ location.service_area }}
               </p>
             {% endif %}
 
@@ -210,10 +223,10 @@
               </p>
             {% endif %}
 
-            {% if location.eligibility_requirements %}
+            {% if location.email %}
               <p>
-                <strong>Eligibility:</strong>
-                {{ location.eligibility_requirements }}
+                <strong>Email:</strong>
+                {{ location.email }}
               </p>
             {% endif %}
 
@@ -248,7 +261,7 @@
             text-align: center;
           "
         >
-          No approved locations found.
+          No approved organizations found.
         </div>
       {% endfor %}
     </div>
@@ -265,31 +278,6 @@
       attribution: "&copy; OpenStreetMap contributors"
     }
   ).addTo(map);
-
-  const markers = [];
-
-  {% for location in locations %}
-    {% if location.latitude and location.longitude %}
-      const marker{{ forloop.counter }} = L.marker([
-        {{ location.latitude }},
-        {{ location.longitude }}
-      ]).addTo(map);
-
-      marker{{ forloop.counter }}.bindPopup(`
-        <strong>{{ location.name|escapejs }}</strong><br>
-        {{ location.get_service_type_display|escapejs }}<br>
-        {{ location.address|escapejs }}<br>
-        {{ location.municipality|escapejs }}
-      `);
-
-      markers.push(marker{{ forloop.counter }});
-    {% endif %}
-  {% endfor %}
-
-  if (markers.length > 0) {
-    const group = L.featureGroup(markers);
-    map.fitBounds(group.getBounds().pad(0.2));
-  }
 </script>
 
 {% endblock %}

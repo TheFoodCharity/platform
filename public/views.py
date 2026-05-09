@@ -1,6 +1,6 @@
 from django.shortcuts import HttpResponse, render
 
-from public.models import FoodHelpLocation
+from organizations.models import Organization
 
 
 def home(request):
@@ -8,10 +8,14 @@ def home(request):
 
 
 def food_help_map(request):
-    locations = FoodHelpLocation.objects.filter(
-        is_public=True,
-        is_approved=True,
-    )
+    locations = Organization.objects.filter(
+        is_active=True,
+        is_publicly_visible=True,
+        status__in=[
+            Organization.Status.APPROVED,
+            Organization.Status.APPROVED_LIMITED,
+        ],
+    ).order_by("municipality", "name")
 
     municipality = request.GET.get("municipality")
 
