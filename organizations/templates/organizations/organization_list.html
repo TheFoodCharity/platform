@@ -3,17 +3,17 @@
 {% block content %}
     <h1>Your Organizations</h1>
 
-    <ul>
-        {# TODO(alex): add link to join page #}
-        <li><a href="">Join</a></li>
-        <li><a href="{% url 'organizations:apply' %}">Apply</a></li>
-    </ul>
+    <div>
+        <a class="btn btn-soft btn-primary" href="">Join</a>
+        <a class="btn btn-soft btn-primary" href="{% url 'organizations:apply' %}">Apply</a>
+    </div>
 
-    <ul>
+    <ul class="list-disc pl-5">
         {% for organization in organization_list %}
             <li>
                 {# TODO(alex): add link to organization dashboard #}
-                <a href="{% if organization.is_approved %}TODO{% else %}{% url 'organizations:application' organization.pk %}{% endif %}">
+                <a class="link link-primary link-hover"
+                   href="{% if organization.is_approved %}TODO{% else %}{% url 'organizations:application' organization.pk %}{% endif %}">
                     {{ organization.name }} ({{ organization.get_status_display }})
                 </a>
             </li>

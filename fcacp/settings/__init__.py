@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "tailwind",
     # 1st-party
     "accounts",
+    "collaborations",
     "organizations",
     "public",
     "storage",
@@ -55,16 +56,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.forms",
 ]
 
 
 if DEBUG:
     INSTALLED_APPS += ["django_browser_reload"]
-
-TAILWIND_APP_NAME = "theme"
-
-if os.name == "nt":
-    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
@@ -94,6 +91,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.debug",
             ],
         },
     },
@@ -155,6 +153,14 @@ PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "assets"
 
+# Theming
+TAILWIND_APP_NAME = "theme"
+
+if os.name == "nt":
+    NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
+
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
 
@@ -165,3 +171,6 @@ LOGIN_REDIRECT_URL = "organizations:dispatch"
 # https://docs.djangoproject.com/en/6.0/topics/email/
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
+
+# Debugging
+DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
