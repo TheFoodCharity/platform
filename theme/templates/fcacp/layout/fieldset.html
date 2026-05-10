@@ -1,0 +1,7 @@
+<fieldset class="fieldset {{ div.css_class }}"
+          {% if div.css_id %}id="{{ div.css_id }}"{% endif %} {{ div.flat_attrs|safe }}>
+    {% if legend %}
+        <legend class="fieldset-legend">{{ legend }}</legend>
+    {% endif %}
+    {{ fields|safe }}
+</fieldset>

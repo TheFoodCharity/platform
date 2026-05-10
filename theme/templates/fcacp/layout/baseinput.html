@@ -1,0 +1,7 @@
+<{{ input.input_type }} type="{{ input.input_type }}"
+   class="{{ input.field_classes|default:'btn btn-primary' }}"
+   {% if input.id %}id="{{ input.id }}"{% endif %}
+   name="{{ input.name }}"
+   value="{{ input.value }}"
+   {{ input.flat_attrs|safe }}
+>

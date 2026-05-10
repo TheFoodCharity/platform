@@ -1,0 +1,13 @@
+{% if form_show_errors and field.errors %}
+    {% if field.errors|length == 1 %}
+        {% with field.errors|first as error %}
+            <p id="{{ field.auto_id }}_error" class="fieldset-label text-error">{{ error }}</p>
+        {% endwith %}
+    {% else %}
+        <ul class="list-disc space-y-1 pl-5" id="{{ field.auto_id }}_error">
+            {% for error in field.errors %}
+                <li class="fieldset-label text-error">{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endif %}
