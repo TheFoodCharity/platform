@@ -10,7 +10,7 @@ from django.views import View
 from django.views.generic.edit import FormView
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
-from .forms import RegistrationForm, VerificationForm
+from .forms import LoginForm, RegistrationForm, VerificationForm
 from .models import User, VerificationCode
 
 PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
@@ -18,6 +18,7 @@ PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
 
 class LoginView(BaseLoginView):
     template_name = "accounts/login.html"
+    form_class = LoginForm
     redirect_authenticated_user = True
 
     def form_valid(self, form):
