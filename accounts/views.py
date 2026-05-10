@@ -5,9 +5,10 @@ from django.contrib.auth.views import LoginView as BaseLoginView
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
+from django_htmx.http import HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
 from .forms import LoginForm, RegistrationForm, VerificationForm
@@ -125,4 +126,6 @@ class ResendVerificationView(EmailUnverifiedMixin, View):
             user.send_verification_email(request)
             messages.info(request, f"A new verification code has been sent to {user.email}.")
 
-        return HttpResponseRedirect(reverse_lazy("accounts:verify"))
+        if request.htmx:
+            return HttpResponseClientRefresh()
+        return HttpResponseRedirect(reverse("accounts:verify"))
