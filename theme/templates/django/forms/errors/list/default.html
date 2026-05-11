@@ -1,0 +1,7 @@
+{% if errors %}
+    {% if errors.field_id is None %}
+        {% include "django/forms/errors/list/alert.html" %}
+    {% else %}
+        {% include "django/forms/errors/list/ul.html" %}
+    {% endif %}
+{% endif %}

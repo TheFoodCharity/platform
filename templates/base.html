@@ -1,6 +1,6 @@
 {% load django_htmx static tailwind_tags %}
 <!doctype html>
-<html lang="en" data-theme="fcacp">
+<html lang="en" data-theme="fcacp" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +9,7 @@
     {% tailwind_css %}
     {% htmx_script %}
 </head>
-<body hx-boost="true" class="bg-white text-slate-900 antialiased">
-    {% block content %}{% endblock %}
+<body hx-boost="true" class="h-full bg-white text-slate-900 antialiased">
+{% block content %}{% endblock %}
 </body>
 </html>
