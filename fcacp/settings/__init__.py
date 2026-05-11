@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "organizations",
     "public",
     "storage",
+    "donations",
     "theme",
     # Django
     "django.contrib.admin",
@@ -104,7 +105,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "OPTIONS": {
-            "pool": True,
+            "pool": not DEBUG,
             "server_side_binding": True,
         },
         **environment.database_url.to_django(),

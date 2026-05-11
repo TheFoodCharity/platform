@@ -35,6 +35,20 @@ uv run ./manage.py migrate
 uv run ./manage.py runserver
 ```
 
+In a second terminal, start the Tailwind watcher while working on templates or CSS:
+
+```shell
+cd theme/static_src
+npm run dev
+```
+
+If the UI looks like plain HTML, the Tailwind CSS probably needs to be rebuilt:
+
+```shell
+cd theme/static_src
+npm run build
+```
+
 ### Common Tasks
 
 Below are some common tasks that may come in handy.

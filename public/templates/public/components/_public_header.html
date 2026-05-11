@@ -7,10 +7,9 @@
                 <img src="{% static 'public/images/logo_w_text_primary.svg' %}" alt="The Food Charity Association of Canada logo" class="hidden h-full w-auto max-h-16 md:block">
             </a>
             <nav class="flex-none hidden h-full items-center gap-10 text-base font-medium leading-none md:flex md:text-lg">
-                <a href="#" class="text-primary transition-colors hover:opacity-80">Product</a>
-                <a href="#" class="text-primary transition-colors hover:opacity-80">Solutions</a>
-                <a href="#" class="text-primary transition-colors hover:opacity-80">Support</a>
-                <a href="#" class="text-primary transition-colors hover:opacity-80">Pricing</a>
+                <a href="{% url 'donations:list' %}" class="text-primary transition-colors hover:opacity-80">Supplier</a>
+                <a href="{% url 'storage:list' %}" class="text-primary transition-colors hover:opacity-80">Storage</a>
+                <a href="{% url 'donations:available_list' %}" class="text-primary transition-colors hover:opacity-80">Listings</a>
             </nav>
         </div>
         <div class="flex items-center justify-end gap-3 text-sm font-medium md:h-full md:w-auto md:gap-6 md:text-lg">
@@ -42,9 +41,8 @@
                     </label>
                 </div>
             </details>
-            <a href="#" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Contact Sales</a>
-            <a href="#" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Log In</a>
-            <a href="#" class="btn btn-primary text-base font-bold rounded-full">Get Started</a>
+            <a href="{% url 'admin:index' %}" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Admin</a>
+            <a href="{% url 'donations:create' %}" class="btn btn-primary text-base font-bold">Get Started</a>
             <details class="md:hidden group">
                 <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded text-primary focus:outline-none">
                     <span class="sr-only">Toggle menu</span>
@@ -57,13 +55,11 @@
                 </summary>
                 <nav class="absolute left-0 right-0 top-full z-40 w-full border-t border-slate-200 bg-base-100 px-6 py-4 text-primary">
                     <div class="flex flex-col space-y-2">
-                        <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Product</a>
-                        <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Solutions</a>
-                        <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Support</a>
-                        <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Pricing</a>
+                        <a href="{% url 'donations:list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Supplier</a>
+                        <a href="{% url 'storage:list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Storage</a>
+                        <a href="{% url 'donations:available_list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Listings</a>
                         <hr class="my-2 border-slate-100">
-                        <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Contact Sales</a>
-                        <a href="#" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Log In</a>
+                        <a href="{% url 'admin:index' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Admin</a>
                     </div>
                 </nav>
             </details>

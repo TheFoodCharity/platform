@@ -1,0 +1,68 @@
+<section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+  <h2 class="text-2xl font-bold text-slate-950">Donation Information</h2>
+
+  <dl class="mt-6 grid gap-4 md:grid-cols-2">
+    {% if show_donor %}
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">Donor Name</dt>
+        <dd class="mt-1 text-slate-950">{{ donation.donor_name }}</dd>
+      </div>
+    {% endif %}
+
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Food Type</dt>
+      <dd class="mt-1 text-slate-950">{{ donation.food_type_display }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Food Category</dt>
+      <dd class="mt-1 text-slate-950">{{ donation.get_food_category_display }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Quantity</dt>
+      <dd class="mt-1 text-slate-950">{{ donation.quantity }} {{ donation.get_unit_display }}</dd>
+    </div>
+
+    {% if donation.estimated_weight %}
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">Estimated Weight</dt>
+        <dd class="mt-1 text-slate-950">{{ donation.estimated_weight_display }}</dd>
+      </div>
+    {% endif %}
+
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Storage Requirement</dt>
+      <dd class="mt-1 text-slate-950">{{ donation.get_storage_requirement_display }}</dd>
+    </div>
+
+    {% if show_status %}
+      <div>
+        <dt class="text-sm font-semibold text-slate-500">Status</dt>
+        <dd class="mt-1">
+          <span class="badge badge-primary badge-outline">{{ donation.get_status_display }}</span>
+        </dd>
+      </div>
+    {% endif %}
+
+    {% if show_pickup_location %}
+      <div class="md:col-span-2">
+        <dt class="text-sm font-semibold text-slate-500">Pickup Location</dt>
+        <dd class="mt-1 text-slate-950">{{ donation.pickup_location }}</dd>
+      </div>
+    {% endif %}
+
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Pickup Window</dt>
+      <dd class="mt-1 text-slate-950">{{ donation.pickup_window }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Pickup Timing</dt>
+      <dd class="mt-1 text-slate-950">
+        {{ donation.get_pickup_day_display }}, {{ donation.get_pickup_ready_time_display }} to {{ donation.get_pickup_end_time_display }}
+      </dd>
+    </div>
+    <div class="md:col-span-2">
+      <dt class="text-sm font-semibold text-slate-500">Special Handling Notes</dt>
+      <dd class="mt-1 text-slate-950">{{ donation.special_handling_notes|default:"None provided." }}</dd>
+    </div>
+  </dl>
+</section>
