@@ -2,13 +2,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView as BaseLoginView
+from django.contrib.auth.views import LogoutView as BaseLogoutView
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
-from django_htmx.http import HttpResponseClientRefresh
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
 from .forms import LoginForm, RegistrationForm, VerificationForm
@@ -31,6 +32,16 @@ class LoginView(BaseLoginView):
             return redirect("accounts:verify")
 
         return super().form_valid(form)
+
+
+class LogoutView(BaseLogoutView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if request.htmx:
+            success_url = self.get_success_url()
+            return HttpResponseClientRedirect(success_url)
+
+        return response
 
 
 class RegistrationView(FormView):

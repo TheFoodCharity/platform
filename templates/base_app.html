@@ -61,9 +61,11 @@
                             </div>
                             <ul tabindex="0"
                                 class="dropdown-content menu bg-base-100 rounded-box border border-base-200 z-10 w-full p-2 shadow-lg mb-1">
-                                <li><a href="{% url 'accounts:logout' %}">
-                                    <span class="material-symbols-rounded">logout</span> Sign out
-                                </a></li>
+                                <li>
+                                    <button type="button" hx-post="{% url 'accounts:logout' %}">
+                                        <span class="material-symbols-rounded">logout</span> Sign out
+                                    </button>
+                                </li>
                             </ul>
                         </div>
                     {% endif %}
