@@ -6,7 +6,7 @@ from django.utils import timezone
 from storage.models import StorageLocation
 
 from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestForm
-from .models import Donation, DonationFoodItem
+from .models import Donation
 
 PICKUP_END_HOURS = {
     Donation.PickupEndTime.BEFORE_2PM: 14,
@@ -35,27 +35,6 @@ def sync_donation_summary_from_items(donation):
     donation.quantity = first_item.quantity
     donation.unit = first_item.packaging
     donation.save(update_fields=["food_category", "food_type", "quantity", "unit"])
-
-
-def save_food_items(donation, formset):
-    donation.food_items.all().delete()
-
-    items = []
-    for form in formset:
-        if not form.cleaned_data.get("selected"):
-            continue
-
-        items.append(
-            DonationFoodItem(
-                donation=donation,
-                food_category=form.cleaned_data["food_category"],
-                packaging=form.cleaned_data["packaging"],
-                quantity=form.cleaned_data["quantity"],
-                description=form.cleaned_data["description"],
-            ),
-        )
-
-    DonationFoodItem.objects.bulk_create(items)
 
 
 def donation_list(request):
@@ -92,7 +71,8 @@ def donation_create(request):
             donation.unit = Donation.QuantityUnit.ITEMS
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
-            save_food_items(donation, formset)
+            formset.instance = donation
+            formset.save()
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
@@ -111,17 +91,17 @@ def donation_edit(request, pk):
 
     if request.method == "POST":
         form = DonationForm(request.POST, instance=donation)
-        formset = DonationFoodItemFormSet(request.POST, donation=donation)
+        formset = DonationFoodItemFormSet(request.POST, instance=donation)
         if form.is_valid() and formset.is_valid():
             donation = form.save(commit=False)
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
-            save_food_items(donation, formset)
+            formset.save()
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
         form = DonationForm(instance=donation)
-        formset = DonationFoodItemFormSet(donation=donation)
+        formset = DonationFoodItemFormSet(instance=donation)
 
     return render(
         request,
