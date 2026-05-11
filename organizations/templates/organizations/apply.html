@@ -1,11 +1,15 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
+{% load crispy_forms_tags %}
 
-{% block content %}
+{% block page_title %}Apply{% endblock %}
+
+{% block page_body %}
+    <h2 class="text-2xl font-semibold mb-6">Start your application</h2>
     <form method="post">
         {% csrf_token %}
-
-        {{ form }}
-
-        <button type="submit" class="btn btn-primary">Continue</button>
+        {% crispy form %}
+        <div class="flex justify-end gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Continue</button>
+        </div>
     </form>
 {% endblock %}
