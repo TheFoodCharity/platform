@@ -73,3 +73,8 @@ def themed_field(parser: template.base.Parser, token: template.base.Token) -> Th
 @register.filter
 def is_checkbox(field: forms.BoundField) -> bool:
     return isinstance(field.field.widget, forms.CheckboxInput)
+
+
+@register.filter
+def is_radioselect(field: forms.BoundField) -> bool:
+    return isinstance(field.field.widget, forms.RadioSelect)
