@@ -1,355 +1,356 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
-  <div class="mx-auto max-w-5xl">
-    <div class="mb-8">
-      <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food donation</p>
-      <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ title }}</h1>
-      <p class="mt-3 max-w-2xl text-lg text-slate-600">
-        Share the food, pickup, safety, and logistics details so the team can match this donation quickly.
-      </p>
-    </div>
-
-    <form method="post" class="space-y-6">
-      {% csrf_token %}
-
-      {% if form.non_field_errors or formset.non_form_errors %}
-        <div class="alert alert-error">
-          <div>
-            {{ form.non_field_errors }}
-            {{ formset.non_form_errors }}
-          </div>
-        </div>
-      {% endif %}
-
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-950">Donor Information</h2>
-          <p class="mt-1 text-slate-600">Tell us who is donating and where the food is coming from.</p>
+{% block page_body %}
+    <div class="mx-auto max-w-5xl">
+        <div class="mb-8">
+            <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food donation</p>
+            <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ title }}</h1>
+            <p class="mt-3 max-w-2xl text-lg text-slate-600">
+                Share the food, pickup, safety, and logistics details so the team can match this donation quickly.
+            </p>
         </div>
 
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="form-control">
-            {{ form.company_name.label_tag }}
-            {{ form.company_name }}
-            {{ form.company_name.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.donor_name.label_tag }}
-            {{ form.donor_name }}
-            {{ form.donor_name.errors }}
-          </div>
-          <div class="form-control md:col-span-2">
-            {{ form.address_1.label_tag }}
-            {{ form.address_1 }}
-            {{ form.address_1.errors }}
-          </div>
-          <div class="form-control md:col-span-2">
-            {{ form.address_2.label_tag }}
-            {{ form.address_2 }}
-            {{ form.address_2.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.city.label_tag }}
-            {{ form.city }}
-            {{ form.city.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.province_or_state.label_tag }}
-            {{ form.province_or_state }}
-            {{ form.province_or_state.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.postal_code.label_tag }}
-            {{ form.postal_code }}
-            {{ form.postal_code.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.donor_contact.label_tag }}
-            {{ form.donor_contact }}
-            {{ form.donor_contact.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.contact_email.label_tag }}
-            {{ form.contact_email }}
-            {{ form.contact_email.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.contact_phone.label_tag }}
-            {{ form.contact_phone }}
-            {{ form.contact_phone.errors }}
-          </div>
-        </div>
-      </section>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-950">Pickup Details</h2>
-          <p class="mt-1 text-slate-600">Set the timing and pickup instructions for the donation.</p>
-        </div>
+            {% if form.non_field_errors or formset.non_form_errors %}
+                <div class="alert alert-error">
+                    <div>
+                        {{ form.non_field_errors }}
+                        {{ formset.non_form_errors }}
+                    </div>
+                </div>
+            {% endif %}
 
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="form-control md:col-span-2">
-            {{ form.pickup_location.label_tag }}
-            {{ form.pickup_location }}
-            {{ form.pickup_location.errors }}
-          </div>
-          <div class="form-control md:col-span-2">
-            <span class="mb-2 font-semibold text-slate-800">{{ form.pickup_day.label }}</span>
-            <div class="grid gap-3 sm:grid-cols-2">
-              {% for radio in form.pickup_day %}
-                <label class="flex items-center gap-3 rounded-xl border border-base-300 bg-base-100 p-4">
-                  {{ radio.tag }}
-                  <span>{{ radio.choice_label }}</span>
-                </label>
-              {% endfor %}
-            </div>
-            {{ form.pickup_day.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.pickup_ready_time.label_tag }}
-            {{ form.pickup_ready_time }}
-            {{ form.pickup_ready_time.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.pickup_end_time.label_tag }}
-            {{ form.pickup_end_time }}
-            {{ form.pickup_end_time.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.pickup_window.label_tag }}
-            {{ form.pickup_window }}
-            {{ form.pickup_window.errors }}
-          </div>
-        </div>
-      </section>
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-950">Donor Information</h2>
+                    <p class="mt-1 text-slate-600">Tell us who is donating and where the food is coming from.</p>
+                </div>
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-950">Food Types</h2>
-          <p class="mt-1 text-slate-600">Select each food type included in this donation.</p>
-        </div>
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div class="form-control">
+                        {{ form.company_name.label_tag }}
+                        {{ form.company_name }}
+                        {{ form.company_name.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.donor_name.label_tag }}
+                        {{ form.donor_name }}
+                        {{ form.donor_name.errors }}
+                    </div>
+                    <div class="form-control md:col-span-2">
+                        {{ form.address_1.label_tag }}
+                        {{ form.address_1 }}
+                        {{ form.address_1.errors }}
+                    </div>
+                    <div class="form-control md:col-span-2">
+                        {{ form.address_2.label_tag }}
+                        {{ form.address_2 }}
+                        {{ form.address_2.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.city.label_tag }}
+                        {{ form.city }}
+                        {{ form.city.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.province_or_state.label_tag }}
+                        {{ form.province_or_state }}
+                        {{ form.province_or_state.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.postal_code.label_tag }}
+                        {{ form.postal_code }}
+                        {{ form.postal_code.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.donor_contact.label_tag }}
+                        {{ form.donor_contact }}
+                        {{ form.donor_contact.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.contact_email.label_tag }}
+                        {{ form.contact_email }}
+                        {{ form.contact_email.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.contact_phone.label_tag }}
+                        {{ form.contact_phone }}
+                        {{ form.contact_phone.errors }}
+                    </div>
+                </div>
+            </section>
 
-        {{ formset.management_form }}
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-950">Pickup Details</h2>
+                    <p class="mt-1 text-slate-600">Set the timing and pickup instructions for the donation.</p>
+                </div>
 
-        <div class="space-y-4">
-          {% for item_form in formset %}
-            <div class="donation-food-type rounded-xl border border-base-300 bg-base-100 p-4">
-              {% for hidden in item_form.hidden_fields %}
-                {{ hidden }}
-              {% endfor %}
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div class="form-control md:col-span-2">
+                        {{ form.pickup_location.label_tag }}
+                        {{ form.pickup_location }}
+                        {{ form.pickup_location.errors }}
+                    </div>
+                    <div class="form-control md:col-span-2">
+                        <span class="mb-2 font-semibold text-slate-800">{{ form.pickup_day.label }}</span>
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            {% for radio in form.pickup_day %}
+                                <label class="flex items-center gap-3 rounded-xl border border-base-300 bg-base-100 p-4">
+                                    {{ radio.tag }}
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                        {{ form.pickup_day.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.pickup_ready_time.label_tag }}
+                        {{ form.pickup_ready_time }}
+                        {{ form.pickup_ready_time.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.pickup_end_time.label_tag }}
+                        {{ form.pickup_end_time }}
+                        {{ form.pickup_end_time.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.pickup_window.label_tag }}
+                        {{ form.pickup_window }}
+                        {{ form.pickup_window.errors }}
+                    </div>
+                </div>
+            </section>
 
-              <label class="flex items-start gap-4 text-lg">
-                {{ item_form.selected }}
-                <span>
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-950">Food Types</h2>
+                    <p class="mt-1 text-slate-600">Select each food type included in this donation.</p>
+                </div>
+
+                {{ formset.management_form }}
+
+                <div class="space-y-4">
+                    {% for item_form in formset %}
+                        <div class="donation-food-type rounded-xl border border-base-300 bg-base-100 p-4">
+                            {% for hidden in item_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+
+                            <label class="flex items-start gap-4 text-lg">
+                                {{ item_form.selected }}
+                                <span>
                   <span class="font-semibold text-slate-900">{{ item_form.food_label }}</span>
                   <span class="text-slate-500">({{ item_form.food_example }})</span>
                 </span>
-              </label>
+                            </label>
 
-              <div class="donation-food-type-details mt-4 hidden rounded-xl border border-primary/20 bg-primary/5 p-5">
-                {{ item_form.non_field_errors }}
+                            <div class="donation-food-type-details mt-4 hidden rounded-xl border border-primary/20 bg-primary/5 p-5">
+                                {{ item_form.non_field_errors }}
 
-                <div class="grid gap-5 md:grid-cols-2">
-                  <div class="form-control md:col-span-2">
-                    {{ item_form.packaging.label_tag }}
-                    {{ item_form.packaging }}
-                    {{ item_form.packaging.errors }}
-                  </div>
-                  <div class="form-control">
-                    {{ item_form.quantity.label_tag }}
-                    {{ item_form.quantity }}
-                    {{ item_form.quantity.errors }}
-                  </div>
-                  <div class="form-control md:col-span-2">
-                    {{ item_form.description.label_tag }}
-                    {{ item_form.description }}
-                    {{ item_form.description.errors }}
-                  </div>
+                                <div class="grid gap-5 md:grid-cols-2">
+                                    <div class="form-control md:col-span-2">
+                                        {{ item_form.packaging.label_tag }}
+                                        {{ item_form.packaging }}
+                                        {{ item_form.packaging.errors }}
+                                    </div>
+                                    <div class="form-control">
+                                        {{ item_form.quantity.label_tag }}
+                                        {{ item_form.quantity }}
+                                        {{ item_form.quantity.errors }}
+                                    </div>
+                                    <div class="form-control md:col-span-2">
+                                        {{ item_form.description.label_tag }}
+                                        {{ item_form.description }}
+                                        {{ item_form.description.errors }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
 
-        <div class="form-control mt-6 max-w-sm">
-          {{ form.people_fed_estimate.label_tag }}
-          {{ form.people_fed_estimate }}
-          {{ form.people_fed_estimate.errors }}
-        </div>
-      </section>
+                <div class="form-control mt-6 max-w-sm">
+                    {{ form.people_fed_estimate.label_tag }}
+                    {{ form.people_fed_estimate }}
+                    {{ form.people_fed_estimate.errors }}
+                </div>
+            </section>
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6 flex items-center gap-4">
-          <div class="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
-            <span class="material-symbols-rounded text-3xl">local_shipping</span>
-          </div>
-          <div>
-            <h2 class="text-2xl font-bold text-slate-950">Logistics</h2>
-            <p class="mt-1 text-slate-600">Define the storage and transportation requirements for this donation.</p>
-          </div>
-        </div>
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <div class="mb-6 flex items-center gap-4">
+                    <div class="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
+                        <span class="material-symbols-rounded text-3xl">local_shipping</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-950">Logistics</h2>
+                        <p class="mt-1 text-slate-600">Define the storage and transportation requirements for this
+                            donation.</p>
+                    </div>
+                </div>
 
-        <div class="rounded-2xl border border-base-300">
-          <div class="grid gap-6 p-6 md:grid-cols-2">
-            <div class="form-control">
-              {{ form.storage_requirement.label_tag }}
-              {{ form.storage_requirement }}
-              {{ form.storage_requirement.errors }}
-            </div>
+                <div class="rounded-2xl border border-base-300">
+                    <div class="grid gap-6 p-6 md:grid-cols-2">
+                        <div class="form-control">
+                            {{ form.storage_requirement.label_tag }}
+                            {{ form.storage_requirement }}
+                            {{ form.storage_requirement.errors }}
+                        </div>
 
-            <div>
-              <div class="mb-2 font-semibold text-slate-800">Fits in car</div>
-              <div class="grid gap-3 sm:grid-cols-2">
-                {% for radio in form.fits_in_car %}
-                  <label class="flex min-h-14 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                    <span>{{ radio.choice_label }}</span>
-                    {{ radio.tag }}
-                  </label>
-                {% endfor %}
-              </div>
-              {{ form.fits_in_car.errors }}
-            </div>
-          </div>
+                        <div>
+                            <div class="mb-2 font-semibold text-slate-800">Fits in car</div>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                {% for radio in form.fits_in_car %}
+                                    <label class="flex min-h-14 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                        <span>{{ radio.choice_label }}</span>
+                                        {{ radio.tag }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            {{ form.fits_in_car.errors }}
+                        </div>
+                    </div>
 
-          <div class="border-t border-base-300 p-6">
-            <h3 class="mb-4 text-xl font-bold text-slate-950">Additional logistics requirements</h3>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires van</span>
-                {{ form.requires_van }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires cube van</span>
-                {{ form.requires_cube_van }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires refrigerated vehicle</span>
-                {{ form.requires_refrigerated_vehicle }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires pallet jack</span>
-                {{ form.requires_pallet_jack }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires forklift</span>
-                {{ form.requires_forklift }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Loading dock available</span>
-                {{ form.loading_dock_available }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Donor can help load</span>
-                {{ form.donor_can_help_load }}
-              </label>
-            </div>
+                    <div class="border-t border-base-300 p-6">
+                        <h3 class="mb-4 text-xl font-bold text-slate-950">Additional logistics requirements</h3>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Requires van</span>
+                                {{ form.requires_van }}
+                            </label>
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Requires cube van</span>
+                                {{ form.requires_cube_van }}
+                            </label>
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Requires refrigerated vehicle</span>
+                                {{ form.requires_refrigerated_vehicle }}
+                            </label>
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Requires pallet jack</span>
+                                {{ form.requires_pallet_jack }}
+                            </label>
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Requires forklift</span>
+                                {{ form.requires_forklift }}
+                            </label>
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Loading dock available</span>
+                                {{ form.loading_dock_available }}
+                            </label>
+                            <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
+                                <span>Donor can help load</span>
+                                {{ form.donor_can_help_load }}
+                            </label>
+                        </div>
 
-            <div class="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4 text-primary">
-              <p class="font-bold">Tip</p>
-              <p class="mt-1">Accurate logistics information helps match this donation with the right recipients.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+                        <div class="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4 text-primary">
+                            <p class="font-bold">Tip</p>
+                            <p class="mt-1">Accurate logistics information helps match this donation with the right
+                                recipients.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <h2 class="text-2xl font-bold text-slate-950">Food Safety</h2>
-        <label class="mt-4 flex items-start gap-3 rounded-xl border border-base-300 bg-base-100 p-4">
-          {{ form.food_safety_agreement }}
-          <span>
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-950">Food Safety</h2>
+                <label class="mt-4 flex items-start gap-3 rounded-xl border border-base-300 bg-base-100 p-4">
+                    {{ form.food_safety_agreement }}
+                    <span>
             <span class="font-semibold">{{ form.food_safety_agreement.label }}</span>
             <span class="mt-1 block text-sm text-slate-600">
               The food is safe for human consumption, has been stored properly, and has not been served from a buffet.
             </span>
           </span>
-        </label>
-        {{ form.food_safety_agreement.errors }}
-      </section>
+                </label>
+                {{ form.food_safety_agreement.errors }}
+            </section>
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-950">Other Information</h2>
-          <p class="mt-1 text-slate-600">Add anything else the team should know before matching this donation.</p>
-        </div>
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-slate-950">Other Information</h2>
+                    <p class="mt-1 text-slate-600">Add anything else the team should know before matching this
+                        donation.</p>
+                </div>
 
-        <div class="space-y-5">
-          <div class="form-control">
-            {{ form.special_handling_notes.label_tag }}
-            {{ form.special_handling_notes }}
-            {{ form.special_handling_notes.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.chain_of_custody_notes.label_tag }}
-            {{ form.chain_of_custody_notes }}
-            {{ form.chain_of_custody_notes.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.other_information.label_tag }}
-            {{ form.other_information }}
-            {{ form.other_information.errors }}
-          </div>
-        </div>
-      </section>
+                <div class="space-y-5">
+                    <div class="form-control">
+                        {{ form.special_handling_notes.label_tag }}
+                        {{ form.special_handling_notes }}
+                        {{ form.special_handling_notes.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.chain_of_custody_notes.label_tag }}
+                        {{ form.chain_of_custody_notes }}
+                        {{ form.chain_of_custody_notes.errors }}
+                    </div>
+                    <div class="form-control">
+                        {{ form.other_information.label_tag }}
+                        {{ form.other_information }}
+                        {{ form.other_information.errors }}
+                    </div>
+                </div>
+            </section>
 
-      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
-        <button type="submit" class="btn btn-primary">
-          <span class="material-symbols-rounded">save</span>
-          Submit Donation
-        </button>
-      </div>
-    </form>
-  </div>
-</main>
+            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
+                <button type="submit" class="btn btn-primary">
+                    <span class="material-symbols-rounded">save</span>
+                    Submit Donation
+                </button>
+            </div>
+        </form>
+    </div>
 
-<script>
-  document.querySelectorAll(".donation-food-type").forEach((foodType) => {
-    const checkbox = foodType.querySelector('input[type="checkbox"]');
-    const details = foodType.querySelector(".donation-food-type-details");
+    <script>
+      document.querySelectorAll(".donation-food-type").forEach((foodType) => {
+        const checkbox = foodType.querySelector('input[type="checkbox"]');
+        const details = foodType.querySelector(".donation-food-type-details");
 
-    function syncDetails() {
-      details.classList.toggle("hidden", !checkbox.checked);
-    }
+        function syncDetails() {
+          details.classList.toggle("hidden", !checkbox.checked);
+        }
 
-    checkbox.addEventListener("change", syncDetails);
-    syncDetails();
-  });
+        checkbox.addEventListener("change", syncDetails);
+        syncDetails();
+      });
 
-  const addressFields = [
-    document.querySelector("#{{ form.address_1.id_for_label }}"),
-    document.querySelector("#{{ form.address_2.id_for_label }}"),
-    document.querySelector("#{{ form.city.id_for_label }}"),
-    document.querySelector("#{{ form.province_or_state.id_for_label }}"),
-    document.querySelector("#{{ form.postal_code.id_for_label }}"),
-  ];
-  const pickupLocation = document.querySelector("#{{ form.pickup_location.id_for_label }}");
-  let lastAutoPickupLocation = "";
-  let pickupLocationWasEdited = Boolean(pickupLocation.value.trim());
+      const addressFields = [
+        document.querySelector("#{{ form.address_1.id_for_label }}"),
+        document.querySelector("#{{ form.address_2.id_for_label }}"),
+        document.querySelector("#{{ form.city.id_for_label }}"),
+        document.querySelector("#{{ form.province_or_state.id_for_label }}"),
+        document.querySelector("#{{ form.postal_code.id_for_label }}"),
+      ];
+      const pickupLocation = document.querySelector("#{{ form.pickup_location.id_for_label }}");
+      let lastAutoPickupLocation = "";
+      let pickupLocationWasEdited = Boolean(pickupLocation.value.trim());
 
-  function buildCompanyAddress() {
-    return addressFields
-      .map((field) => field.value.trim())
-      .filter(Boolean)
-      .join(", ");
-  }
+      function buildCompanyAddress() {
+        return addressFields
+          .map((field) => field.value.trim())
+          .filter(Boolean)
+          .join(", ");
+      }
 
-  function syncPickupLocationFromAddress() {
-    const companyAddress = buildCompanyAddress();
-    const canSync = !pickupLocationWasEdited || pickupLocation.value === lastAutoPickupLocation;
+      function syncPickupLocationFromAddress() {
+        const companyAddress = buildCompanyAddress();
+        const canSync = !pickupLocationWasEdited || pickupLocation.value === lastAutoPickupLocation;
 
-    if (canSync) {
-      pickupLocation.value = companyAddress;
-      lastAutoPickupLocation = companyAddress;
-      pickupLocationWasEdited = false;
-    }
-  }
+        if (canSync) {
+          pickupLocation.value = companyAddress;
+          lastAutoPickupLocation = companyAddress;
+          pickupLocationWasEdited = false;
+        }
+      }
 
-  pickupLocation.addEventListener("input", () => {
-    pickupLocationWasEdited = pickupLocation.value !== lastAutoPickupLocation;
-  });
-  addressFields.forEach((field) => field.addEventListener("input", syncPickupLocationFromAddress));
-  syncPickupLocationFromAddress();
-</script>
+      pickupLocation.addEventListener("input", () => {
+        pickupLocationWasEdited = pickupLocation.value !== lastAutoPickupLocation;
+      });
+      addressFields.forEach((field) => field.addEventListener("input", syncPickupLocationFromAddress));
+      syncPickupLocationFromAddress();
+    </script>
 {% endblock %}
