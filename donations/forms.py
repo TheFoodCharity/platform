@@ -63,7 +63,9 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["food_safety_agreement"].help_text = (
+        self.fields[
+            "food_safety_agreement"
+        ].help_text = (
             "The food is safe for human consumption, has been stored properly, and has not been served from a buffet."
         )
 
