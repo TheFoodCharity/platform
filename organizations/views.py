@@ -6,6 +6,7 @@ from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
 from django.views.generic.list import ListView
+from django_htmx.http import HttpResponseClientRefresh
 
 from .forms import (
     ApplicationBasicDetailsForm,
@@ -16,7 +17,7 @@ from .forms import (
     ApplicationSubmitForm,
 )
 from .models import Organization
-from .services import organization_create
+from .services import organization_create, set_current_organization
 
 
 class OrganizationsView(ListView):
@@ -32,7 +33,7 @@ class DispatchView(LoginRequiredMixin, View):
                 # TODO(alex): redirect to that org's dashboard once it exists
                 return redirect("/")
             case _:
-                return redirect(reverse("organizations:list"))
+                return redirect(reverse("organizations:select"))
 
 
 class ApplyView(LoginRequiredMixin, FormView):
@@ -133,3 +134,34 @@ class ApplicationOperationsView(ApplicationFormView):
     form_class = ApplicationOperationsForm
     section = "operations"
     section_title = "Interests & preferences"
+
+
+class SelectView(LoginRequiredMixin, ListView):
+    template_name = "organizations/select.html"
+    context_object_name = "organizations"
+
+    def get(self, request, *args, **kwargs):
+        if not request.htmx and request.organization:
+            return redirect("/")  # TODO(alex): redirect to dashboard
+        return super().get(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Organization.active.for_user(self.request.user)
+
+    def get_template_names(self):
+        names = super().get_template_names()
+        if self.request.htmx:
+            return [f"{name}#options" for name in names]
+
+        return names
+
+
+class ActivateView(LoginRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        try:
+            organization = Organization.active.for_user(request.user).get(pk=pk)
+            set_current_organization(request, organization)
+        except Organization.DoesNotExist:
+            pass
+
+        return HttpResponseClientRefresh()
