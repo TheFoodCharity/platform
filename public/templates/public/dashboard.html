@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'public/css/public.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-white flex flex-col">
+    {% include "public/components/_public_header.html" %}
+
+    <main class="flex-1">
+        <section class="mx-auto max-w-6xl px-6 pb-12 pt-8 text-center md:pt-14">
+
+            <!-- <p class="text-base font-bold uppercase tracking-wide text-primary">
+                Operational Dashboard
+            </p> -->
+
+            <h1 class="mx-auto mt-4 max-w-5xl text-balance text-4xl font-bold leading-tight text-primary md:text-6xl">
+                Manage food donations, storage, and collaboration from one centralized platform.
+            </h1>
+
+            <p class="mx-auto mt-6 max-w-3xl text-lg text-slate-600">
+                Access donation tickets, storage locations, public food-help listings,
+                collaboration spaces, and organization workflows through a unified
+                operational dashboard.
+            </p>
+
+            <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+
+                <a href="{% url 'donations:create' %}"
+                   class="btn btn-primary text-xl">
+                    Create Donation Ticket
+                </a>
+
+                <a href="{% url 'collaborations:request_create' %}"
+                   class="btn btn-outline btn-primary rounded-full text-xl">
+                    Request Collaboration
+                </a>
+
+            </div>
+        </section>
+
+        <section class="mx-auto max-w-6xl px-6 pb-16">
+
+            <h2 class="text-center text-4xl font-bold text-primary">
+                Platform Modules
+            </h2>
+
+            <p class="mx-auto mt-4 max-w-3xl text-center text-lg text-slate-500">
+                Quickly access the key tools used to manage food supply,
+                storage operations, public listings, and member coordination.
+            </p>
+
+            <div class="mt-10 grid gap-8 md:grid-cols-3">
+
+                <a href="{% url 'donations:list' %}"
+                   class="public-feature-card flex flex-col items-center text-center">
+
+                    <div class="public-feature-icon text-8xl text-primary">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            receipt_long
+                        </span>
+                    </div>
+
+                    <h3 class="mt-5 text-xl font-semibold text-primary">
+                        Donation Tickets
+                    </h3>
+
+                    <p class="mt-3 text-slate-500">
+                        Track food donations, pickup deadlines,
+                        storage needs, and redistribution status.
+                    </p>
+
+                </a>
+
+                <a href="{% url 'storage:list' %}"
+                   class="public-feature-card flex flex-col items-center text-center">
+
+                    <div class="public-feature-icon text-8xl text-primary">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            warehouse
+                        </span>
+                    </div>
+
+                    <h3 class="mt-5 text-xl font-semibold text-primary">
+                        Storage Locations
+                    </h3>
+
+                    <p class="mt-3 text-slate-500">
+                        Manage dry, refrigerated, and frozen storage capacity
+                        across partner locations.
+                    </p>
+
+                </a>
+
+                <a href="{% url 'collaborations:list' %}"
+                   class="public-feature-card flex flex-col items-center text-center">
+
+                    <div class="public-feature-icon text-8xl text-primary">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            groups
+                        </span>
+                    </div>
+
+                    <h3 class="mt-5 text-xl font-semibold text-primary">
+                        Collaborations
+                    </h3>
+
+                    <p class="mt-3 text-slate-500">
+                        Coordinate working groups, shared requests,
+                        and communication spaces.
+                    </p>
+
+                </a>
+
+                <a href="{% url 'food_help_map' %}"
+                   class="public-feature-card flex flex-col items-center text-center">
+
+                    <div class="public-feature-icon text-8xl text-primary">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            map
+                        </span>
+                    </div>
+
+                    <h3 class="mt-5 text-xl font-semibold text-primary">
+                        Public Food Map
+                    </h3>
+
+                    <p class="mt-3 text-slate-500">
+                        View approved food-support services
+                        and public community listings.
+                    </p>
+
+                </a>
+
+                <a href="{% url 'organizations:list' %}"
+                   class="public-feature-card flex flex-col items-center text-center">
+
+                    <div class="public-feature-icon text-8xl text-primary">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            apartment
+                        </span>
+                    </div>
+
+                    <h3 class="mt-5 text-xl font-semibold text-primary">
+                        Organizations
+                    </h3>
+
+                    <p class="mt-3 text-slate-500">
+                        Review organization profiles,
+                        applications, and participation records.
+                    </p>
+
+                </a>
+
+                <a href="{% url 'admin:index' %}"
+                   class="public-feature-card flex flex-col items-center text-center">
+
+                    <div class="public-feature-icon text-8xl text-primary">
+                        <span class="material-symbols-rounded" aria-hidden="true">
+                            admin_panel_settings
+                        </span>
+                    </div>
+
+                    <h3 class="mt-5 text-xl font-semibold text-primary">
+                        Administration
+                    </h3>
+
+                    <p class="mt-3 text-slate-500">
+                        Access moderation tools, approvals,
+                        and platform management workflows.
+                    </p>
+
+                </a>
+
+            </div>
+
+        </section>
+
+        <section class="mx-auto max-w-6xl px-6 pb-16">
+
+            <div class="grid gap-8 md:grid-cols-2">
+
+                <article class="public-card rounded-3xl bg-white p-8 shadow-secondary shadow-xl">
+
+                    <h2 class="text-3xl font-bold text-primary">
+                        Announcements
+                    </h2>
+
+                    <div class="mt-6 space-y-4 text-slate-600">
+
+                        <p>
+                            New funding opportunities available
+                        </p>
+
+                        <p>
+                            Burnaby storage capacity updated
+                        </p>
+
+                        <p>
+                            Scheduled platform maintenance Friday
+                        </p>
+
+                    </div>
+
+                </article>
+
+                <article class="public-card rounded-3xl bg-white p-8 shadow-secondary shadow-xl">
+
+                    <h2 class="text-3xl font-bold text-primary">
+                        Opportunities
+                    </h2>
+
+                    <div class="mt-6 space-y-4 text-slate-600">
+
+                        <p>
+                            Produce pickup assistance needed
+                        </p>
+
+                        <p>
+                            Refrigerated storage currently available
+                        </p>
+
+                        <p>
+                            Volunteer coordination request open
+                        </p>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    {% include "public/components/_public_footer.html" %}
+</div>
+
+<script src="{% static 'public/js/public-header.js' %}" defer></script>
+{% endblock %}
