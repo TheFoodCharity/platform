@@ -26,10 +26,11 @@ class OrganizationsView(ListView):
 
 class DispatchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        match request.user.organizations.count():
-            case 0:
+        match list(request.user.organizations.all()[:2]):
+            case []:
                 return redirect(reverse("organizations:apply"))
-            case 1:
+            case [organization]:
+                set_current_organization(request, organization)
                 # TODO(alex): redirect to that org's dashboard once it exists
                 return redirect("/")
             case _:
