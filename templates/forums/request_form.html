@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load crispy_forms_tags %}
 
 {% block page_title %}Request New Forum{% endblock %}
 
@@ -18,26 +19,7 @@
 
     <form class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm" method="post">
       {% csrf_token %}
-      <div class="grid gap-5">
-        {% for field in form %}
-          <label class="form-control w-full">
-            <span class="label-text font-semibold">{{ field.label }}</span>
-            <div class="mt-2">{{ field }}</div>
-            {% if field.help_text %}
-              <span class="mt-1 text-sm text-slate-500">{{ field.help_text }}</span>
-            {% endif %}
-            {% for error in field.errors %}
-              <span class="mt-1 text-sm text-error">{{ error }}</span>
-            {% endfor %}
-          </label>
-        {% endfor %}
-      </div>
-
-      {% if form.non_field_errors %}
-        <div class="alert alert-error mt-5">
-          {{ form.non_field_errors }}
-        </div>
-      {% endif %}
+      {% crispy form %}
 
       <div class="mt-6 flex justify-end gap-2">
         <a class="btn btn-ghost" href="{% url 'forums:request_list' %}">Cancel</a>

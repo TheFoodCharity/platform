@@ -1,11 +1,12 @@
 from django import forms
 
 from organizations.models import Organization
+from theme.forms import ThemedFormMixin
 
 from .models import ForumPost, ForumSpaceRequest, approved_member_organizations
 
 
-class ForumSpaceRequestForm(forms.ModelForm):
+class ForumSpaceRequestForm(ThemedFormMixin, forms.ModelForm):
     class Meta:
         model = ForumSpaceRequest
         fields = [
@@ -32,13 +33,6 @@ class ForumSpaceRequestForm(forms.ModelForm):
             organizations = approved_member_organizations(user)
         self.fields["requested_by_org"].queryset = organizations
         self.fields["requested_by_org"].required = False
-        for field in self.fields.values():
-            if isinstance(field.widget, forms.Textarea):
-                field.widget.attrs["class"] = "textarea textarea-bordered w-full"
-            elif isinstance(field.widget, forms.Select):
-                field.widget.attrs["class"] = "select select-bordered w-full"
-            else:
-                field.widget.attrs["class"] = "input input-bordered w-full"
 
 
 class ForumPostForm(forms.ModelForm):
