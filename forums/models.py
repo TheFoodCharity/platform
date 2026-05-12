@@ -148,6 +148,15 @@ class ForumSpaceRequest(models.Model):
         self.admin_notes = admin_notes
         self.save(update_fields=["status", "reviewed_by", "reviewed_at", "admin_notes", "updated_at"])
 
+    def get_status_class(self):
+        match self.status:
+            case self.Status.APPROVED:
+                return "badge-success"
+            case self.Status.DECLINED:
+                return "badge-error"
+            case _:
+                return "badge-warning"
+
 
 class ForumSpaceQuerySet(models.QuerySet):
     def visible_to(self, user):
