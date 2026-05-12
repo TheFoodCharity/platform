@@ -141,7 +141,7 @@ class SelectView(LoginRequiredMixin, ListView):
     context_object_name = "organizations"
 
     def get(self, request, *args, **kwargs):
-        if not request.htmx and request.organization:
+        if (not request.htmx or request.htmx.boosted) and request.organization:
             return redirect("/")  # TODO(alex): redirect to dashboard
         return super().get(request, *args, **kwargs)
 
@@ -150,7 +150,7 @@ class SelectView(LoginRequiredMixin, ListView):
 
     def get_template_names(self):
         names = super().get_template_names()
-        if self.request.htmx:
+        if self.request.htmx and not self.request.htmx.boosted:
             return [f"{name}#options" for name in names]
 
         return names
