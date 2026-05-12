@@ -14,6 +14,4 @@ def food_help_map(request):
 
 
 def demo_interest(request):
-    return HttpResponse(
-        "Thanks! Demo requests are open - contact us to schedule one."
-    )
+    return HttpResponse("Thanks! Demo requests are open - contact us to schedule one.")
