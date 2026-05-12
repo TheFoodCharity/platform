@@ -356,3 +356,40 @@ class ForumSpaceOrganizationMembership(ForumMembershipBase):
 
     def __str__(self):
         return f"{self.organization} in {self.space}"
+
+
+class ForumPost(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    space = models.ForeignKey(ForumSpace, related_name="posts", on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="forum_posts",
+        on_delete=models.PROTECT,
+    )
+    body = models.TextField()
+    is_removed = models.BooleanField(default=False)
+    moderated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="moderated_forum_posts",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+    )
+    moderated_at = models.DateTimeField(null=True, blank=True)
+    moderation_note = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"Post by {self.author} in {self.space}"
+
+    def remove(self, moderator, note=""):
+        self.is_removed = True
+        self.moderated_by = moderator
+        self.moderated_at = timezone.now()
+        if note:
+            self.moderation_note = note
+        self.save(update_fields=["is_removed", "moderated_by", "moderated_at", "moderation_note", "updated_at"])

@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 
 from .models import (
+    ForumPost,
     ForumSpace,
     ForumSpaceOrganizationMembership,
     ForumSpaceRequest,
@@ -16,6 +17,12 @@ class ForumSpaceUserMembershipInline(admin.TabularInline):
 class ForumSpaceOrganizationMembershipInline(admin.TabularInline):
     model = ForumSpaceOrganizationMembership
     extra = 0
+
+
+class ForumPostInline(admin.TabularInline):
+    model = ForumPost
+    extra = 0
+    readonly_fields = ["created_at", "updated_at", "moderated_at"]
 
 
 @admin.register(ForumSpaceRequest)
@@ -76,6 +83,15 @@ class ForumSpaceAdmin(admin.ModelAdmin):
     search_fields = ["title", "description", "region", "municipality"]
     readonly_fields = ["created_at", "updated_at", "last_activity_at"]
     inlines = [
+        ForumPostInline,
         ForumSpaceUserMembershipInline,
         ForumSpaceOrganizationMembershipInline,
     ]
+
+
+@admin.register(ForumPost)
+class ForumPostAdmin(admin.ModelAdmin):
+    list_display = ["space", "author", "created_at", "is_removed"]
+    list_filter = ["is_removed", "created_at"]
+    search_fields = ["body", "author__first_name", "author__last_name", "author__email", "space__title"]
+    readonly_fields = ["created_at", "updated_at", "moderated_at"]
