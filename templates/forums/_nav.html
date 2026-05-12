@@ -1,0 +1,17 @@
+<header class="forum-module-header">
+  <div>
+    <p class="forum-crumb">Member platform / governed access / forum</p>
+    <h1>{{ forum_header_title|default:"Forums" }}</h1>
+    <p>{{ forum_header_description|default:"Member-only communication spaces and forum applications." }}</p>
+  </div>
+  <div class="forum-userbox">
+    <strong>{{ request.user.get_full_name|default:request.user }}</strong><br>
+    Role: {{ request.user.role|default:"Verified Member" }}
+  </div>
+</header>
+
+<nav class="forum-header-nav" aria-label="Forum module sections">
+  <a class="{% if forum_nav_active == 'applications' %}is-active{% endif %}" href="{% url 'forums:request_list' %}">
+    Applications
+  </a>
+</nav>

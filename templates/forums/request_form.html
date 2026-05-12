@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  {% include "forums/_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<main class="forum-shell forum-shell-narrow">
+  {% include "forums/_nav.html" %}
+
+  <form class="forum-form forum-panel" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit Request</button>
+  </form>
+
+  <p class="forum-return-link">
+    <a class="forum-link" href="{% url 'forums:request_list' %}">Back to Applications</a>
+  </p>
+</main>
+{% endblock %}

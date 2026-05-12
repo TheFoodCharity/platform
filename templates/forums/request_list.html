@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  {% include "forums/_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<main class="forum-shell">
+  {% include "forums/_nav.html" %}
+
+  <section class="forum-section">
+    <div class="forum-section-header">
+      <h2 class="forum-section-title">Applications</h2>
+      {% if can_request %}
+        <a class="forum-button forum-button-secondary" href="{% url 'forums:request_create' %}">New Application</a>
+      {% endif %}
+    </div>
+    <table class="forum-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          {% if request.user.is_staff %}
+            <th>Requested by</th>
+          {% endif %}
+          <th>Status</th>
+          <th>Topic</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for forum_request in applications %}
+          <tr>
+            <td>
+              <a class="forum-link" href="{% url 'forums:request_detail' forum_request.id %}">
+                {{ forum_request.title }}
+              </a>
+            </td>
+            {% if request.user.is_staff %}
+              <td>{{ forum_request.requested_by_user.get_full_name|default:forum_request.requested_by_user }}</td>
+            {% endif %}
+            <td>
+              <span class="forum-status">
+                {% if forum_request.status == "pending" %}
+                  In review
+                {% else %}
+                  {{ forum_request.get_status_display }}
+                {% endif %}
+              </span>
+            </td>
+            <td>{{ forum_request.get_topic_category_display }}</td>
+            <td>{{ forum_request.created_at|date:"M j, Y" }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{% if request.user.is_staff %}5{% else %}4{% endif %}">
+              {% if request.user.is_staff %}
+                No forum applications have been submitted yet.
+              {% else %}
+                You have not submitted a forum application yet.
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

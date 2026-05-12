@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  {% include "forums/_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<main class="forum-shell">
+  {% include "forums/_nav.html" %}
+
+  <nav class="forum-page-tabs" aria-label="Forum application sections">
+    <a href="#overview">Overview</a>
+    <a href="#participants">Suggested Participants</a>
+    <a href="#review">Admin Review</a>
+  </nav>
+
+  <div class="forum-content">
+    <section id="overview" class="forum-panel">
+      <div class="forum-panel-header">
+        <div>
+          <h2>Request Overview</h2>
+          <p class="forum-muted">Status: <span class="forum-status">{{ forum_request.get_status_display }}</span></p>
+        </div>
+        <a class="forum-link" href="{% url 'forums:request_list' %}">Back to Applications</a>
+      </div>
+        <dl class="forum-meta">
+          <dt>Purpose</dt>
+          <dd>{{ forum_request.purpose }}</dd>
+          <dt>Topic</dt>
+          <dd>{{ forum_request.get_topic_category_display }}</dd>
+          <dt>Region</dt>
+          <dd>{{ forum_request.region|default:"Not specified" }}</dd>
+          <dt>Municipality</dt>
+          <dd>{{ forum_request.municipality|default:"Not specified" }}</dd>
+          <dt>Visibility</dt>
+          <dd>{{ forum_request.get_visibility_preference_display }}</dd>
+          <dt>Reason</dt>
+          <dd>{{ forum_request.reason_for_request }}</dd>
+          <dt>Requested by</dt>
+          <dd>{{ forum_request.requested_by_user }}</dd>
+          <dt>Organization</dt>
+          <dd>{{ forum_request.requested_by_org|default:"Not specified" }}</dd>
+        </dl>
+    </section>
+
+    <section id="participants" class="forum-panel forum-section">
+      <h2>Suggested Participants</h2>
+      <p>{{ forum_request.suggested_participants|linebreaksbr|default:"No suggestions provided." }}</p>
+    </section>
+
+    <section id="review" class="forum-panel forum-section">
+      <h2>Admin Review</h2>
+      <dl class="forum-meta">
+        {% if forum_request.reviewed_by %}
+          <dt>Reviewed by</dt>
+          <dd>{{ forum_request.reviewed_by }}</dd>
+          <dt>Reviewed at</dt>
+          <dd>{{ forum_request.reviewed_at|date:"M j, Y g:i A" }}</dd>
+        {% endif %}
+        <dt>Admin notes</dt>
+        <dd>{{ forum_request.admin_notes|linebreaksbr|default:"None" }}</dd>
+      </dl>
+
+      {% if request.user.is_staff %}
+        <p>
+          <a class="forum-link" href="{% url 'admin:forums_forumspacerequest_change' forum_request.id %}">
+            Open this request in Django admin
+          </a>
+        </p>
+      {% endif %}
+    </section>
+  </div>
+</main>
+{% endblock %}
