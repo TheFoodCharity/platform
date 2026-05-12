@@ -1,30 +1,16 @@
-{% extends "base.html" %}
+{% extends "accounts/base.html" %}
+{% load crispy_forms_tags %}
 
-{% block content %}
-    <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-            <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-                Sign in to your account
-            </h2>
-        </div>
+{% block page_title %}Sign in to your account{% endblock %}
 
-        <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-            <form method="post" class="space-y-6">
-                {% csrf_token %}
-
-                {{ form }}
-
-                <div>
-                    <button type="submit" class="btn btn-primary w-full">Sign in</button>
-                </div>
-            </form>
-
-            <p class="mt-10 text-center text-sm/6 text-gray-500">
-                Don't have an account?
-                <a href="{% url 'accounts:register' %}" class="font-semibold text-indigo-600 hover:text-indigo-500">
-                    Sign up
-                </a>
-            </p>
-        </div>
-    </div>
+{% block page_content %}
+    <form method="post" class="flex flex-col gap-2">
+        {% csrf_token %}
+        {% crispy form %}
+        <button type="submit" class="btn btn-primary w-full mt-2">Sign in</button>
+    </form>
+    <p class="mt-4 text-center text-sm text-base-content/60">
+        Don't have an account?
+        <a href="{% url 'accounts:register' %}" class="link link-primary font-semibold">Sign up</a>
+    </p>
 {% endblock %}

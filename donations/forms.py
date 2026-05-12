@@ -1,32 +1,73 @@
+from crispy_forms.layout import Div, Fieldset, Layout, Row
 from django import forms
 
 from storage.models import StorageLocation
+from theme.forms import ThemedFormMixin
 
 from .models import Donation, DonationFoodItem, FoodRequest
 
-INPUT_CLASS = "input input-bordered w-full"
-SELECT_CLASS = "select select-bordered w-full"
-TEXTAREA_CLASS = "textarea textarea-bordered w-full"
-CHECKBOX_CLASS = "checkbox checkbox-primary"
-RADIO_CLASS = "radio radio-primary"
 
-FOOD_TYPE_INTAKE = [
-    (Donation.FoodCategory.BAKED_GOODS, "Baked Goods", "e.g. Bread, pastries"),
-    (Donation.FoodCategory.DAIRY, "Dairy", "e.g. Milk, cheese"),
-    (Donation.FoodCategory.MEAT_PROTEIN, "Meat & Protein", "e.g. Beef, chicken, eggs"),
-    (Donation.FoodCategory.NON_FOOD, "Non-Food", "e.g. Latex gloves, disposable cups, etc."),
-    (Donation.FoodCategory.NON_PERISHABLE, "Non-Perishable", "e.g. Canned vegetables, granola bars, uncooked pasta"),
-    (Donation.FoodCategory.OTHER, "Other", "e.g. Water, seedlings, etc."),
-    (Donation.FoodCategory.PREPARED_INDIVIDUAL, "Prepared - Individually Packaged", "e.g. Sandwiches"),
-    (Donation.FoodCategory.PREPARED_TRAYS, "Prepared - Trays/Multi-Serving", "e.g. Lasagna"),
-    (Donation.FoodCategory.PRODUCE, "Produce", "e.g. Peppers, eggplant"),
-]
+class DonationForm(ThemedFormMixin, forms.ModelForm):
+    layout = Layout(
+        Fieldset(
+            "Donor Information",
+            Row(
+                "company_name",
+                "donor_name",
+                Div("address_1", css_class="md:col-span-2"),
+                Div("address_2", css_class="md:col-span-2"),
+                "city",
+                "province_or_state",
+                "postal_code",
+                "donor_contact",
+                "contact_email",
+                "contact_phone",
+            ),
+        ),
+        Fieldset(
+            "Pickup Details",
+            Row(
+                Div("pickup_location", css_class="md:col-span-2"),
+                Div("pickup_day", css_class="md:col-span-2"),
+                "pickup_ready_time",
+                "pickup_end_time",
+                "pickup_window",
+            ),
+        ),
+        Fieldset(
+            "Logistics",
+            Row(
+                "storage_requirement",
+                "fits_in_car",
+                "requires_van",
+                "requires_cube_van",
+                "requires_refrigerated_vehicle",
+                "requires_pallet_jack",
+                "requires_forklift",
+                "loading_dock_available",
+                "donor_can_help_load",
+            ),
+            "people_fed_estimate",
+        ),
+        Fieldset(
+            "Food Safety",
+            "food_safety_agreement",
+        ),
+        Fieldset(
+            "Other Information",
+            "special_handling_notes",
+            "chain_of_custody_notes",
+            "other_information",
+        ),
+    )
 
-
-class DonationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        apply_form_control_classes(self.fields)
+        self.fields[
+            "food_safety_agreement"
+        ].help_text = (
+            "The food is safe for human consumption, has been stored properly, and has not been served from a buffet."
+        )
 
     def clean_food_safety_agreement(self):
         agreed = self.cleaned_data["food_safety_agreement"]
@@ -79,96 +120,45 @@ class DonationForm(forms.ModelForm):
         }
 
 
-class DonationFoodItemIntakeForm(forms.Form):
-    selected = forms.BooleanField(required=False)
-    food_category = forms.ChoiceField(choices=Donation.FoodCategory.choices, widget=forms.HiddenInput)
-    packaging = forms.ChoiceField(
-        choices=[("", "Choose packaging"), *DonationFoodItem.Packaging.choices],
-        required=False,
-        label="How is it packaged?",
+class DonationFoodItemForm(ThemedFormMixin, forms.ModelForm):
+    layout = Layout(
+        Row("food_category", "packaging"),
+        Row("quantity", "description"),
     )
-    quantity = forms.IntegerField(required=False, min_value=1, label="How many?")
-    description = forms.CharField(required=False, label="Describe it:")
 
-    def __init__(self, *args, **kwargs):
-        self.food_label = kwargs.pop("food_label", "")
-        self.food_example = kwargs.pop("food_example", "")
-        super().__init__(*args, **kwargs)
-        apply_form_control_classes(self.fields)
-
-    def clean(self):
-        cleaned_data = super().clean()
-        selected = cleaned_data.get("selected")
-        packaging = cleaned_data.get("packaging")
-        quantity = cleaned_data.get("quantity")
-        description = cleaned_data.get("description")
-
-        if packaging or quantity or description:
-            selected = True
-            cleaned_data["selected"] = True
-
-        if selected:
-            if not packaging:
-                self.add_error("packaging", "Choose how this food is packaged.")
-            if quantity is None:
-                self.add_error("quantity", "Enter how many packages are available.")
-
-        return cleaned_data
+    class Meta:
+        model = DonationFoodItem
+        fields = ["food_category", "packaging", "quantity", "description"]
 
 
-BaseDonationFoodItemFormSet = forms.formset_factory(
-    DonationFoodItemIntakeForm,
-    extra=0,
+DonationFoodItemFormSet = forms.inlineformset_factory(
+    Donation,
+    DonationFoodItem,
+    form=DonationFoodItemForm,
+    extra=1,
+    can_delete=True,
     min_num=1,
-    validate_min=False,
+    validate_min=True,
+    max_num=20,
+    validate_max=True,
 )
 
 
-class DonationFoodItemFormSet(BaseDonationFoodItemFormSet):
-    def __init__(self, *args, **kwargs):
-        donation = kwargs.pop("donation", None)
-        initial = kwargs.pop("initial", None)
-        if initial is None:
-            initial = get_food_item_initial(donation)
-        super().__init__(*args, initial=initial, prefix="food_items", **kwargs)
+class FoodRequestForm(ThemedFormMixin, forms.ModelForm):
+    layout = Layout(
+        Row("receiver_name", "organization", "email", "phone"),
+        Row("requested_quantity", "requested_unit"),
+        Fieldset(
+            "Storage",
+            "storage_required",
+            "preferred_storage",
+            "storage_notes",
+        ),
+        "notes",
+    )
 
-        for form, (_, label, example) in zip(self.forms, FOOD_TYPE_INTAKE, strict=False):
-            form.food_label = label
-            form.food_example = example
-
-    def clean(self):
-        super().clean()
-        if any(self.errors):
-            return
-
-        if not any(form.cleaned_data.get("selected") for form in self.forms):
-            raise forms.ValidationError("Select at least one food type.")
-
-
-def get_food_item_initial(donation=None):
-    existing_items = {}
-    if donation is not None and donation.pk:
-        existing_items = {item.food_category: item for item in donation.food_items.all()}
-
-    initial = []
-    for value, _label, _example in FOOD_TYPE_INTAKE:
-        item = existing_items.get(value)
-        initial.append(
-            {
-                "selected": item is not None,
-                "food_category": value,
-                "packaging": item.packaging if item else "",
-                "quantity": item.quantity if item else None,
-                "description": item.description if item else "",
-            },
-        )
-    return initial
-
-
-class FoodRequestForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        apply_form_control_classes(self.fields)
         self.fields["preferred_storage"].queryset = StorageLocation.objects.filter(
             is_active=True,
             approval_status=StorageLocation.ApprovalStatus.APPROVED,
@@ -197,24 +187,3 @@ class FoodRequestForm(forms.ModelForm):
             "storage_notes": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
-
-
-def apply_form_control_classes(fields):
-    for field in fields.values():
-        widget = field.widget
-        existing_class = widget.attrs.get("class", "")
-
-        if isinstance(widget, forms.CheckboxInput):
-            css_class = CHECKBOX_CLASS
-        elif isinstance(widget, forms.RadioSelect):
-            css_class = RADIO_CLASS
-        elif isinstance(widget, forms.Select):
-            css_class = SELECT_CLASS
-        elif isinstance(widget, forms.Textarea):
-            css_class = TEXTAREA_CLASS
-        elif isinstance(widget, forms.HiddenInput):
-            continue
-        else:
-            css_class = INPUT_CLASS
-
-        widget.attrs["class"] = f"{existing_class} {css_class}".strip()

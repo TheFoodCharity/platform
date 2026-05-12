@@ -1,0 +1,6 @@
+{# Usage: {% include "components/_alert.html" with message="..." variant="info" icon="info" %} #}
+{# variant: info (default), success, warning, error #}
+<div role="alert" class="alert alert-{{ variant|default:'info' }} {{ extra_class }}">
+    {% if icon %}<span class="material-symbols-rounded">{{ icon }}</span>{% endif %}
+    <span>{{ message }}</span>
+</div>

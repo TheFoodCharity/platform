@@ -9,7 +9,8 @@
     {% tailwind_css %}
     {% htmx_script %}
 </head>
-<body hx-boost="true" class="h-full bg-white text-slate-900 antialiased">
+<body class="h-full bg-white text-slate-900 antialiased" hx-boost="true"
+      hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
 {% block content %}{% endblock %}
 </body>
 </html>

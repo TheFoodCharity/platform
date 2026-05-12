@@ -1,40 +1,24 @@
-{% extends "base.html" %}
+{% extends "accounts/base.html" %}
+{% load crispy_forms_tags %}
 
-{% block content %}
-    <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-        <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-            <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-                Verify your email
-            </h2>
+{% block page_title %}Verify your email{% endblock %}
+
+{% block page_content %}
+    {% if messages %}
+        {% for message in messages %}
+            <p class="text-center text-sm">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    <p class="text-center text-sm text-base-content/60 mb-4">Enter the 6-character code sent to your email.</p>
+
+    <form method="post" class="flex flex-col gap-2">
+        {% csrf_token %}
+        {% crispy form %}
+        <div class="flex flex-col gap-2 mt-2">
+            <button type="submit" class="btn btn-primary w-full">Verify</button>
+            <button type="button" class="btn btn-soft btn-primary w-full" hx-post="{% url 'accounts:verify_resend' %}">
+                Send a new code
+            </button>
         </div>
-
-        <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-            <div class="text-center">
-                {% if messages %}
-                    {% for message in messages %}
-                        <p>{{ message }}</p>
-                    {% endfor %}
-                {% endif %}
-
-                <p>Enter the 6-character code sent to your email.</p>
-            </div>
-
-            <form method="post" class="mt-5 space-y-6">
-                {% csrf_token %}
-
-                {{ form }}
-
-                <div class="flex flex-col gap-y-2">
-                    <button type="submit" class="btn btn-primary w-full">Verify</button>
-                    <button type="submit" form="resend" class="btn btn-soft btn-primary w-full">
-                        Send a new code
-                    </button>
-                </div>
-            </form>
-
-            <form id="resend" method="post" action="{% url 'accounts:verify_resend' %}">
-                {% csrf_token %}
-            </form>
-        </div>
-    </div>
+    </form>
 {% endblock %}

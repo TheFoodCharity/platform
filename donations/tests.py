@@ -1,10 +1,11 @@
+from django import forms
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from storage.models import StorageLocation
 
-from .forms import FOOD_TYPE_INTAKE, DonationFoodItemFormSet, DonationForm, FoodRequestForm
+from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestForm
 from .models import Donation, DonationFoodItem, FoodRequest
 
 
@@ -25,8 +26,10 @@ class DonationFormTests(SimpleTestCase):
         formset = DonationFoodItemFormSet()
 
         self.assertEqual(formset.min_num, 1)
-        self.assertIn("selected", formset.forms[0].fields)
+        self.assertTrue(formset.can_delete)
+        self.assertNotIn("selected", formset.forms[0].fields)
         self.assertIn("food_category", formset.forms[0].fields)
+        self.assertIsInstance(formset.forms[0].fields["food_category"].widget, forms.Select)
         self.assertIn("packaging", formset.forms[0].fields)
         self.assertIn("quantity", formset.forms[0].fields)
         self.assertIn("description", formset.forms[0].fields)
@@ -69,27 +72,15 @@ class DonationIntakeViewTests(TestCase):
             "special_handling_notes": "",
             "chain_of_custody_notes": "",
             "other_information": "Use the loading door.",
-            "food_items-TOTAL_FORMS": str(len(FOOD_TYPE_INTAKE)),
+            "food_items-TOTAL_FORMS": "1",
             "food_items-INITIAL_FORMS": "0",
             "food_items-MIN_NUM_FORMS": "1",
-            "food_items-MAX_NUM_FORMS": "1000",
+            "food_items-MAX_NUM_FORMS": "20",
+            "food_items-0-food_category": Donation.FoodCategory.PRODUCE,
+            "food_items-0-packaging": DonationFoodItem.Packaging.BOXES,
+            "food_items-0-quantity": "12",
+            "food_items-0-description": "Mixed produce",
         }
-
-        for index, (food_category, _label, _example) in enumerate(FOOD_TYPE_INTAKE):
-            data[f"food_items-{index}-food_category"] = food_category
-            data[f"food_items-{index}-packaging"] = ""
-            data[f"food_items-{index}-quantity"] = ""
-            data[f"food_items-{index}-description"] = ""
-
-        produce_index = next(
-            index
-            for index, (food_category, _label, _example) in enumerate(FOOD_TYPE_INTAKE)
-            if food_category == Donation.FoodCategory.PRODUCE
-        )
-        data[f"food_items-{produce_index}-selected"] = "on"
-        data[f"food_items-{produce_index}-packaging"] = DonationFoodItem.Packaging.BOXES
-        data[f"food_items-{produce_index}-quantity"] = "12"
-        data[f"food_items-{produce_index}-description"] = "Mixed produce"
 
         response = self.client.post(reverse("donations:create"), data)
 

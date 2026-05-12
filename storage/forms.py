@@ -1,9 +1,11 @@
 from django import forms
 
+from theme.forms import ThemedFormMixin
+
 from .models import StorageLocation
 
 
-class StorageLocationForm(forms.ModelForm):
+class StorageLocationForm(ThemedFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

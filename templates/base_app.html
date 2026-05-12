@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="drawer lg:drawer-open">
+        <input id="sidebar-toggle" type="checkbox" class="drawer-toggle"/>
+
+        {# Page content #}
+        <div class="drawer-content flex flex-col min-h-screen">
+
+            {# Topbar — hamburger hidden on lg+ where drawer is always open #}
+            <div class="navbar bg-base-100 border-b border-base-200 sticky top-0 z-10">
+                <div class="flex-none lg:hidden">
+                    <label for="sidebar-toggle" class="btn btn-ghost btn-square drawer-button" aria-label="Open menu">
+                        <span class="material-symbols-rounded">menu</span>
+                    </label>
+                </div>
+                <div class="flex-1 px-2">
+                    <span class="font-semibold text-lg">{% block page_title %}{% endblock %}</span>
+                </div>
+                <div class="flex-none gap-2">
+                    {% block page_actions %}{% endblock %}
+                </div>
+            </div>
+
+            {# Main content #}
+            <main class="flex-1 p-4 lg:p-6">
+                {% block page_body %}{% endblock %}
+            </main>
+        </div>
+
+        {# Sidebar #}
+        <div class="drawer-side z-20">
+            <label for="sidebar-toggle" aria-label="Close menu" class="drawer-overlay"></label>
+            <aside class="bg-base-100 border-r border-base-200 w-64 min-h-screen flex flex-col">
+                <div class="p-4 border-b border-base-200">
+                    <a href="/" class="font-bold text-xl text-primary">FCACP</a>
+                </div>
+                <ul class="menu menu-lg flex-1 p-2">
+                    {% block sidenav %}
+                        <li><a href="{% url 'organizations:list' %}">
+                            <span class="material-symbols-rounded">apartment</span> Organizations
+                        </a></li>
+                        <li><a href="{% url 'donations:list' %}">
+                            <span class="material-symbols-rounded">hand_package</span> Donations
+                        </a></li>
+                        <li><a href="{% url 'storage:list' %}">
+                            <span class="material-symbols-rounded">warehouse</span> Storage
+                        </a></li>
+                        <li><a href="{% url 'collaborations:list' %}">
+                            <span class="material-symbols-rounded">handshake</span> Collaborations
+                        </a></li>
+                    {% endblock %}
+                </ul>
+                <div class="p-4 border-t border-base-200">
+                    {% if user.is_authenticated %}
+                        <div class="dropdown dropdown-top w-full">
+                            <div tabindex="0" role="button" class="btn btn-ghost w-full justify-start gap-2">
+                                <span class="material-symbols-rounded">account_circle</span>
+                                <span class="truncate">{{ user.get_full_name|default:user.email }}</span>
+                                <span class="material-symbols-rounded ml-auto">expand_less</span>
+                            </div>
+                            <ul tabindex="0"
+                                class="dropdown-content menu bg-base-100 rounded-box border border-base-200 z-10 w-full p-2 shadow-lg mb-1">
+                                <li>
+                                    <button type="button" hx-post="{% url 'accounts:logout' %}">
+                                        <span class="material-symbols-rounded">logout</span> Sign out
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </aside>
+        </div>
+    </div>
+{% endblock %}

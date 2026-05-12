@@ -36,6 +36,7 @@ INTERNAL_IPS = ["127.0.0.1", "::1"]
 
 INSTALLED_APPS = [
     # 3rd-party
+    "crispy_forms",
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
@@ -158,13 +159,17 @@ TAILWIND_APP_NAME = "theme"
 if os.name == "nt":
     NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 
-FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
+CRISPY_FAIL_SILENTLY = not DEBUG
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = ["fcacp"]
+CRISPY_TEMPLATE_PACK = "fcacp"
 
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "organizations:dispatch"
+LOGOUT_REDIRECT_URL = "accounts:login"
 
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/

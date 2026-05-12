@@ -1,16 +1,22 @@
 from django import forms
-from django.contrib.auth.forms import BaseUserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
+
+from theme.forms import ThemedFormMixin
 
 from .models import VERIFICATION_CODE_ALPHABET, User
 
 
-class RegistrationForm(BaseUserCreationForm):
+class LoginForm(ThemedFormMixin, AuthenticationForm):
+    pass
+
+
+class RegistrationForm(ThemedFormMixin, BaseUserCreationForm):
     class Meta:
         model = User
         fields = ["email", "first_name", "last_name"]
 
 
-class VerificationForm(forms.Form):
+class VerificationForm(ThemedFormMixin, forms.Form):
     code = forms.CharField(
         min_length=6,
         max_length=6,

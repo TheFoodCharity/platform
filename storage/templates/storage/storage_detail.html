@@ -1,100 +1,98 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
-  <div class="mx-auto max-w-5xl">
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Storage location</p>
-        <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ location.name }}</h1>
-      </div>
-      <div class="flex gap-2">
-        <a class="btn btn-outline btn-primary" href="{% url 'storage:list' %}">Back</a>
-        <a class="btn btn-primary" href="{% url 'storage:edit' location.id %}">Edit</a>
-      </div>
-    </div>
-
-    <div class="grid gap-6">
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <h2 class="text-2xl font-bold text-slate-950">Basic Information</h2>
-        <dl class="mt-6 grid gap-4 md:grid-cols-2">
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Owner/Operator</dt>
-            <dd class="mt-1 text-slate-950">{{ location.owner_operator }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Municipality</dt>
-            <dd class="mt-1 text-slate-950">{{ location.municipality }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Region</dt>
-            <dd class="mt-1 text-slate-950">{{ location.region }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Province</dt>
-            <dd class="mt-1 text-slate-950">{{ location.province }}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <h2 class="text-2xl font-bold text-slate-950">Storage Details</h2>
-        <dl class="mt-6 grid gap-4 md:grid-cols-2">
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Storage Type</dt>
-            <dd class="mt-1 text-slate-950">{{ location.get_storage_type_display }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Available Space</dt>
-            <dd class="mt-1 text-slate-950">{{ location.available_space }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Capacity Status</dt>
-            <dd class="mt-1 text-slate-950">{{ location.get_capacity_status_display }}</dd>
-          </div>
-          <div class="md:col-span-2">
-            <dt class="text-sm font-semibold text-slate-500">Accepted Food Types</dt>
-            <dd class="mt-1 text-slate-950">{{ location.accepted_food_types }}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <h2 class="text-2xl font-bold text-slate-950">Access and Equipment</h2>
-        <dl class="mt-6 grid gap-4 md:grid-cols-2">
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Access Hours</dt>
-            <dd class="mt-1 text-slate-950">{{ location.access_hours }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Restrictions</dt>
-            <dd class="mt-1 text-slate-950">{{ location.restrictions }}</dd>
-          </div>
-        </dl>
-
-        <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <span class="badge badge-outline">Loading Dock: {{ location.has_loading_dock }}</span>
-          <span class="badge badge-outline">Ramp Access: {{ location.has_ramp_access }}</span>
-          <span class="badge badge-outline">Forklift: {{ location.has_forklift }}</span>
-          <span class="badge badge-outline">Pallet Jack: {{ location.has_pallet_jack }}</span>
-          <span class="badge badge-outline">Hand Truck: {{ location.has_hand_truck }}</span>
+{% block page_body %}
+    <div class="mx-auto max-w-5xl">
+        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-wide text-primary">Storage location</p>
+                <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ location.name }}</h1>
+            </div>
+            <div class="flex gap-2">
+                <a class="btn btn-outline btn-primary" href="{% url 'storage:list' %}">Back</a>
+                <a class="btn btn-primary" href="{% url 'storage:edit' location.id %}">Edit</a>
+            </div>
         </div>
-      </section>
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <h2 class="text-2xl font-bold text-slate-950">Approval</h2>
-        <dl class="mt-6 grid gap-4 md:grid-cols-2">
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Approval Status</dt>
-            <dd class="mt-1 text-slate-950">{{ location.get_approval_status_display }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Permission Level</dt>
-            <dd class="mt-1 text-slate-950">{{ location.get_permission_level_display }}</dd>
-          </div>
-        </dl>
-      </section>
+        <div class="grid gap-6">
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-950">Basic Information</h2>
+                <dl class="mt-6 grid gap-4 md:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Owner/Operator</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.owner_operator }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Municipality</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.municipality }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Region</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.region }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Province</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.province }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-950">Storage Details</h2>
+                <dl class="mt-6 grid gap-4 md:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Storage Type</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.get_storage_type_display }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Available Space</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.available_space }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Capacity Status</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.get_capacity_status_display }}</dd>
+                    </div>
+                    <div class="md:col-span-2">
+                        <dt class="text-sm font-semibold text-slate-500">Accepted Food Types</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.accepted_food_types }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-950">Access and Equipment</h2>
+                <dl class="mt-6 grid gap-4 md:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Access Hours</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.access_hours }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Restrictions</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.restrictions }}</dd>
+                    </div>
+                </dl>
+
+                <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <span class="badge badge-outline">Loading Dock: {{ location.has_loading_dock }}</span>
+                    <span class="badge badge-outline">Ramp Access: {{ location.has_ramp_access }}</span>
+                    <span class="badge badge-outline">Forklift: {{ location.has_forklift }}</span>
+                    <span class="badge badge-outline">Pallet Jack: {{ location.has_pallet_jack }}</span>
+                    <span class="badge badge-outline">Hand Truck: {{ location.has_hand_truck }}</span>
+                </div>
+            </section>
+
+            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+                <h2 class="text-2xl font-bold text-slate-950">Approval</h2>
+                <dl class="mt-6 grid gap-4 md:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Approval Status</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.get_approval_status_display }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-semibold text-slate-500">Permission Level</dt>
+                        <dd class="mt-1 text-slate-950">{{ location.get_permission_level_display }}</dd>
+                    </div>
+                </dl>
+            </section>
+        </div>
     </div>
-  </div>
-</main>
 {% endblock %}

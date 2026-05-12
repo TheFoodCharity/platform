@@ -1,14 +1,15 @@
 {% extends "organizations/application/base.html" %}
+{% load crispy_forms_tags %}
 
 {% block apply_content %}
     <h2>{{ section_title }}</h2>
 
     <form method="post">
         {% csrf_token %}
-        {{ form }}
+        {% crispy form %}
 
         <div class="flex justify-between">
-            <a class="btn btn-soft" href="{% url 'organizations:application' organization.pk %}">Back to application</a>
+            <a class="btn btn-soft" href="{% url 'organizations:application' organization.pk %}">Back</a>
             <button type="submit" class="btn btn-primary"
                     {% if not organization.is_editable %}disabled aria-disabled="true"{% endif %}>
                 Save
