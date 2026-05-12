@@ -32,6 +32,13 @@ class ForumSpaceRequestForm(forms.ModelForm):
             organizations = approved_member_organizations(user)
         self.fields["requested_by_org"].queryset = organizations
         self.fields["requested_by_org"].required = False
+        for field in self.fields.values():
+            if isinstance(field.widget, forms.Textarea):
+                field.widget.attrs["class"] = "textarea textarea-bordered w-full"
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs["class"] = "select select-bordered w-full"
+            else:
+                field.widget.attrs["class"] = "input input-bordered w-full"
 
 
 class ForumPostForm(forms.ModelForm):
@@ -42,5 +49,11 @@ class ForumPostForm(forms.ModelForm):
             "body": "Post",
         }
         widgets = {
-            "body": forms.Textarea(attrs={"rows": 3, "placeholder": "Write a post to this forum"}),
+            "body": forms.Textarea(
+                attrs={
+                    "class": "textarea textarea-bordered min-h-28 w-full",
+                    "rows": 3,
+                    "placeholder": "Write a post to this forum",
+                }
+            ),
         }

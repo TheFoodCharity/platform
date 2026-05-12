@@ -1,172 +1,181 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block extra_head %}
-  {% include "forums/_styles.html" %}
+{% block page_title %}{{ space.title }}{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-ghost btn-sm" href="{% url 'forums:list' %}">Back</a>
 {% endblock %}
 
-{% block content %}
-<main class="forum-detail-shell">
-  <aside class="forum-detail-sidebar" aria-label="Forum sections">
-    <nav>
-      <a
-        class="forum-detail-nav-item {% if forum_detail_section == 'posts' %}is-active{% endif %}"
-        href="{% url 'forums:detail' space.id %}?section=posts"
-      >
-        Posts
-      </a>
-      <a
-        class="forum-detail-nav-item {% if forum_detail_section == 'members' %}is-active{% endif %}"
-        href="{% url 'forums:detail' space.id %}?section=members"
-      >
-        Members
-      </a>
-      {% if request.user.is_staff %}
-        <a
-          class="forum-detail-nav-item {% if forum_detail_section == 'admin' %}is-active{% endif %}"
-          href="{% url 'forums:detail' space.id %}?section=admin"
-        >
-          Admin
-        </a>
-      {% endif %}
-    </nav>
-  </aside>
-
-  <div class="forum-detail-content">
-    <header class="forum-detail-header">
+{% block page_body %}
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1>{{ space.title }}</h1>
-        <p>{{ space.description }}</p>
-        <p>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Forum space</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ space.title }}</h1>
+        <p class="mt-2 text-slate-600">{{ space.description }}</p>
+        <p class="mt-2 text-sm text-slate-500">
           Created by {{ space.created_by.get_full_name|default:space.created_by }}
           at {{ space.created_at|date:"M j, Y g:i A" }}.
         </p>
       </div>
-      <a class="forum-link" href="{% url 'forums:list' %}">Back to Forum Spaces</a>
-    </header>
+      <a class="btn btn-outline btn-primary" href="{% url 'forums:list' %}">Back to Forum Spaces</a>
+    </div>
 
-    <div class="forum-detail-page">
-      {% if forum_detail_section == "posts" %}
-        <section id="posts" class="forum-panel">
-          <div class="forum-section-header">
-            <div>
-              <h2>Posts</h2>
-              <p class="forum-muted">Discussion updates from members of this forum.</p>
-            </div>
-          </div>
+    <div class="mb-6 border-b border-base-300">
+      <div class="tabs tabs-border">
+        <a
+          class="tab {% if forum_detail_section == 'posts' %}tab-active{% endif %}"
+          href="{% url 'forums:detail' space.id %}?section=posts"
+        >
+          Posts
+        </a>
+        <a
+          class="tab {% if forum_detail_section == 'members' %}tab-active{% endif %}"
+          href="{% url 'forums:detail' space.id %}?section=members"
+        >
+          Members
+        </a>
+        {% if request.user.is_staff %}
+          <a
+            class="tab {% if forum_detail_section == 'admin' %}tab-active{% endif %}"
+            href="{% url 'forums:detail' space.id %}?section=admin"
+          >
+            Admin
+          </a>
+        {% endif %}
+      </div>
+    </div>
 
-          <div class="forum-post-log">
-            {% for row in post_rows %}
-              {% with post=row.post %}
-                <article class="forum-post">
-                  <aside class="forum-post-author">
-                    <div class="forum-post-avatar" aria-hidden="true">
-                      {{ row.author_name|first|upper }}
+    {% if forum_detail_section == "posts" %}
+      <section id="posts" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-950">Posts</h2>
+          <p class="mt-2 text-slate-600">Discussion updates from members of this forum.</p>
+        </div>
+
+        <div class="space-y-4">
+          {% for row in post_rows %}
+            {% with post=row.post %}
+              <article class="overflow-hidden rounded-xl border border-base-300 bg-base-100">
+                <div class="grid md:grid-cols-[12rem_minmax(0,1fr)]">
+                  <aside class="border-b border-base-300 bg-white p-4 md:border-b-0 md:border-r">
+                    <div class="avatar avatar-placeholder mb-3">
+                      <div class="w-11 rounded-full bg-primary text-primary-content">
+                        <span>{{ row.author_name|first|upper }}</span>
+                      </div>
                     </div>
-                    <strong>{{ row.author_name }}</strong>
-                    <span>{{ row.author_role }}</span>
+                    <strong class="block text-slate-950">{{ row.author_name }}</strong>
+                    <span class="mt-2 block text-sm text-slate-600">{{ row.author_role }}</span>
                     {% if row.organization %}
-                      <span>{{ row.organization.name }}</span>
+                      <span class="block text-sm text-slate-600">{{ row.organization.name }}</span>
                     {% else %}
-                      <span>N/A</span>
+                      <span class="block text-sm text-slate-600">N/A</span>
                     {% endif %}
                   </aside>
 
-                  <div class="forum-post-body">
-                    <div class="forum-post-meta">
+                  <div class="p-4">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-slate-500">
                       <time datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:"M j, Y g:i A" }}</time>
-                      {% if post.is_removed %}<span>Removed</span>{% endif %}
+                      {% if post.is_removed %}<span class="badge badge-error badge-sm">Removed</span>{% endif %}
                     </div>
                     {% if post.is_removed %}
-                      <p class="forum-muted">{{ post.moderation_note|default:"This post has been removed." }}</p>
+                      <p class="mt-3 text-slate-600">{{ post.moderation_note|default:"This post has been removed." }}</p>
                     {% else %}
-                      <p>{{ post.body|linebreaksbr }}</p>
+                      <p class="mt-3 leading-relaxed text-slate-800">{{ post.body|linebreaksbr }}</p>
                     {% endif %}
                   </div>
-                </article>
-              {% endwith %}
-            {% empty %}
-              <p class="forum-empty">No posts have been added yet.</p>
-            {% endfor %}
+                </div>
+              </article>
+            {% endwith %}
+          {% empty %}
+            <div class="rounded-xl border border-dashed border-base-300 bg-base-100 p-8 text-center text-slate-600">
+              No posts have been added yet.
+            </div>
+          {% endfor %}
 
-            {% if can_post %}
-              <form
-                class="forum-post forum-post-composer is-hidden"
-                method="post"
-                action="{% url 'forums:post_create' space.id %}"
-                data-forum-composer
-              >
-                {% csrf_token %}
-                <aside class="forum-post-author">
-                  <div class="forum-post-avatar" aria-hidden="true">
-                    {{ request.user.get_full_name|default:request.user|first|upper }}
+          {% if can_post %}
+            <form
+              class="hidden overflow-hidden rounded-xl border border-base-300 bg-base-100"
+              method="post"
+              action="{% url 'forums:post_create' space.id %}"
+              data-forum-composer
+            >
+              {% csrf_token %}
+              <div class="grid md:grid-cols-[12rem_minmax(0,1fr)]">
+                <aside class="border-b border-base-300 bg-white p-4 md:border-b-0 md:border-r">
+                  <div class="avatar avatar-placeholder mb-3">
+                    <div class="w-11 rounded-full bg-primary text-primary-content">
+                      <span>{{ request.user.get_full_name|default:request.user|first|upper }}</span>
+                    </div>
                   </div>
-                  <strong>{{ request.user.get_full_name|default:request.user }}</strong>
-                  <span>{{ request.user.role }}</span>
+                  <strong class="block text-slate-950">{{ request.user.get_full_name|default:request.user }}</strong>
+                  <span class="mt-2 block text-sm text-slate-600">{{ request.user.role }}</span>
                   {% if request.user.organization %}
-                    <span>{{ request.user.organization.name }}</span>
+                    <span class="block text-sm text-slate-600">{{ request.user.organization.name }}</span>
                   {% else %}
-                    <span>N/A</span>
+                    <span class="block text-sm text-slate-600">N/A</span>
                   {% endif %}
                 </aside>
 
-                <div class="forum-post-body">
-                  <div class="forum-post-meta">
-                    <span>New post</span>
-                  </div>
+                <div class="p-4">
+                  <div class="mb-2 text-sm text-slate-500">New post</div>
                   {{ post_form.body }}
-                  <div class="forum-composer-actions">
-                    <button class="forum-button forum-button-secondary" type="button" data-forum-composer-cancel>
+                  <div class="mt-3 flex justify-end gap-2">
+                    <button class="btn btn-ghost" type="button" data-forum-composer-cancel>
                       Cancel
                     </button>
-                    <button class="forum-button" type="submit">Post</button>
+                    <button class="btn btn-primary" type="submit">Post</button>
                   </div>
                 </div>
-              </form>
-            {% endif %}
-          </div>
-
-          {% if can_post %}
-            <div class="forum-post-actions">
-              <button class="forum-button forum-post-add-button" type="button" data-forum-composer-open>
-                Add Post
-              </button>
-            </div>
+              </div>
+            </form>
           {% endif %}
-        </section>
+        </div>
+
         {% if can_post %}
-          <script>
-            (() => {
-              const composer = document.querySelector("[data-forum-composer]");
-              const openButton = document.querySelector("[data-forum-composer-open]");
-              const cancelButton = document.querySelector("[data-forum-composer-cancel]");
-              if (!composer || !openButton || !cancelButton) {
-                return;
-              }
-
-              const textarea = composer.querySelector("textarea");
-
-              openButton.addEventListener("click", () => {
-                composer.classList.remove("is-hidden");
-                openButton.classList.add("is-hidden");
-                if (textarea) {
-                  textarea.focus();
-                }
-              });
-
-              cancelButton.addEventListener("click", () => {
-                composer.classList.add("is-hidden");
-                openButton.classList.remove("is-hidden");
-                if (textarea) {
-                  textarea.value = "";
-                }
-              });
-            })();
-          </script>
+          <div class="mt-6">
+            <button class="btn btn-primary" type="button" data-forum-composer-open>
+              <span class="material-symbols-rounded">add</span>
+              Add Post
+            </button>
+          </div>
         {% endif %}
-      {% elif forum_detail_section == "members" %}
-        <section id="members" class="forum-panel">
-          <h2>Members</h2>
-          <table class="forum-table">
+      </section>
+      {% if can_post %}
+        <script>
+          (() => {
+            const composer = document.querySelector("[data-forum-composer]");
+            const openButton = document.querySelector("[data-forum-composer-open]");
+            const cancelButton = document.querySelector("[data-forum-composer-cancel]");
+            if (!composer || !openButton || !cancelButton) {
+              return;
+            }
+
+            const textarea = composer.querySelector("textarea");
+
+            openButton.addEventListener("click", () => {
+              composer.classList.remove("hidden");
+              openButton.classList.add("hidden");
+              if (textarea) {
+                textarea.focus();
+              }
+            });
+
+            cancelButton.addEventListener("click", () => {
+              composer.classList.add("hidden");
+              openButton.classList.remove("hidden");
+              if (textarea) {
+                textarea.value = "";
+              }
+            });
+          })();
+        </script>
+      {% endif %}
+    {% elif forum_detail_section == "members" %}
+      <section id="members" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="text-2xl font-bold text-slate-950">Members</h2>
+        <div class="mt-6 overflow-x-auto rounded-xl border border-base-300">
+          <table class="table">
             <thead>
               <tr>
                 <th>User</th>
@@ -185,42 +194,59 @@
                       N/A
                     {% endif %}
                   </td>
-                  <td>{{ member.role }}</td>
+                  <td><span class="badge badge-ghost">{{ member.role }}</span></td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="3">No user members yet.</td>
+                  <td class="py-8 text-center text-slate-600" colspan="3">No user members yet.</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
-        </section>
-      {% elif forum_detail_section == "admin" and request.user.is_staff %}
-        <section id="admin" class="forum-panel">
-          <h2>Admin</h2>
-          <dl class="forum-meta">
-            <dt>Status</dt>
-            <dd><span class="forum-status">{{ space.get_status_display }}</span></dd>
-            <dt>Topic</dt>
-            <dd>{{ space.get_topic_category_display }}</dd>
-            <dt>Region</dt>
-            <dd>{{ space.region|default:"Not specified" }}</dd>
-            <dt>Municipality</dt>
-            <dd>{{ space.municipality|default:"Not specified" }}</dd>
-            <dt>Visibility</dt>
-            <dd>{{ space.get_visibility_level_display }}</dd>
-            <dt>Owner</dt>
-            <dd>{{ space.owner }}</dd>
-            <dt>Moderator</dt>
-            <dd>{{ space.moderator|default:"Not assigned" }}</dd>
-            <dt>Last activity</dt>
-            <dd>{{ space.last_activity_at|date:"M j, Y g:i A" }}</dd>
-            <dt>Created from request</dt>
-            <dd>{{ space.created_from_request|default:"No" }}</dd>
-          </dl>
-        </section>
-      {% endif %}
-    </div>
+        </div>
+      </section>
+    {% elif forum_detail_section == "admin" and request.user.is_staff %}
+      <section id="admin" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="text-2xl font-bold text-slate-950">Admin</h2>
+        <dl class="mt-6 grid gap-4 md:grid-cols-2">
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Status</dt>
+            <dd class="mt-1 text-slate-950"><span class="badge badge-ghost">{{ space.get_status_display }}</span></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Topic</dt>
+            <dd class="mt-1 text-slate-950">{{ space.get_topic_category_display }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Region</dt>
+            <dd class="mt-1 text-slate-950">{{ space.region|default:"Not specified" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Municipality</dt>
+            <dd class="mt-1 text-slate-950">{{ space.municipality|default:"Not specified" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Visibility</dt>
+            <dd class="mt-1 text-slate-950">{{ space.get_visibility_level_display }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Owner</dt>
+            <dd class="mt-1 text-slate-950">{{ space.owner }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Moderator</dt>
+            <dd class="mt-1 text-slate-950">{{ space.moderator|default:"Not assigned" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Last activity</dt>
+            <dd class="mt-1 text-slate-950">{{ space.last_activity_at|date:"M j, Y g:i A" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Created from request</dt>
+            <dd class="mt-1 text-slate-950">{{ space.created_from_request|default:"No" }}</dd>
+          </div>
+        </dl>
+      </section>
+    {% endif %}
   </div>
-</main>
 {% endblock %}

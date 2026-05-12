@@ -1,21 +1,48 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block extra_head %}
-  {% include "forums/_styles.html" %}
+{% block page_title %}Request New Forum{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-ghost btn-sm" href="{% url 'forums:request_list' %}">Cancel</a>
 {% endblock %}
 
-{% block content %}
-<main class="forum-shell forum-shell-narrow">
-  {% include "forums/_nav.html" %}
+{% block page_body %}
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-8">
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">Forum management</p>
+      <h1 class="mt-2 text-4xl font-bold text-slate-950">Request New Forum</h1>
+      <p class="mt-2 text-slate-600">Submit the discussion space details for admin review.</p>
+    </div>
 
-  <form class="forum-form forum-panel" method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit Request</button>
-  </form>
+    {% include "forums/_nav.html" %}
 
-  <p class="forum-return-link">
-    <a class="forum-link" href="{% url 'forums:request_list' %}">Back to Applications</a>
-  </p>
-</main>
+    <form class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm" method="post">
+      {% csrf_token %}
+      <div class="grid gap-5">
+        {% for field in form %}
+          <label class="form-control w-full">
+            <span class="label-text font-semibold">{{ field.label }}</span>
+            <div class="mt-2">{{ field }}</div>
+            {% if field.help_text %}
+              <span class="mt-1 text-sm text-slate-500">{{ field.help_text }}</span>
+            {% endif %}
+            {% for error in field.errors %}
+              <span class="mt-1 text-sm text-error">{{ error }}</span>
+            {% endfor %}
+          </label>
+        {% endfor %}
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error mt-5">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+
+      <div class="mt-6 flex justify-end gap-2">
+        <a class="btn btn-ghost" href="{% url 'forums:request_list' %}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Submit Request</button>
+      </div>
+    </form>
+  </div>
 {% endblock %}
