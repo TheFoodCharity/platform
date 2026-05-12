@@ -278,6 +278,7 @@ def donation_detail(request, pk):
     )
 
 
+@login_required
 def donation_assign_storage(request, pk, storage_pk):
     donation = get_object_or_404(Donation, pk=pk)
     storage_location = get_object_or_404(StorageLocation, pk=storage_pk)
@@ -287,6 +288,7 @@ def donation_assign_storage(request, pk, storage_pk):
     return redirect("donations:detail", pk=donation.pk)
 
 
+@login_required
 def available_donation_list(request):
     donations = (
         Donation.objects.exclude(
@@ -330,6 +332,7 @@ def available_donation_list(request):
     )
 
 
+@login_required
 def available_donation_detail(request, pk):
     donation = get_object_or_404(
         Donation.objects.select_related(
@@ -381,6 +384,7 @@ def food_request_create(request, pk):
     )
 
 
+@login_required
 def food_request_thanks(request, pk):
     food_request = get_object_or_404(FoodRequest, pk=pk)
     return render(request, "donations/food_request_thanks.html", {"food_request": food_request})

@@ -1,9 +1,11 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import StorageLocationForm
 from .models import StorageLocation
 
 
+@login_required
 def storage_list(request):
     locations = StorageLocation.objects.filter(is_active=True).order_by("name")
 
@@ -33,6 +35,7 @@ def storage_list(request):
     return render(request, "storage/storage_list.html", context)
 
 
+@login_required
 def storage_create(request):
     if request.method == "POST":
         form = StorageLocationForm(request.POST)
@@ -50,6 +53,7 @@ def storage_create(request):
     )
 
 
+@login_required
 def storage_edit(request, pk):
     location = get_object_or_404(StorageLocation, pk=pk)
 
@@ -69,6 +73,7 @@ def storage_edit(request, pk):
     )
 
 
+@login_required
 def storage_detail(request, pk):
     location = get_object_or_404(StorageLocation, pk=pk)
 
