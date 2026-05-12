@@ -8,7 +8,6 @@ INPUT_CLASS = "input input-bordered w-full"
 SELECT_CLASS = "select select-bordered w-full"
 TEXTAREA_CLASS = "textarea textarea-bordered w-full"
 CHECKBOX_CLASS = "checkbox checkbox-primary"
-RADIO_CLASS = "radio radio-primary"
 
 FOOD_TYPE_INTAKE = [
     (Donation.FoodCategory.BAKED_GOODS, "Baked Goods", "e.g. Bread, pastries"),
@@ -204,10 +203,10 @@ def apply_form_control_classes(fields):
         widget = field.widget
         existing_class = widget.attrs.get("class", "")
 
-        if isinstance(widget, forms.CheckboxInput):
+        if isinstance(widget, forms.RadioSelect):
+            continue
+        elif isinstance(widget, forms.CheckboxInput):
             css_class = CHECKBOX_CLASS
-        elif isinstance(widget, forms.RadioSelect):
-            css_class = RADIO_CLASS
         elif isinstance(widget, forms.Select):
             css_class = SELECT_CLASS
         elif isinstance(widget, forms.Textarea):

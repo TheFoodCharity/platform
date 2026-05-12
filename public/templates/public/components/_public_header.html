@@ -42,7 +42,8 @@
                 </div>
             </details>
             <a href="{% url 'admin:index' %}" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Admin</a>
-            <a href="{% url 'donations:create' %}" class="btn btn-primary text-base font-bold">Get Started</a>
+            <a href="{% url 'accounts:register' %}" class="hidden text-primary transition-colors hover:opacity-80 md:inline">Register</a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-primary text-base font-bold">Log In</a>
             <details class="md:hidden group">
                 <summary class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded text-primary focus:outline-none">
                     <span class="sr-only">Toggle menu</span>
@@ -60,6 +61,8 @@
                         <a href="{% url 'donations:available_list' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Listings</a>
                         <hr class="my-2 border-slate-100">
                         <a href="{% url 'admin:index' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Admin</a>
+                        <a href="{% url 'accounts:register' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Register</a>
+                        <a href="{% url 'accounts:login' %}" class="block rounded-lg px-4 py-3 text-lg hover:bg-base-200">Log In</a>
                     </div>
                 </nav>
             </details>

@@ -2,6 +2,10 @@
         type="{{ widget.type }}"
         name="{{ widget.name }}"
         {% if widget.value != None %}value="{{ widget.value|stringformat:'s' }}"{% endif %}
+        {% if widget.type == "radio" %}
+        class="radio radio-primary accent-primary aria-invalid:radio-error {{ widget.attrs.class|default:'' }}"
+        {% else %}
         class="input w-full aria-invalid:input-error {{ widget.attrs.class|default:'' }}"
+        {% endif %}
         {% include "django/forms/widgets/attrs.html" %}
 />

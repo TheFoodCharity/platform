@@ -58,8 +58,59 @@ def save_food_items(donation, formset):
     DonationFoodItem.objects.bulk_create(items)
 
 
+def user_organization(user):
+    if not user.is_authenticated:
+        return None
+    return user.organizations.filter(is_active=True).first()
+
+
+def account_initial(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    organization = user_organization(request.user)
+    full_name = request.user.get_full_name().strip()
+    display_name = full_name or request.user.email
+    initial = {
+        "contact_email": organization.email if organization and organization.email else request.user.email,
+        "contact_phone": str(organization.phone) if organization and organization.phone else "",
+        "donor_contact": display_name,
+        "donor_name": display_name,
+    }
+
+    if organization is not None:
+        initial.update(
+            {
+                "city": organization.municipality,
+                "company_name": organization.name,
+                "province_or_state": organization.region,
+            },
+        )
+
+    return initial
+
+
+def request_account_initial(request):
+    if not request.user.is_authenticated:
+        return {}
+
+    full_name = request.user.get_full_name().strip()
+    initial = {
+        "email": request.user.email,
+        "receiver_name": full_name or request.user.email,
+    }
+    organization = user_organization(request.user)
+    if organization is not None:
+        initial["organization"] = organization.name
+    return initial
+
+
 def donation_list(request):
     donations = Donation.objects.all().order_by("-created_at")
+    organization = user_organization(request.user)
+
+    if request.user.is_authenticated and not request.user.is_staff:
+        donations = donations.filter(supplier_organization=organization)
 
     status = request.GET.get("status")
     storage_requirement = request.GET.get("storage_requirement")
@@ -90,13 +141,16 @@ def donation_create(request):
             donation.food_type = []
             donation.quantity = 1
             donation.unit = Donation.QuantityUnit.ITEMS
+            if request.user.is_authenticated:
+                donation.submitted_by = request.user
+                donation.supplier_organization = user_organization(request.user)
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
             save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
-        form = DonationForm()
+        form = DonationForm(initial=account_initial(request))
         formset = DonationFoodItemFormSet()
 
     return render(
@@ -114,6 +168,10 @@ def donation_edit(request, pk):
         formset = DonationFoodItemFormSet(request.POST, donation=donation)
         if form.is_valid() and formset.is_valid():
             donation = form.save(commit=False)
+            if request.user.is_authenticated and donation.submitted_by_id is None:
+                donation.submitted_by = request.user
+            if request.user.is_authenticated and donation.supplier_organization_id is None:
+                donation.supplier_organization = user_organization(request.user)
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
             save_food_items(donation, formset)
@@ -194,10 +252,13 @@ def food_request_create(request, pk):
         if form.is_valid():
             food_request = form.save(commit=False)
             food_request.donation = donation
+            if request.user.is_authenticated:
+                food_request.requested_by = request.user
+                food_request.receiver_organization = user_organization(request.user)
             food_request.save()
             return redirect("donations:request_thanks", pk=food_request.pk)
     else:
-        form = FoodRequestForm()
+        form = FoodRequestForm(initial=request_account_initial(request))
 
     return render(request, "donations/food_request_form.html", {"form": form, "donation": donation})
 

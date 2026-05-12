@@ -1,11 +1,15 @@
+from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from organizations.models import Membership, Organization
 from storage.models import StorageLocation
 
 from .forms import FOOD_TYPE_INTAKE, DonationFoodItemFormSet, DonationForm, FoodRequestForm
 from .models import Donation, DonationFoodItem, FoodRequest
+
+User = get_user_model()
 
 
 class DonationFormTests(SimpleTestCase):
@@ -45,7 +49,7 @@ class DonationFormTests(SimpleTestCase):
 
 
 class DonationIntakeViewTests(TestCase):
-    def test_create_donation_saves_food_items(self):
+    def donation_post_data(self):
         data = {
             "company_name": "Neighbourhood Market",
             "address_1": "123 Main Street",
@@ -90,8 +94,10 @@ class DonationIntakeViewTests(TestCase):
         data[f"food_items-{produce_index}-packaging"] = DonationFoodItem.Packaging.BOXES
         data[f"food_items-{produce_index}-quantity"] = "12"
         data[f"food_items-{produce_index}-description"] = "Mixed produce"
+        return data
 
-        response = self.client.post(reverse("donations:create"), data)
+    def test_create_donation_saves_food_items(self):
+        response = self.client.post(reverse("donations:create"), self.donation_post_data())
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Donation.objects.count(), 1)
@@ -102,6 +108,114 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(donation.food_category, Donation.FoodCategory.PRODUCE)
         self.assertEqual(donation.quantity, 12)
         self.assertIsNotNone(donation.pickup_deadline)
+
+    def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
+        user = User.objects.create_user(
+            email="supplier@example.com",
+            password="password",
+            first_name="Sam",
+            last_name="Supplier",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(name="Supplier Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=organization)
+        self.client.force_login(user)
+
+        response = self.client.post(reverse("donations:create"), self.donation_post_data())
+
+        self.assertEqual(response.status_code, 302)
+        donation = Donation.objects.get()
+        self.assertEqual(donation.submitted_by, user)
+        self.assertEqual(donation.supplier_organization, organization)
+
+    def test_logged_in_user_gets_donor_info_prefilled_from_account_and_organization(self):
+        user = User.objects.create_user(
+            email="supplier@example.com",
+            password="password",
+            first_name="Sam",
+            last_name="Supplier",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(
+            name="Supplier Org",
+            owner=user,
+            is_active=True,
+            municipality="Vancouver",
+            region="BC",
+            email="donations@supplier.example",
+            phone="6045550100",
+        )
+        Membership.objects.create(user=user, organization=organization)
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:create"))
+
+        self.assertContains(response, 'value="Supplier Org"')
+        self.assertContains(response, 'value="Vancouver"')
+        self.assertContains(response, 'value="BC"')
+        self.assertContains(response, 'value="donations@supplier.example"')
+        self.assertContains(response, 'value="6045550100"')
+        self.assertContains(response, 'value="Sam Supplier"')
+
+    def test_org_members_share_supplier_donation_list(self):
+        owner = User.objects.create_user(
+            email="owner@example.com",
+            password="password",
+            first_name="Owner",
+            last_name="User",
+            email_verified=True,
+        )
+        member = User.objects.create_user(
+            email="member@example.com",
+            password="password",
+            first_name="Member",
+            last_name="User",
+            email_verified=True,
+        )
+        other_user = User.objects.create_user(
+            email="other@example.com",
+            password="password",
+            first_name="Other",
+            last_name="User",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(name="Shared Org", owner=owner, is_active=True)
+        other_organization = Organization.objects.create(name="Other Org", owner=other_user, is_active=True)
+        Membership.objects.create(user=owner, organization=organization)
+        Membership.objects.create(user=member, organization=organization)
+        Membership.objects.create(user=other_user, organization=other_organization)
+        Donation.objects.create(
+            donor_name="Shared Donation",
+            donor_contact="owner@example.com",
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.SUBMITTED,
+        )
+        Donation.objects.create(
+            donor_name="Hidden Donation",
+            donor_contact="other@example.com",
+            supplier_organization=other_organization,
+            food_category=Donation.FoodCategory.DAIRY,
+            food_type=[Donation.FoodCategory.DAIRY],
+            quantity=4,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="456 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.REFRIGERATED,
+            status=Donation.Status.SUBMITTED,
+        )
+        self.client.force_login(member)
+
+        response = self.client.get(reverse("donations:list"))
+
+        self.assertContains(response, "Shared Donation")
+        self.assertNotContains(response, "Hidden Donation")
 
 
 class FoodRequestTests(TestCase):
@@ -146,6 +260,17 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, "Request this food")
 
     def test_receiver_can_submit_food_request(self):
+        user = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=organization)
+        self.client.force_login(user)
+
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
             {
@@ -171,6 +296,8 @@ class FoodRequestTests(TestCase):
         self.assertTrue(food_request.storage_required)
         self.assertEqual(food_request.preferred_storage, self.storage)
         self.assertEqual(food_request.status, FoodRequest.Status.SUBMITTED)
+        self.assertEqual(food_request.requested_by, user)
+        self.assertEqual(food_request.receiver_organization, organization)
 
     def test_food_request_form_exposes_storage_fields_not_internal_fields(self):
         form = FoodRequestForm()

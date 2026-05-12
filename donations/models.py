@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from storage.models import StorageLocation
@@ -105,6 +106,20 @@ class Donation(models.Model):
     contact_email = models.EmailField(blank=True)
     contact_phone = models.CharField(max_length=50, blank=True)
 
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="submitted_donations",
+    )
+    supplier_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="donations",
+    )
     donor_name = models.CharField(max_length=255)
     donor_contact = models.CharField(max_length=255, blank=True)
 
@@ -247,6 +262,20 @@ class FoodRequest(models.Model):
     donation = models.ForeignKey(
         Donation,
         on_delete=models.CASCADE,
+        related_name="food_requests",
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="food_requests",
+    )
+    receiver_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="food_requests",
     )
     receiver_name = models.CharField(max_length=255)
