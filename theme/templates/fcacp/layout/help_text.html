@@ -1,0 +1,6 @@
+{% if field.help_text %}
+    <div id="{{ field.auto_id }}_helptext"
+         class="fieldset-label flex-col items-start [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1">
+        {{ field.help_text|safe }}
+    </div>
+{% endif %}

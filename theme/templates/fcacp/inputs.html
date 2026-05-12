@@ -1,0 +1,7 @@
+{% if inputs %}
+    <div class="flex gap-2 mt-2">
+        {% for input in inputs %}
+            {% include "fcacp/layout/baseinput.html" %}
+        {% endfor %}
+    </div>
+{% endif %}

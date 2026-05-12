@@ -1,0 +1,20 @@
+{% if form.non_field_errors %}
+    <div role="alert" class="alert alert-soft alert-error mb-4">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 shrink-0">
+            <path clip-rule="evenodd" fill-rule="evenodd"
+                  d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"/>
+        </svg>
+        <div>
+            <p class="font-semibold">
+                There w{{ form.non_field_errors|length|pluralize:"as,ere" }}
+                {{ form.non_field_errors|length }}
+                error{{ form.non_field_errors|length|pluralize }} in your submission
+            </p>
+            <ul class="list-disc space-y-1 pl-5 mt-1 text-sm">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endif %}

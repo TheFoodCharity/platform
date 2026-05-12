@@ -1,28 +1,26 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
-  <div class="mx-auto max-w-5xl">
-    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Available donation</p>
-        <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ donation.food_type_display }}</h1>
-      </div>
-      <a class="btn btn-primary" href="{% url 'donations:request_create' donation.id %}">
-        <span class="material-symbols-rounded">volunteer_activism</span>
-        Request this food
-      </a>
+{% block page_body %}
+    <div class="mx-auto max-w-5xl">
+        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-wide text-primary">Available donation</p>
+                <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ donation.food_type_display }}</h1>
+            </div>
+            <a class="btn btn-primary" href="{% url 'donations:request_create' donation.id %}">
+                <span class="material-symbols-rounded">volunteer_activism</span>
+                Request this food
+            </a>
+        </div>
+
+        <div class="space-y-6">
+            {% include "donations/partials/donation_detail.html" with donation=donation show_donor=False show_status=False show_pickup_location=False %}
+
+            <div class="flex justify-end">
+                <a class="btn btn-outline btn-primary" href="{% url 'donations:available_list' %}">
+                    Back to Available Donations
+                </a>
+            </div>
+        </div>
     </div>
-
-    <div class="space-y-6">
-      {% include "donations/partials/donation_detail.html" with donation=donation show_donor=False show_status=False show_pickup_location=False %}
-
-      <div class="flex justify-end">
-        <a class="btn btn-outline btn-primary" href="{% url 'donations:available_list' %}">
-          Back to Available Donations
-        </a>
-      </div>
-    </div>
-  </div>
-</main>
 {% endblock %}

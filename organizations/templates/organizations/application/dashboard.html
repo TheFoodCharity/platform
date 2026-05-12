@@ -67,7 +67,7 @@
                             donor/supplier details, recipient capacity, and other relevant records are still current.
                             This helps ensure members and the public are working with accurate information.
                         </p>
-                        {{ form.acknowledged }}
+                        {% include "fcacp/field.html" with field=form.acknowledged form_show_labels=True %}
                     </fieldset>
                 {% endif %}
                 <button type="submit" class="btn btn-primary">Submit application</button>
