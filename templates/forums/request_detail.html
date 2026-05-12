@@ -68,6 +68,14 @@
           </a>
         </p>
       {% endif %}
+
+      {% if forum_request.space %}
+        <p>
+          <a class="forum-link" href="{% url 'forums:detail' forum_request.space.id %}?section=posts">
+            Open Created Forum
+          </a>
+        </p>
+      {% endif %}
     </section>
   </div>
 </main>

@@ -11,6 +11,9 @@
 </header>
 
 <nav class="forum-header-nav" aria-label="Forum module sections">
+  <a class="{% if forum_nav_active == 'forums' %}is-active{% endif %}" href="{% url 'forums:list' %}">
+    Forum Spaces
+  </a>
   <a class="{% if forum_nav_active == 'applications' %}is-active{% endif %}" href="{% url 'forums:request_list' %}">
     Applications
   </a>

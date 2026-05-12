@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+  {% include "forums/_styles.html" %}
+{% endblock %}
+
+{% block content %}
+<main class="forum-shell">
+  {% include "forums/_nav.html" %}
+
+  <section class="forum-section">
+    <div class="forum-section-header">
+      <h2 class="forum-section-title">Available Forums</h2>
+      {% if can_request %}
+        <a class="forum-button forum-button-secondary" href="{% url 'forums:request_create' %}">Request New Forum</a>
+      {% endif %}
+    </div>
+    <table class="forum-table">
+      <thead>
+        <tr>
+          <th>Forum</th>
+          <th>Created</th>
+          <th>Posts</th>
+          <th>Latest Post</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for space in spaces %}
+          <tr>
+            <td>
+              <div class="forum-title-cell">
+                <span class="forum-icon" aria-hidden="true">{{ space.get_topic_category_display|slice:":1" }}</span>
+                <div>
+                  <strong>
+                    <a class="forum-link" href="{% url 'forums:detail' space.id %}?section=posts">{{ space.title }}</a>
+                  </strong>
+                  <p class="forum-description">{{ space.description|truncatewords:24 }}</p>
+                  <div class="forum-meta-line">
+                    {{ space.get_topic_category_display }} -
+                    {{ space.get_visibility_level_display }} -
+                    {{ space.region|default:"No region" }}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td>{{ space.created_at|date:"M j, Y" }}</td>
+            <td>{{ space.post_count }}</td>
+            <td>
+              {% if space.latest_post_at %}
+                {{ space.latest_post_at|date:"M j, Y g:i A" }}
+              {% else %}
+                No posts yet
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4">No forums are visible to you yet.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

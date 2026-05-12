@@ -25,6 +25,7 @@
           <th>Status</th>
           <th>Topic</th>
           <th>Submitted</th>
+          <th>Forum Space</th>
         </tr>
       </thead>
       <tbody>
@@ -49,10 +50,17 @@
             </td>
             <td>{{ forum_request.get_topic_category_display }}</td>
             <td>{{ forum_request.created_at|date:"M j, Y" }}</td>
+            <td>
+              {% if forum_request.space %}
+                <a class="forum-link" href="{% url 'forums:detail' forum_request.space.id %}?section=posts">Open Forum</a>
+              {% else %}
+                <span class="forum-muted">Not created</span>
+              {% endif %}
+            </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="{% if request.user.is_staff %}5{% else %}4{% endif %}">
+            <td colspan="{% if request.user.is_staff %}6{% else %}5{% endif %}">
               {% if request.user.is_staff %}
                 No forum applications have been submitted yet.
               {% else %}
