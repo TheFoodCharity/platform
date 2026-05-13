@@ -10,7 +10,7 @@
         {% if show_donor %}
           <p><span class="font-semibold text-slate-900">Donor:</span> {{ donation.donor_display_name }}</p>
         {% endif %}
-        <p><span class="font-semibold text-slate-900">Quantity:</span> {{ donation.quantity }} {{ donation.get_unit_display }}</p>
+        <p><span class="font-semibold text-slate-900">Quantity:</span> {{ donation.quantity_summary_display }}</p>
         <p>
           <span class="font-semibold text-slate-900">Storage:</span>
           {{ donation.get_storage_requirement_display }}

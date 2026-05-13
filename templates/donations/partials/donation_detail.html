@@ -22,7 +22,7 @@
     <div class="rounded-xl border border-base-300 bg-base-100 p-4">
       <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Food</p>
       <p class="mt-1 font-semibold text-slate-950">{{ donation.category_list_display }}</p>
-      <p class="mt-1 text-sm text-slate-600">{{ donation.quantity }} {{ donation.get_unit_display }}</p>
+      <p class="mt-1 text-sm text-slate-600">{{ donation.quantity_summary_display }}</p>
       <p class="text-sm text-slate-600">People fed: {{ donation.people_fed_estimate|default:"Not provided" }}</p>
     </div>
 

@@ -224,6 +224,24 @@ class Donation(models.Model):
         return sum(food_item.remaining_quantity for food_item in self.food_items.all())
 
     @property
+    def quantity_summary_display(self):
+        totals_by_packaging = {}
+        packaging_labels = dict(DonationFoodItem.Packaging.choices)
+
+        for food_item in self.food_items.all():
+            totals_by_packaging[food_item.packaging] = (
+                totals_by_packaging.get(food_item.packaging, 0) + food_item.quantity
+            )
+
+        if not totals_by_packaging:
+            return f"{self.quantity} {self.get_unit_display()}"
+
+        return ", ".join(
+            f"{quantity} {packaging_labels.get(packaging, packaging)}"
+            for packaging, quantity in totals_by_packaging.items()
+        )
+
+    @property
     def is_fully_requested(self):
         return self.food_items.exists() and self.total_remaining_quantity == 0
 

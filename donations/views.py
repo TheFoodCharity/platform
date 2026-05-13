@@ -33,7 +33,7 @@ def sync_donation_summary_from_items(donation):
 
     donation.food_category = first_item.food_category
     donation.food_type = list(donation.food_items.values_list("food_category", flat=True).distinct())
-    donation.quantity = first_item.quantity
+    donation.quantity = sum(donation.food_items.values_list("quantity", flat=True))
     donation.unit = first_item.packaging
     donation.save(update_fields=["food_category", "food_type", "quantity", "unit"])
 

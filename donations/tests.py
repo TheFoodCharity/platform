@@ -226,6 +226,40 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Shared Org")
         self.assertNotContains(response, "Other Org")
 
+    def test_donation_list_shows_total_quantity_for_food_items(self):
+        user, organization = self.create_user_with_org()
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.MEAT_PROTEIN,
+            food_type=[Donation.FoodCategory.MEAT_PROTEIN, Donation.FoodCategory.OTHER],
+            quantity=9,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.REFRIGERATED,
+            status=Donation.Status.SUBMITTED,
+        )
+        DonationFoodItem.objects.create(
+            donation=donation,
+            food_category=Donation.FoodCategory.MEAT_PROTEIN,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=5,
+            description="Meat",
+        )
+        DonationFoodItem.objects.create(
+            donation=donation,
+            food_category=Donation.FoodCategory.OTHER,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=4,
+            description="Other food",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:list"))
+
+        self.assertContains(response, "Quantity:</span> 9 Boxes", html=False)
+
     def test_donation_detail_shows_allocation_and_request_history_sections(self):
         supplier, supplier_organization = self.create_user_with_org()
         receiver = User.objects.create_user(
