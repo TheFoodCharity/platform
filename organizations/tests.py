@@ -614,14 +614,14 @@ class RegistryTests(TestCase):
         # Save and restore the registry state around each test
         from organizations import registry
 
-        self._orig_descriptions = dict(registry._descriptions)
+        self._orig_descriptions = dict(registry._registry)
         self._orig_rules = dict(rules.permissions.permissions)
 
     def tearDown(self):
         from organizations import registry
 
-        registry._descriptions.clear()
-        registry._descriptions.update(self._orig_descriptions)
+        registry._registry.clear()
+        registry._registry.update(self._orig_descriptions)
         rules.permissions.permissions.clear()
         rules.permissions.permissions.update(self._orig_rules)
 
@@ -656,14 +656,14 @@ class SystemCheckE001Tests(TestCase):
     def setUp(self):
         from organizations import registry
 
-        self._orig_descriptions = dict(registry._descriptions)
+        self._orig_descriptions = dict(registry._registry)
         self._orig_rules = dict(rules.permissions.permissions)
 
     def tearDown(self):
         from organizations import registry
 
-        registry._descriptions.clear()
-        registry._descriptions.update(self._orig_descriptions)
+        registry._registry.clear()
+        registry._registry.update(self._orig_descriptions)
         rules.permissions.permissions.clear()
         rules.permissions.permissions.update(self._orig_rules)
 
@@ -686,14 +686,14 @@ class SystemCheckE002Tests(TestCase):
     def setUp(self):
         from organizations import registry
 
-        self._orig_descriptions = dict(registry._descriptions)
+        self._orig_descriptions = dict(registry._registry)
         self._orig_rules = dict(rules.permissions.permissions)
 
     def tearDown(self):
         from organizations import registry
 
-        registry._descriptions.clear()
-        registry._descriptions.update(self._orig_descriptions)
+        registry._registry.clear()
+        registry._registry.update(self._orig_descriptions)
         rules.permissions.permissions.clear()
         rules.permissions.permissions.update(self._orig_rules)
         # Clean up any permission rows created in this test
