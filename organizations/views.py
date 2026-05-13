@@ -20,10 +20,6 @@ from .models import Organization
 from .services import organization_create, set_current_organization
 
 
-class OrganizationsView(ListView):
-    model = Organization
-
-
 class DispatchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         match list(request.user.organizations.all()[:2]):
@@ -46,7 +42,7 @@ class ApplyView(LoginRequiredMixin, FormView):
         self.object = None
 
     def get_success_url(self):
-        return reverse("organizations:application", args=[self.object.pk])
+        return reverse("organizations:application")
 
     def form_valid(self, form):
         self.object = organization_create(
@@ -54,6 +50,7 @@ class ApplyView(LoginRequiredMixin, FormView):
             name=form.cleaned_data["name"],
             organization_type=form.cleaned_data["organization_type"],
         )
+        set_current_organization(self.request, self.object)
         return super().form_valid(form)
 
 
@@ -66,6 +63,9 @@ class ApplicationDashboardView(LoginRequiredMixin, SingleObjectMixin, FormView):
         super().__init__()
         self.object = None
 
+    def get_object(self, queryset=None):
+        return self.request.organization
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         return super().get(request, *args, **kwargs)
@@ -75,7 +75,7 @@ class ApplicationDashboardView(LoginRequiredMixin, SingleObjectMixin, FormView):
         return super().post(request, *args, **kwargs)
 
     def get_success_url(self):
-        return reverse("organizations:application", args=[self.object.pk])
+        return reverse("organizations:application")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -99,6 +99,9 @@ class ApplicationFormView(LoginRequiredMixin, UpdateView):
     section: str
     section_title: str
 
+    def get_object(self, queryset=None):
+        return self.request.organization
+
     def get_context_data(self, **kwargs):
         return super().get_context_data(section_title=self.section_title, **kwargs)
 
@@ -110,7 +113,7 @@ class ApplicationFormView(LoginRequiredMixin, UpdateView):
         return response
 
     def get_success_url(self):
-        return reverse("organizations:application", args=[self.object.pk])
+        return reverse("organizations:application")
 
 
 class ApplicationBasicDetailsView(ApplicationFormView):

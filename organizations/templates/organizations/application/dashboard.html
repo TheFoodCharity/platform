@@ -26,27 +26,27 @@
                 <td>Basic information</td>
                 <td>{% if application.basics_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_basic' organization.pk %}">{{ section_action }}</a></td>
+                       href="{% url 'organizations:application_basic' %}">{{ section_action }}</a></td>
             </tr>
             <tr>
                 <td>Location &amp; service area</td>
                 <td>{% if application.location_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_location' organization.pk %}">{{ section_action }}</a>
+                       href="{% url 'organizations:application_location' %}">{{ section_action }}</a>
                 </td>
             </tr>
             <tr>
                 <td>Contact details</td>
                 <td>{% if application.contact_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_contact' organization.pk %}">{{ section_action }}</a>
+                       href="{% url 'organizations:application_contact' %}">{{ section_action }}</a>
                 </td>
             </tr>
             <tr>
                 <td>Interests &amp; preferences</td>
                 <td>{% if application.operations_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_operations' organization.pk %}">{{ section_action }}</a>
+                       href="{% url 'organizations:application_operations' %}">{{ section_action }}</a>
                 </td>
             </tr>
             </tbody>
