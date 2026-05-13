@@ -12,6 +12,7 @@ requires-python = ">=3.14"
 dependencies = [
     "django>=6.0.4",
     "django-crispy-forms>=2.6",
+    "rules>=3.5",
     "django-debug-toolbar>=6.3.0",
     "django-htmx>=1.27.0",
     "django-phonenumber-field[phonenumberslite]>=8.4.0",

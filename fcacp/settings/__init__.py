@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
+    "rules",
     "tailwind",
     # 1st-party
     "accounts",
@@ -169,6 +170,11 @@ CRISPY_TEMPLATE_PACK = "fcacp"
 
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "rules.permissions.ObjectPermissionBackend",
+]
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "organizations:dispatch"
