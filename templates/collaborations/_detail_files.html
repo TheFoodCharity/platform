@@ -10,50 +10,65 @@
     </div>
   </div>
 
-  <div class="mt-6 space-y-3">
-    {% for collaboration_file in files %}
-      <article class="rounded-xl border border-base-300 bg-base-100 p-4">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h3 class="text-xl font-bold text-slate-950">{{ collaboration_file.original_filename }}</h3>
-            <p class="mt-2 text-sm text-slate-600">
-              {{ collaboration_file.size|filesizeformat }} · {{ collaboration_file.content_type }}
-            </p>
-            <p class="mt-2 text-xs text-slate-500">
-              Uploaded by {{ collaboration_file.uploaded_by.get_full_name|default:collaboration_file.uploaded_by }}
-              on {{ collaboration_file.created_at|date:"M j, Y" }}.
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <a
-              class="btn btn-sm btn-outline btn-primary"
-              href="{% url 'collaborations:file_download' space.id collaboration_file.id %}"
-              download="{{ collaboration_file.original_filename }}"
-              hx-boost="false"
-            >
-              <span class="material-symbols-rounded">download</span>
-              Download
-            </a>
-            {% if can_delete_files %}
-              <form
-                method="post"
-                action="{% url 'collaborations:file_delete' space.id collaboration_file.id %}"
-              >
-                {% csrf_token %}
-                <button class="btn btn-sm btn-outline btn-error" type="submit">
-                  <span class="material-symbols-rounded">delete</span>
-                  Delete
-                </button>
-              </form>
-            {% endif %}
-          </div>
-        </div>
-      </article>
-    {% empty %}
-      <div class="rounded-xl border border-dashed border-base-300 bg-base-100 p-8 text-center text-slate-600">
-        No files have been uploaded yet.
-      </div>
-    {% endfor %}
+  <div class="mt-6 overflow-x-auto rounded-xl border border-base-300 bg-base-100">
+    <table class="table">
+      <thead class="bg-white text-xs tracking-wide text-slate-500">
+        <tr>
+          <th>Name</th>
+          <th class="w-32">Size</th>
+          <th class="w-48">Uploaded By</th>
+          <th class="w-48">Uploaded At</th>
+          <th class="w-44">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for collaboration_file in files %}
+          <tr class="align-middle">
+            <td>
+              <p class="max-w-xs truncate font-medium text-slate-950" title="{{ collaboration_file.original_filename }}">
+                {{ collaboration_file.original_filename }}
+              </p>
+            </td>
+            <td class="text-sm text-slate-600">{{ collaboration_file.size|filesizeformat }}</td>
+            <td class="text-sm text-slate-600">
+              {{ collaboration_file.uploaded_by.get_full_name|default:collaboration_file.uploaded_by }}
+            </td>
+            <td class="text-sm text-slate-600">
+                {{ collaboration_file.created_at|date:"M d, Y" }}
+            </td>
+            <td>
+              <div class="flex flex-wrap gap-2">
+                <a
+                  class="btn btn-sm btn-outline btn-primary"
+                  href="{% url 'collaborations:file_download' space.id collaboration_file.id %}"
+                  download="{{ collaboration_file.original_filename }}"
+                  hx-boost="false"
+                >
+                  <span class="material-symbols-rounded">download</span>
+                </a>
+                {% if can_delete_files %}
+                  <form
+                    method="post"
+                    action="{% url 'collaborations:file_delete' space.id collaboration_file.id %}"
+                  >
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline btn-error" type="submit">
+                      <span class="material-symbols-rounded">delete</span>
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="p-8 text-center text-slate-600">
+              No files have been uploaded yet.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
   {% if can_upload_files %}
