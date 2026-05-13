@@ -49,14 +49,6 @@
                    <p>
                     <span class="font-semibold text-slate-900">Created:</span> {{ space.created_at|date:"M j, Y" }}
                   </p>
-                  <p>
-                    <span class="font-semibold text-slate-900">Latest Message:</span>
-                    {% if space.latest_message_at %}
-                      {{ space.latest_message_at|date:"M j, Y g:i A" }}
-                    {% else %}
-                      No messages yet
-                    {% endif %}
-                  </p>
                 </p>
               </div>
             </div>

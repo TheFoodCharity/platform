@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Max
+from django.db.models import Count
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -27,7 +27,6 @@ def collaboration_list(request):
         .select_related("owner", "moderator", "created_by")
         .annotate(
             message_count=Count("chat_messages", distinct=True),
-            latest_message_at=Max("chat_messages__created_at"),
             linked_record_count=Count("linked_objects", distinct=True),
             file_count=Count("files", distinct=True),
         )
