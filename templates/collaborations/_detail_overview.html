@@ -5,15 +5,27 @@
   </div>
 
   <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-      <dt class="text-sm font-semibold text-slate-500">Linked Records</dt>
+    <a
+      class="rounded-xl border border-base-300 bg-base-100 p-4 transition hover:border-primary hover:bg-white"
+      href="{% url 'collaborations:detail_linked_records' space.id %}"
+    >
+      <dt class="flex items-center gap-2 text-sm font-semibold text-slate-500">
+        <span class="material-symbols-rounded text-base">add_link</span>
+        Linked Records
+      </dt>
       <dd class="mt-2 text-3xl font-bold text-slate-950">{{ linked_record_count|default:0 }}</dd>
-    </div>
+    </a>
 
-        <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-      <dt class="text-sm font-semibold text-slate-500">Files</dt>
+    <a
+      class="rounded-xl border border-base-300 bg-base-100 p-4 transition hover:border-primary hover:bg-white"
+      href="{% url 'collaborations:detail_files' space.id %}"
+    >
+      <dt class="flex items-center gap-2 text-sm font-semibold text-slate-500">
+        <span class="material-symbols-rounded text-base">folder</span>
+        Files
+      </dt>
       <dd class="mt-2 text-3xl font-bold text-slate-950">{{ file_count|default:0 }}</dd>
-    </div>
+    </a>
   </div>
 
   <dl class="mt-6 grid gap-4 md:grid-cols-2">

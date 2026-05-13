@@ -31,7 +31,7 @@
                 </div>
                 <div class="min-w-0">
                   <h2 class="text-2xl font-bold text-slate-950">
-                    <a class="hover:text-primary" href="{% url 'collaborations:detail_chat' space.id %}">
+                    <a class="hover:text-primary" href="{% url 'collaborations:detail_overview' space.id %}">
                       {{ space.title }}
                     </a>
                   </h2>
@@ -39,16 +39,17 @@
                 </div>
               </div>
 
-              <div class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-5">
+              <div class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-3">
                 <p><span class="font-semibold text-slate-900">Topic:</span> {{ space.get_topic_category_display }}</p>
                 <p><span class="font-semibold text-slate-900">Visibility:</span> {{ space.get_visibility_level_display }}</p>
                 <p><span class="font-semibold text-slate-900">Region:</span> {{ space.region|default:"No region" }}</p>
-                <p><span class="font-semibold text-slate-900">Messages:</span> {{ space.message_count }}</p>
-                <p><span class="font-semibold text-slate-900">Files:</span> {{ space.file_count|default:0 }}</p>
-                <p class="sm:col-span-2 lg:col-span-5">
-                   <p>
-                    <span class="font-semibold text-slate-900">Created:</span> {{ space.created_at|date:"M j, Y" }}
-                  </p>
+                <p class="sm:col-span-2 lg:col-span-3">
+                  <p><span class="font-semibold text-slate-900">Messages:</span> {{ space.message_count }}</p>
+                  <p><span class="font-semibold text-slate-900">Linked Records:</span> {{ space.linked_record_count|default:0 }}</p>
+                  <p><span class="font-semibold text-slate-900">Files:</span> {{ space.file_count|default:0 }}</p>
+                </p>
+                <p class="sm:col-span-2 lg:col-span-6">
+                  <span class="font-semibold text-slate-900">Created:</span> {{ space.created_at|date:"M j, Y" }}
                 </p>
               </div>
             </div>
