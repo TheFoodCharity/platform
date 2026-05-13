@@ -1,26 +1,29 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
+{% load crispy_forms_tags %}
 
 {% block extra_head %}
-  {% include "collaborations/_styles.html" %}
+    {% include "collaborations/_styles.html" %}
 {% endblock %}
 
-{% block content %}
-<main class="collab-shell" style="max-width: 820px;">
-  <header class="collab-page-header">
-    <div>
-      <h1>Request New Collaboration</h1>
-      <p>Submit the request details for admin review.</p>
-    </div>
-  </header>
+{% block page_title %}Request New Collaboration{% endblock %}
 
-  <form class="collab-form collab-card" method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Submit Request</button>
-  </form>
+{% block page_body %}
+    <main class="collab-shell">
+        <header class="collab-page-header">
+            <div>
+                <h1>Request New Collaboration</h1>
+                <p>Submit the request details for admin review.</p>
+            </div>
+        </header>
 
-  <hr>
+        <form class="collab-form collab-card" method="post">
+            {% csrf_token %}
+            {% crispy form %}
+            <button type="submit">Submit Request</button>
+        </form>
 
-  <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
-</main>
+        <hr>
+
+        <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
+    </main>
 {% endblock %}

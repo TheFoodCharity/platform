@@ -2,15 +2,17 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView as BaseLoginView
+from django.contrib.auth.views import LogoutView as BaseLogoutView
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
-from .forms import RegistrationForm, VerificationForm
+from .forms import LoginForm, RegistrationForm, VerificationForm
 from .models import User, VerificationCode
 
 PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
@@ -18,6 +20,7 @@ PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
 
 class LoginView(BaseLoginView):
     template_name = "accounts/login.html"
+    form_class = LoginForm
     redirect_authenticated_user = True
 
     def form_valid(self, form):
@@ -29,6 +32,16 @@ class LoginView(BaseLoginView):
             return redirect("accounts:verify")
 
         return super().form_valid(form)
+
+
+class LogoutView(BaseLogoutView):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if request.htmx:
+            success_url = self.get_success_url()
+            return HttpResponseClientRedirect(success_url)
+
+        return response
 
 
 class RegistrationView(FormView):
@@ -124,4 +137,6 @@ class ResendVerificationView(EmailUnverifiedMixin, View):
             user.send_verification_email(request)
             messages.info(request, f"A new verification code has been sent to {user.email}.")
 
-        return HttpResponseRedirect(reverse_lazy("accounts:verify"))
+        if request.htmx:
+            return HttpResponseClientRefresh()
+        return HttpResponseRedirect(reverse("accounts:verify"))

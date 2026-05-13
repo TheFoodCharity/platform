@@ -1,153 +1,157 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
+{% load crispy_forms_tags %}
 
 {% block extra_head %}
-  {% include "collaborations/_styles.html" %}
+    {% include "collaborations/_styles.html" %}
 {% endblock %}
 
-{% block content %}
-<main class="collab-shell">
-  <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
+{% block page_title %}{{ space.title }}{% endblock %}
 
-  <section class="collab-detail-layout">
-    <aside class="collab-sidebar">
-      <nav>
-        <a href="#home">Home</a>
-        <a href="#members">Members</a>
-        <a href="#chat">Chat Channel</a>
-        <a href="#links">Linked Records</a>
-        <a class="collab-placeholder-link" href="#">Connected Food Supply Listings</a>
-        <a class="collab-placeholder-link" href="#">Donations</a>
-        <a class="collab-placeholder-link" href="#">Food Donation</a>
-        <a class="collab-placeholder-link" href="#">Storage</a>
-        <a class="collab-placeholder-link" href="#">Files</a>
-        {% if request.user.is_staff %}
-          <a href="#admin">Admin</a>
-        {% endif %}
-      </nav>
-    </aside>
+{% block page_body %}
+    <main class="collab-shell">
+        <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
 
-    <div class="collab-content">
-      <section id="home" class="collab-card">
-        <div class="collab-hero-placeholder">
-          <h1>{{ space.title }}</h1>
-          <p>{{ space.purpose }}</p>
-        </div>
+        <section class="collab-detail-layout">
+            <aside class="collab-sidebar">
+                <nav>
+                    <a href="#home">Home</a>
+                    <a href="#members">Members</a>
+                    <a href="#chat">Chat Channel</a>
+                    <a href="#links">Linked Records</a>
+                    <a class="collab-placeholder-link" href="#">Connected Food Supply Listings</a>
+                    <a class="collab-placeholder-link" href="#">Donations</a>
+                    <a class="collab-placeholder-link" href="#">Food Donation</a>
+                    <a class="collab-placeholder-link" href="#">Storage</a>
+                    <a class="collab-placeholder-link" href="#">Files</a>
+                    {% if request.user.is_staff %}
+                        <a href="#admin">Admin</a>
+                    {% endif %}
+                </nav>
+            </aside>
 
-        <dl class="collab-meta">
-          <dt>Status</dt>
-          <dd><span class="collab-status">{{ space.get_status_display }}</span></dd>
-          <dt>Topic</dt>
-          <dd>{{ space.get_topic_category_display }}</dd>
-          <dt>Region</dt>
-          <dd>{{ space.region|default:"Not specified" }}</dd>
-          <dt>Municipality</dt>
-          <dd>{{ space.municipality|default:"Not specified" }}</dd>
-          <dt>Visibility</dt>
-          <dd>{{ space.get_visibility_level_display }}</dd>
-          <dt>Owner</dt>
-          <dd>{{ space.owner }}</dd>
-          <dt>Moderator</dt>
-          <dd>{{ space.moderator|default:"Not assigned" }}</dd>
-          <dt>Last activity</dt>
-          <dd>{{ space.last_activity_at }}</dd>
-        </dl>
-      </section>
+            <div class="collab-content">
+                <section id="home" class="collab-card">
+                    <div class="collab-hero-placeholder">
+                        <h1>{{ space.title }}</h1>
+                        <p>{{ space.purpose }}</p>
+                    </div>
 
-      <section id="members" class="collab-card collab-section">
-        <h2>Members</h2>
+                    <dl class="collab-meta">
+                        <dt>Status</dt>
+                        <dd><span class="collab-status">{{ space.get_status_display }}</span></dd>
+                        <dt>Topic</dt>
+                        <dd>{{ space.get_topic_category_display }}</dd>
+                        <dt>Region</dt>
+                        <dd>{{ space.region|default:"Not specified" }}</dd>
+                        <dt>Municipality</dt>
+                        <dd>{{ space.municipality|default:"Not specified" }}</dd>
+                        <dt>Visibility</dt>
+                        <dd>{{ space.get_visibility_level_display }}</dd>
+                        <dt>Owner</dt>
+                        <dd>{{ space.owner }}</dd>
+                        <dt>Moderator</dt>
+                        <dd>{{ space.moderator|default:"Not assigned" }}</dd>
+                        <dt>Last activity</dt>
+                        <dd>{{ space.last_activity_at }}</dd>
+                    </dl>
+                </section>
 
-        <h3>Users</h3>
-        <table class="collab-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for membership in space.user_memberships.all %}
-              <tr>
-                <td>{{ membership.user }}</td>
-                <td>{{ membership.get_role_display }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="2">No user members yet.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                <section id="members" class="collab-card collab-section">
+                    <h2>Members</h2>
 
-        <h3>Organizations</h3>
-        <table class="collab-table">
-          <thead>
-            <tr>
-              <th>Organization</th>
-              <th>Role</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for membership in space.organization_memberships.all %}
-              <tr>
-                <td>{{ membership.organization }}</td>
-                <td>{{ membership.get_role_display }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="2">No organization members yet.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </section>
+                    <h3>Users</h3>
+                    <table class="collab-table">
+                        <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for membership in space.user_memberships.all %}
+                            <tr>
+                                <td>{{ membership.user }}</td>
+                                <td>{{ membership.get_role_display }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">No user members yet.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
 
-      <section id="chat" class="collab-card collab-section">
-        <h2>Chat Channel</h2>
+                    <h3>Organizations</h3>
+                    <table class="collab-table">
+                        <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Role</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for membership in space.organization_memberships.all %}
+                            <tr>
+                                <td>{{ membership.organization }}</td>
+                                <td>{{ membership.get_role_display }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="2">No organization members yet.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </section>
 
-        {% if can_post %}
-          <form class="collab-form" method="post" action="{% url 'collaborations:chat_message_create' space.id %}">
-            {% csrf_token %}
-            {{ chat_form.as_p }}
-            <button type="submit">Send Message</button>
-          </form>
-        {% endif %}
+                <section id="chat" class="collab-card collab-section">
+                    <h2>Chat Channel</h2>
 
-        <div class="collab-chat-log">
-        {% for message in space.chat_messages.all %}
-          <article class="collab-chat-message">
-            <div class="collab-chat-meta">
-              <strong>{{ message.author }}</strong> - {{ message.created_at }}
+                    {% if can_post %}
+                        <form class="collab-form" method="post"
+                              action="{% url 'collaborations:chat_message_create' space.id %}">
+                            {% csrf_token %}
+                            {% crispy chat_form %}
+                            <button type="submit">Send Message</button>
+                        </form>
+                    {% endif %}
+
+                    <div class="collab-chat-log">
+                        {% for message in space.chat_messages.all %}
+                            <article class="collab-chat-message">
+                                <div class="collab-chat-meta">
+                                    <strong>{{ message.author }}</strong> - {{ message.created_at }}
+                                </div>
+                                <p>{{ message.body|linebreaksbr }}</p>
+                            </article>
+                        {% empty %}
+                            <p class="collab-empty">No chat messages have been added yet.</p>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section id="links" class="collab-card collab-section">
+                    <h2>Linked Records</h2>
+                    {% for linked_object in space.linked_objects.all %}
+                        <article class="collab-subpanel">
+                            <h3>{{ linked_object.label }}</h3>
+                            <p><strong>Type:</strong> {{ linked_object.content_type }}</p>
+                            <p>{{ linked_object.notes|linebreaksbr }}</p>
+                        </article>
+                    {% empty %}
+                        <p class="collab-empty">No linked records yet.</p>
+                    {% endfor %}
+                </section>
+
+                {% if request.user.is_staff %}
+                    <section id="admin" class="collab-card collab-section">
+                        <h2>Admin</h2>
+                        <p><strong>Created by:</strong> {{ space.created_by }}</p>
+                        <p><strong>Created from request:</strong> {{ space.created_from_request|default:"No" }}</p>
+                        <p>Use the Django admin for membership, role, moderation, and linked-record edits.</p>
+                    </section>
+                {% endif %}
             </div>
-            <p>{{ message.body|linebreaksbr }}</p>
-          </article>
-        {% empty %}
-          <p class="collab-empty">No chat messages have been added yet.</p>
-        {% endfor %}
-        </div>
-      </section>
-
-      <section id="links" class="collab-card collab-section">
-        <h2>Linked Records</h2>
-        {% for linked_object in space.linked_objects.all %}
-          <article class="collab-subpanel">
-            <h3>{{ linked_object.label }}</h3>
-            <p><strong>Type:</strong> {{ linked_object.content_type }}</p>
-            <p>{{ linked_object.notes|linebreaksbr }}</p>
-          </article>
-        {% empty %}
-          <p class="collab-empty">No linked records yet.</p>
-        {% endfor %}
-      </section>
-
-      {% if request.user.is_staff %}
-        <section id="admin" class="collab-card collab-section">
-          <h2>Admin</h2>
-          <p><strong>Created by:</strong> {{ space.created_by }}</p>
-          <p><strong>Created from request:</strong> {{ space.created_from_request|default:"No" }}</p>
-          <p>Use the Django admin for membership, role, moderation, and linked-record edits.</p>
         </section>
-      {% endif %}
-    </div>
-  </section>
-</main>
-{% endblock %}
+    </main>
+{% endblock page_body %}

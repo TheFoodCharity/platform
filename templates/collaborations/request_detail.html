@@ -1,90 +1,94 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
 {% block extra_head %}
-  {% include "collaborations/_styles.html" %}
+    {% include "collaborations/_styles.html" %}
 {% endblock %}
 
-{% block content %}
-<main class="collab-shell">
-  <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
+{% block page_title %}Collaboration Request{% endblock %}
 
-  <header class="collab-page-header" style="margin-top: 24px;">
-    <div>
-    <h1>{{ collaboration_request.title }}</h1>
-      <p><strong>Status:</strong> <span class="collab-status">{{ collaboration_request.get_status_display }}</span></p>
-    </div>
-  </header>
+{% block page_body %}
+    <main class="collab-shell">
+        <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
 
-  <section class="collab-detail-layout">
-    <aside class="collab-sidebar">
-      <nav>
-        <a href="#home">Home</a>
-        <a href="#participants">Suggested Participants</a>
-        <a href="#review">Admin Review</a>
-      </nav>
-    </aside>
+        <header class="collab-page-header" style="margin-top: 24px;">
+            <div>
+                <h1>{{ collaboration_request.title }}</h1>
+                <p><strong>Status:</strong> <span
+                        class="collab-status">{{ collaboration_request.get_status_display }}</span></p>
+            </div>
+        </header>
 
-    <div class="collab-content">
-      <section id="home" class="collab-card">
-        <h2>Request Overview</h2>
-        <dl class="collab-meta">
-          <dt>Purpose</dt>
-          <dd>{{ collaboration_request.purpose }}</dd>
-          <dt>Topic</dt>
-          <dd>{{ collaboration_request.get_topic_category_display }}</dd>
-          <dt>Region</dt>
-          <dd>{{ collaboration_request.region|default:"Not specified" }}</dd>
-          <dt>Municipality</dt>
-          <dd>{{ collaboration_request.municipality|default:"Not specified" }}</dd>
-          <dt>Visibility</dt>
-          <dd>{{ collaboration_request.get_visibility_preference_display }}</dd>
-          <dt>Reason</dt>
-          <dd>{{ collaboration_request.reason_for_request }}</dd>
-          <dt>Requested by</dt>
-          <dd>{{ collaboration_request.requested_by_user }}</dd>
-          <dt>Organization</dt>
-          <dd>{{ collaboration_request.requested_by_org|default:"Not specified" }}</dd>
-        </dl>
-      </section>
+        <section class="collab-detail-layout">
+            <aside class="collab-sidebar">
+                <nav>
+                    <a href="#home">Home</a>
+                    <a href="#participants">Suggested Participants</a>
+                    <a href="#review">Admin Review</a>
+                </nav>
+            </aside>
 
-      <section id="participants" class="collab-card collab-section">
-        <h2>Suggested Participants</h2>
-        <p>{{ collaboration_request.suggested_participants|linebreaksbr|default:"No suggestions provided." }}</p>
-      </section>
+            <div class="collab-content">
+                <section id="home" class="collab-card">
+                    <h2>Request Overview</h2>
+                    <dl class="collab-meta">
+                        <dt>Purpose</dt>
+                        <dd>{{ collaboration_request.purpose }}</dd>
+                        <dt>Topic</dt>
+                        <dd>{{ collaboration_request.get_topic_category_display }}</dd>
+                        <dt>Region</dt>
+                        <dd>{{ collaboration_request.region|default:"Not specified" }}</dd>
+                        <dt>Municipality</dt>
+                        <dd>{{ collaboration_request.municipality|default:"Not specified" }}</dd>
+                        <dt>Visibility</dt>
+                        <dd>{{ collaboration_request.get_visibility_preference_display }}</dd>
+                        <dt>Reason</dt>
+                        <dd>{{ collaboration_request.reason_for_request }}</dd>
+                        <dt>Requested by</dt>
+                        <dd>{{ collaboration_request.requested_by_user }}</dd>
+                        <dt>Organization</dt>
+                        <dd>{{ collaboration_request.requested_by_org|default:"Not specified" }}</dd>
+                    </dl>
+                </section>
 
-      <section id="review" class="collab-card collab-section">
-        <h2>Admin Review</h2>
-        <dl class="collab-meta">
-          {% if collaboration_request.reviewed_by %}
-            <dt>Reviewed by</dt>
-            <dd>{{ collaboration_request.reviewed_by }}</dd>
-            <dt>Reviewed at</dt>
-            <dd>{{ collaboration_request.reviewed_at }}</dd>
-          {% endif %}
-          <dt>Admin notes</dt>
-          <dd>{{ collaboration_request.admin_notes|linebreaksbr|default:"None" }}</dd>
-        </dl>
+                <section id="participants" class="collab-card collab-section">
+                    <h2>Suggested Participants</h2>
+                    <p>{{ collaboration_request.suggested_participants|linebreaksbr|default:"No suggestions provided." }}</p>
+                </section>
 
-        {% if request.user.is_staff %}
-          <p>
-            <a
-              class="collab-link"
-              href="{% url 'admin:collaborations_collaborationspacerequest_change' collaboration_request.id %}"
-            >
-              Open this request in Django admin
-            </a>
-          </p>
-        {% endif %}
+                <section id="review" class="collab-card collab-section">
+                    <h2>Admin Review</h2>
+                    <dl class="collab-meta">
+                        {% if collaboration_request.reviewed_by %}
+                            <dt>Reviewed by</dt>
+                            <dd>{{ collaboration_request.reviewed_by }}</dd>
+                            <dt>Reviewed at</dt>
+                            <dd>{{ collaboration_request.reviewed_at }}</dd>
+                        {% endif %}
+                        <dt>Admin notes</dt>
+                        <dd>{{ collaboration_request.admin_notes|linebreaksbr|default:"None" }}</dd>
+                    </dl>
 
-        {% if collaboration_request.space %}
-          <p>
-            <a class="collab-link" href="{% url 'collaborations:detail' collaboration_request.space.id %}">
-              Open Created Collaboration Space
-            </a>
-          </p>
-        {% endif %}
-      </section>
-    </div>
-  </section>
-</main>
-{% endblock %}
+                    {% if request.user.is_staff %}
+                        <p>
+                            <a
+                                    class="collab-link"
+                                    href="{% url 'admin:collaborations_collaborationspacerequest_change' collaboration_request.id %}"
+                            >
+                                Open this request in Django admin
+                            </a>
+                        </p>
+                    {% endif %}
+
+                    {% if collaboration_request.space %}
+                        <p>
+                            <a class="collab-link"
+                               href="{% url 'collaborations:detail' collaboration_request.space.id %}">
+                                Open Created Collaboration Space
+                            </a>
+                        </p>
+                    {% endif %}
+                </section>
+            </div>
+        </section>
+    </main>
+{% endblock page_body %}

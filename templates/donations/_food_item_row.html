@@ -1,0 +1,8 @@
+{% load crispy_forms_tags %}
+<div class="food-item-row py-4">
+    {% crispy item_form %}
+    <div class="mt-2 flex justify-end">
+        <button type="button" class="btn btn-error btn-soft btn-xs remove-food-item">Remove</button>
+    </div>
+    <div class="hidden">{{ item_form.DELETE }}</div>
+</div>

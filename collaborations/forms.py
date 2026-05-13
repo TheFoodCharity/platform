@@ -1,11 +1,12 @@
 from django import forms
 
 from organizations.models import Organization
+from theme.forms import ThemedFormMixin
 
 from .models import CollaborationChatMessage, CollaborationSpaceRequest
 
 
-class CollaborationSpaceRequestForm(forms.ModelForm):
+class CollaborationSpaceRequestForm(ThemedFormMixin, forms.ModelForm):
     class Meta:
         model = CollaborationSpaceRequest
         fields = [
@@ -34,7 +35,7 @@ class CollaborationSpaceRequestForm(forms.ModelForm):
         self.fields["requested_by_org"].required = False
 
 
-class CollaborationChatMessageForm(forms.ModelForm):
+class CollaborationChatMessageForm(ThemedFormMixin, forms.ModelForm):
     class Meta:
         model = CollaborationChatMessage
         fields = ["body"]

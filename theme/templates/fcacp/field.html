@@ -1,0 +1,42 @@
+{% load themed_field %}
+
+{% if field.is_hidden %}
+    {{ field }}
+{% else %}
+    {% if field|is_checkbox %}
+        <div class="fieldset">
+        <label class="label cursor-pointer gap-3" for="{{ field.id_for_label }}">
+            {% themed_field field %}
+            {% if form_show_labels and field.label %}
+                <span class="grow text-base-content">
+                    {{ field.label }}
+                    {% if field.field.required %}<span aria-hidden="true" class="text-error">*</span>{% endif %}
+                </span>
+            {% endif %}
+        </label>
+    {% elif field|is_radioselect %}
+        <div class="fieldset">
+        {% if form_show_labels and field.label %}
+            <span class="fieldset-legend">
+                {{ field.label }}
+                {% if field.field.required %}<span aria-hidden="true" class="text-error">*</span>{% endif %}
+            </span>
+        {% endif %}
+        {% include "fcacp/layout/radioselect.html" %}
+    {% else %}
+        <div class="fieldset">
+        {% if form_show_labels and field.label %}
+            <label for="{{ field.id_for_label }}" class="fieldset-legend">
+                {{ field.label }}
+                {% if field.field.required %}<span aria-hidden="true" class="text-error">*</span>{% endif %}
+            </label>
+        {% endif %}
+
+        {% themed_field field %}
+    {% endif %}
+
+{% include "fcacp/layout/help_text_and_errors.html" %}
+
+</div>
+
+{% endif %}
