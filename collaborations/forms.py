@@ -35,7 +35,7 @@ class CollaborationSpaceRequestForm(ThemedFormMixin, forms.ModelForm):
         self.fields["requested_by_org"].required = False
 
 
-class CollaborationChatMessageForm(ThemedFormMixin, forms.ModelForm):
+class CollaborationChatMessageForm(forms.ModelForm):
     class Meta:
         model = CollaborationChatMessage
         fields = ["body"]
@@ -43,5 +43,11 @@ class CollaborationChatMessageForm(ThemedFormMixin, forms.ModelForm):
             "body": "Message",
         }
         widgets = {
-            "body": forms.Textarea(attrs={"rows": 3, "placeholder": "Write a message to the collaboration channel"}),
+            "body": forms.Textarea(
+                attrs={
+                    "class": "textarea textarea-bordered min-h-28 w-full",
+                    "rows": 3,
+                    "placeholder": "Write a message to this collaboration",
+                }
+            ),
         }
