@@ -1,4 +1,5 @@
 import uuid
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -350,3 +351,29 @@ class CollaborationChatMessage(models.Model):
 
     def __str__(self):
         return f"Chat message by {self.author} in {self.space}"
+
+
+def collaboration_file_upload_to(instance, filename):
+    ext = Path(filename).suffix.lower()
+    return f"collaborations/{instance.space_id}/files/{instance.id}{ext}"
+
+
+class CollaborationFile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    space = models.ForeignKey(CollaborationSpace, related_name="files", on_delete=models.CASCADE)
+    file = models.FileField(upload_to=collaboration_file_upload_to)
+    original_filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=255)
+    size = models.PositiveBigIntegerField()
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="uploaded_collaboration_files",
+        on_delete=models.PROTECT,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "original_filename"]
+
+    def __str__(self):
+        return self.original_filename
