@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
-    "rules",
+    "rules.apps.AutodiscoverRulesConfig",
     "tailwind",
     # 1st-party
     "accounts",
