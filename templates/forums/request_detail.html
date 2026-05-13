@@ -38,7 +38,7 @@
             </p>
           </div>
           {% if forum_request.space %}
-            <a class="btn btn-primary btn-sm" href="{% url 'forums:detail' forum_request.space.id %}?section=posts">
+            <a class="btn btn-primary btn-sm" href="{% url 'forums:detail_posts' forum_request.space.id %}">
               Open Forum
             </a>
           {% endif %}

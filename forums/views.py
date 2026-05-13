@@ -108,25 +108,24 @@ def forum_request_detail(request, request_id):
     )
 
 
-@login_required
-def forum_detail(request, space_id):
-    space = get_object_or_404(ForumSpace.objects.visible_to(request.user), pk=space_id)
-    posts = space.posts.select_related("author").order_by("created_at")
-    if not request.user.is_staff:
-        posts = posts.filter(is_removed=False)
-    posts = list(posts)
+def _get_forum_space(user, space_id):
+    return get_object_or_404(ForumSpace.objects.visible_to(user), pk=space_id)
 
-    forum_detail_section = request.GET.get("section", "posts")
-    allowed_sections = {"posts", "members"}
-    if request.user.is_staff:
-        allowed_sections.add("admin")
-    if forum_detail_section not in allowed_sections:
-        forum_detail_section = "posts"
 
+def _build_forum_detail_context(space, section):
+    return {
+        "space": space,
+        "forum_detail_section": section,
+        "forum_nav_active": "forums",
+        "forum_header_title": space.title,
+        "forum_header_description": space.description,
+    }
+
+
+def _build_forum_participant_context(space, participant_ids):
     user_memberships = list(space.user_memberships.select_related("user").filter(left_at__isnull=True))
     member_ids = {membership.user_id for membership in user_memberships}
-    author_ids = {post.author_id for post in posts}
-    participant_ids = author_ids | member_ids | {request.user.id}
+    participant_ids = set(participant_ids) | member_ids
 
     forum_user_roles = {
         membership.user_id: membership.get_role_display()
@@ -164,38 +163,78 @@ def forum_detail(request, space_id):
         if membership.organization_id in forum_org_ids:
             participant_forum_orgs.setdefault(membership.user_id, membership.organization)
 
+    return {
+        "user_memberships": user_memberships,
+        "forum_user_roles": forum_user_roles,
+        "forum_org_roles": forum_org_roles,
+        "participant_orgs": participant_orgs,
+        "participant_forum_orgs": participant_forum_orgs,
+    }
+
+
+def _forum_role_for_user(user, participant_context):
+    organization = participant_context["participant_forum_orgs"].get(user.id) or participant_context[
+        "participant_orgs"
+    ].get(user.id)
+    role = participant_context["forum_user_roles"].get(user.id)
+    if not role and organization:
+        role = participant_context["forum_org_roles"].get(organization.id)
+    if not role and user.is_staff:
+        role = "Staff"
+    return role or "Member", organization
+
+
+@login_required
+def forum_detail_posts(request, space_id):
+    space = _get_forum_space(request.user, space_id)
+    posts = space.posts.select_related("author").order_by("created_at")
+    if not request.user.is_staff:
+        posts = posts.filter(is_removed=False)
+    posts = list(posts)
+
+    author_ids = {post.author_id for post in posts}
+    participant_context = _build_forum_participant_context(space, author_ids | {request.user.id})
+
     post_rows = []
     for post in posts:
-        author = post.author
-        organization = participant_forum_orgs.get(author.id) or participant_orgs.get(author.id)
-        role = forum_user_roles.get(author.id)
-        if not role and organization:
-            role = forum_org_roles.get(organization.id)
-        if not role and author.is_staff:
-            role = "Staff"
+        author_role, organization = _forum_role_for_user(post.author, participant_context)
         post_rows.append(
             {
                 "post": post,
-                "author_name": author.get_full_name() or str(author),
-                "author_role": role or "Member",
+                "author_name": post.author.get_full_name() or str(post.author),
+                "author_role": author_role,
                 "organization": organization,
             }
         )
 
-    current_user_organization = participant_forum_orgs.get(request.user.id) or participant_orgs.get(request.user.id)
-    current_user_role = forum_user_roles.get(request.user.id)
-    if not current_user_role and current_user_organization:
-        current_user_role = forum_org_roles.get(current_user_organization.id)
-    if not current_user_role and request.user.is_staff:
-        current_user_role = "Staff"
+    current_user_role, current_user_organization = _forum_role_for_user(request.user, participant_context)
 
-    request.user.role = current_user_role or "Member"
-    request.user.organization = current_user_organization
+    return render(
+        request,
+        "forums/detail.html",
+        {
+            **_build_forum_detail_context(space, "posts"),
+            "forum_detail_template": "forums/_detail_posts.html",
+            "post_rows": post_rows,
+            "post_form": ForumPostForm() if space.can_post(request.user) else None,
+            "can_post": space.can_post(request.user),
+            "current_user_role": current_user_role,
+            "current_user_organization": current_user_organization,
+        },
+    )
+
+
+@login_required
+def forum_detail_members(request, space_id):
+    space = _get_forum_space(request.user, space_id)
+    participant_context = _build_forum_participant_context(space, {request.user.id})
 
     member_rows = []
-    for membership in user_memberships:
+    for membership in participant_context["user_memberships"]:
         user = membership.user
-        organization = participant_forum_orgs.get(user.id) or participant_orgs.get(user.id)
+        organization = participant_context["participant_forum_orgs"].get(user.id) or participant_context[
+            "participant_orgs"
+        ].get(user.id)
         member_rows.append(
             {
                 "name": user.get_full_name() or str(user),
@@ -208,27 +247,37 @@ def forum_detail(request, space_id):
         request,
         "forums/detail.html",
         {
-            "space": space,
-            "post_rows": post_rows,
+            **_build_forum_detail_context(space, "members"),
+            "forum_detail_template": "forums/_detail_members.html",
             "member_rows": member_rows,
-            "post_form": ForumPostForm() if space.can_post(request.user) else None,
-            "can_post": space.can_post(request.user),
-            "forum_detail_section": forum_detail_section,
-            "forum_nav_active": "forums",
-            "forum_header_title": space.title,
-            "forum_header_description": space.description,
+        },
+    )
+
+
+@login_required
+def forum_detail_admin(request, space_id):
+    if not request.user.is_staff:
+        raise PermissionDenied
+
+    space = _get_forum_space(request.user, space_id)
+    return render(
+        request,
+        "forums/detail.html",
+        {
+            **_build_forum_detail_context(space, "admin"),
+            "forum_detail_template": "forums/_detail_admin.html",
         },
     )
 
 
 @login_required
 def forum_post_create(request, space_id):
-    space = get_object_or_404(ForumSpace.objects.visible_to(request.user), pk=space_id)
+    space = _get_forum_space(request.user, space_id)
     if not space.can_post(request.user):
         raise PermissionDenied
 
     if request.method != "POST":
-        return redirect("forums:detail", space_id=space.id)
+        return redirect("forums:detail_posts", space_id=space.id)
 
     form = ForumPostForm(request.POST)
     if form.is_valid():
@@ -239,4 +288,4 @@ def forum_post_create(request, space_id):
         space.last_activity_at = timezone.now()
         space.save(update_fields=["last_activity_at", "updated_at"])
 
-    return redirect("forums:detail", space_id=space.id)
+    return redirect("forums:detail_posts", space_id=space.id)

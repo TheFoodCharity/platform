@@ -58,7 +58,7 @@
               <td>{{ forum_request.created_at|date:"M j, Y" }}</td>
               <td>
                 {% if forum_request.space %}
-                  <a class="btn btn-sm btn-primary" href="{% url 'forums:detail' forum_request.space.id %}?section=posts">
+                  <a class="btn btn-sm btn-primary" href="{% url 'forums:detail_posts' forum_request.space.id %}">
                     Open Forum
                   </a>
                 {% else %}
