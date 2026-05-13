@@ -180,3 +180,37 @@ DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
 
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
+
+PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
+
+# File storage directory
+if environment.aws_storage_bucket_name:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": environment.aws_storage_bucket_name,
+                "region_name": environment.aws_s3_region_name or None,
+                "access_key": environment.aws_s3_access_key_id or None,
+                "secret_key": environment.aws_s3_secret_access_key or None,
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": PRIVATE_MEDIA_ROOT,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }

@@ -36,3 +36,8 @@ class Environment(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_nested_delimiter="__")
 
     database_url: DatabaseUrl = Field(default="postgresql://fcacp:super-secure-password@127.0.0.1:5432/fcacp")
+
+    aws_storage_bucket_name: str = ""
+    aws_s3_region_name: str = ""
+    aws_s3_access_key_id: str = ""
+    aws_s3_secret_access_key: str = ""
