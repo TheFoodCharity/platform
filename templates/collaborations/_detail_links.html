@@ -10,39 +10,59 @@
     </div>
   </div>
 
-  <div class="mt-6 space-y-3">
-    {% for row in linked_record_rows %}
-      {% with linked_object=row.linked_object %}
-        <article class="rounded-xl border border-base-300 bg-base-100 p-4">
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 class="text-xl font-bold text-slate-950">{{ linked_object.label }}</h3>
-              <p class="mt-2 text-sm text-slate-600">
-                <span class="font-semibold text-slate-900">Type:</span>
-                {{ linked_object.content_type.name|title }}
-              </p>
-              {% if linked_object.notes %}
-                <p class="mt-2 text-slate-950">{{ linked_object.notes|linebreaksbr }}</p>
-              {% endif %}
-              <p class="mt-2 text-xs text-slate-500">
-                Linked by {{ linked_object.created_by.get_full_name|default:linked_object.created_by }}
-                on {{ linked_object.created_at|date:"M j, Y" }}.
-              </p>
-            </div>
-            {% if row.record_url %}
-              <a class="btn btn-sm btn-outline btn-primary" href="{{ row.record_url }}">Open Record</a>
-            {% endif %}
-          </div>
-        </article>
-      {% endwith %}
-    {% empty %}
-      <div class="rounded-xl border border-dashed border-base-300 bg-base-100 p-8 text-center text-slate-600">
-        No linked records yet.
-      </div>
-    {% endfor %}
+  <div class="mt-6 overflow-x-auto rounded-xl border border-base-300 bg-base-100">
+    <table class="table">
+      <thead class="bg-white text-xs tracking-wide text-slate-500">
+        <tr>
+          <th>Name</th>
+          <th class="w-40">Type</th>
+          <th class="w-48">Linked By</th>
+          <th class="w-48">Linked At</th>
+          <th class="w-36">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in linked_record_rows %}
+          {% with linked_object=row.linked_object %}
+            <tr class="align-middle">
+              <td>
+                <div class="max-w-xs">
+                  <p class="truncate font-medium text-slate-950" title="{{ linked_object.label }}">
+                    {{ linked_object.label }}
+                  </p>
+                  {% if linked_object.notes %}
+                    <p class="mt-1 line-clamp-2 text-sm text-slate-500">{{ linked_object.notes }}</p>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="text-sm text-slate-600">{{ linked_object.content_type.name|title }}</td>
+              <td class="text-sm text-slate-600">
+                {{ linked_object.created_by.get_full_name|default:linked_object.created_by }}
+              </td>
+              <td class="text-sm text-slate-600">{{ linked_object.created_at|date:"M d, Y" }}</td>
+              <td>
+                {% if row.record_url %}
+                  <a class="btn btn-sm btn-outline btn-primary" href="{{ row.record_url }}">
+                    <span class="material-symbols-rounded">open_in_new</span>
+                  </a>
+                {% else %}
+                  <span class="text-sm text-slate-400">Unavailable</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endwith %}
+        {% empty %}
+          <tr>
+            <td colspan="5" class="p-8 text-center text-slate-600">
+              No linked records yet.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
 
-    {% if can_link_records %}
+  {% if can_link_records %}
     <form
       class="{% if not linked_record_form.errors %}hidden {% endif %}mt-6 rounded-xl border border-base-300 bg-base-100 p-4"
       method="post"
