@@ -28,6 +28,8 @@
             <a
               class="btn btn-sm btn-outline btn-primary"
               href="{% url 'collaborations:file_download' space.id collaboration_file.id %}"
+              download="{{ collaboration_file.original_filename }}"
+              hx-boost="false"
             >
               <span class="material-symbols-rounded">download</span>
               Download
