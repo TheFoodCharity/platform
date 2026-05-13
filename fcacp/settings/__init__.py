@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django_htmx",
     "phonenumber_field",
     "tailwind",
+    "storages",
     # 1st-party
     "accounts",
     "collaborations",
