@@ -1,5 +1,6 @@
 from datetime import datetime, time, timedelta
 
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -64,30 +65,31 @@ def user_organization(user):
     return user.organizations.filter(is_active=True).first()
 
 
-def account_initial(request):
-    if not request.user.is_authenticated:
-        return {}
-
-    organization = user_organization(request.user)
+def donor_profile(request, organization):
     full_name = request.user.get_full_name().strip()
-    display_name = full_name or request.user.email
-    initial = {
+    address_parts = []
+    if organization:
+        region_and_postal = " ".join(part for part in [organization.region, organization.postal_code] if part)
+        address_parts = [
+            organization.address_line_1,
+            organization.address_line_2,
+            organization.municipality,
+            region_and_postal,
+        ]
+
+    return {
+        "company_name": organization.name if organization else "",
+        "address_1": organization.address_line_1 if organization else "",
+        "address_2": organization.address_line_2 if organization else "",
+        "address_display": ", ".join(part for part in address_parts if part),
+        "city": organization.municipality if organization else "",
+        "province_or_state": organization.region if organization else "",
+        "postal_code": organization.postal_code if organization else "",
+        "donor_name": full_name or request.user.email,
+        "donor_contact": request.user.email,
         "contact_email": organization.email if organization and organization.email else request.user.email,
         "contact_phone": str(organization.phone) if organization and organization.phone else "",
-        "donor_contact": display_name,
-        "donor_name": display_name,
     }
-
-    if organization is not None:
-        initial.update(
-            {
-                "city": organization.municipality,
-                "company_name": organization.name,
-                "province_or_state": organization.region,
-            },
-        )
-
-    return initial
 
 
 def request_account_initial(request):
@@ -105,6 +107,7 @@ def request_account_initial(request):
     return initial
 
 
+@login_required
 def donation_list(request):
     donations = Donation.objects.all().order_by("-created_at")
     organization = user_organization(request.user)
@@ -130,7 +133,10 @@ def donation_list(request):
     return render(request, "donations/donation_list.html", context)
 
 
+@login_required
 def donation_create(request):
+    organization = user_organization(request.user)
+
     if request.method == "POST":
         form = DonationForm(request.POST)
         formset = DonationFoodItemFormSet(request.POST)
@@ -141,25 +147,31 @@ def donation_create(request):
             donation.food_type = []
             donation.quantity = 1
             donation.unit = Donation.QuantityUnit.ITEMS
-            if request.user.is_authenticated:
-                donation.submitted_by = request.user
-                donation.supplier_organization = user_organization(request.user)
+            donation.submitted_by = request.user
+            donation.supplier_organization = organization
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
             save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
-        form = DonationForm(initial=account_initial(request))
+        form = DonationForm()
         formset = DonationFoodItemFormSet()
 
     return render(
         request,
         "donations/donation_form.html",
-        {"form": form, "formset": formset, "title": "Create Donation"},
+        {
+            "form": form,
+            "formset": formset,
+            "donor_profile": donor_profile(request, organization),
+            "supplier_organization": organization,
+            "title": "Create Donation",
+        },
     )
 
 
+@login_required
 def donation_edit(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
 
@@ -184,10 +196,17 @@ def donation_edit(request, pk):
     return render(
         request,
         "donations/donation_form.html",
-        {"form": form, "formset": formset, "title": "Edit Donation"},
+        {
+            "form": form,
+            "formset": formset,
+            "donor_profile": donor_profile(request, donation.supplier_organization),
+            "supplier_organization": donation.supplier_organization,
+            "title": "Edit Donation",
+        },
     )
 
 
+@login_required
 def donation_detail(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
 

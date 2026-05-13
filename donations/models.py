@@ -97,15 +97,6 @@ class Donation(models.Model):
         TWO_HUNDRED = 200, "200"
         THREE_HUNDRED = 300, "300"
 
-    company_name = models.CharField(max_length=255, blank=True)
-    address_1 = models.CharField(max_length=255, blank=True)
-    address_2 = models.CharField(max_length=255, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    province_or_state = models.CharField(max_length=100, blank=True)
-    postal_code = models.CharField(max_length=20, blank=True)
-    contact_email = models.EmailField(blank=True)
-    contact_phone = models.CharField(max_length=50, blank=True)
-
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -120,8 +111,6 @@ class Donation(models.Model):
         blank=True,
         related_name="donations",
     )
-    donor_name = models.CharField(max_length=255)
-    donor_contact = models.CharField(max_length=255, blank=True)
 
     food_category = models.CharField(
         max_length=50,
@@ -192,7 +181,23 @@ class Donation(models.Model):
         verbose_name_plural = "Donations"
 
     def __str__(self):
-        return f"{self.food_type_display} - {self.donor_name}"
+        return f"{self.food_type_display} - {self.donor_display_name}"
+
+    @property
+    def donor_display_name(self):
+        if self.supplier_organization_id:
+            return self.supplier_organization.name
+        if self.submitted_by_id:
+            return self.submitted_by.get_full_name().strip() or self.submitted_by.email
+        return "Unknown donor"
+
+    @property
+    def donor_contact_display(self):
+        if self.supplier_organization_id and self.supplier_organization.email:
+            return self.supplier_organization.email
+        if self.submitted_by_id:
+            return self.submitted_by.email
+        return ""
 
     @property
     def food_type_display(self):

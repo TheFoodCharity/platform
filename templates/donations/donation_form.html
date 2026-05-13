@@ -26,59 +26,45 @@
       <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         <div class="mb-6">
           <h2 class="text-2xl font-bold text-slate-950">Donor Information</h2>
-          <p class="mt-1 text-slate-600">Tell us who is donating and where the food is coming from.</p>
+          <p class="mt-1 text-slate-600">This information comes from your account and organization profile.</p>
         </div>
 
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="form-control">
-            {{ form.company_name.label_tag }}
-            {{ form.company_name }}
-            {{ form.company_name.errors }}
+        <div class="grid gap-4 text-sm md:grid-cols-2">
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Company name</p>
+            <p class="mt-1 text-lg font-bold text-slate-950">
+              {{ donor_profile.company_name|default:"No active organization" }}
+            </p>
           </div>
-          <div class="form-control">
-            {{ form.donor_name.label_tag }}
-            {{ form.donor_name }}
-            {{ form.donor_name.errors }}
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Donor name</p>
+            <p class="mt-1 text-lg font-bold text-slate-950">
+              {{ donor_profile.donor_name|default:"Not provided" }}
+            </p>
           </div>
-          <div class="form-control md:col-span-2">
-            {{ form.address_1.label_tag }}
-            {{ form.address_1 }}
-            {{ form.address_1.errors }}
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4 md:col-span-2">
+            <p class="font-semibold text-slate-500">Address</p>
+            <p class="mt-1 text-lg font-bold text-slate-950">
+              {{ donor_profile.address_display|default:"Not provided" }}
+            </p>
           </div>
-          <div class="form-control md:col-span-2">
-            {{ form.address_2.label_tag }}
-            {{ form.address_2 }}
-            {{ form.address_2.errors }}
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Donor contact</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.donor_contact|default:"Not provided" }}
+            </p>
           </div>
-          <div class="form-control">
-            {{ form.city.label_tag }}
-            {{ form.city }}
-            {{ form.city.errors }}
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Contact email</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.contact_email|default:"Not provided" }}
+            </p>
           </div>
-          <div class="form-control">
-            {{ form.province_or_state.label_tag }}
-            {{ form.province_or_state }}
-            {{ form.province_or_state.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.postal_code.label_tag }}
-            {{ form.postal_code }}
-            {{ form.postal_code.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.donor_contact.label_tag }}
-            {{ form.donor_contact }}
-            {{ form.donor_contact.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.contact_email.label_tag }}
-            {{ form.contact_email }}
-            {{ form.contact_email.errors }}
-          </div>
-          <div class="form-control">
-            {{ form.contact_phone.label_tag }}
-            {{ form.contact_phone }}
-            {{ form.contact_phone.errors }}
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Contact phone</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.contact_phone|default:"Not provided" }}
+            </p>
           </div>
         </div>
       </section>
@@ -317,39 +303,5 @@
     syncDetails();
   });
 
-  const addressFields = [
-    document.querySelector("#{{ form.address_1.id_for_label }}"),
-    document.querySelector("#{{ form.address_2.id_for_label }}"),
-    document.querySelector("#{{ form.city.id_for_label }}"),
-    document.querySelector("#{{ form.province_or_state.id_for_label }}"),
-    document.querySelector("#{{ form.postal_code.id_for_label }}"),
-  ];
-  const pickupLocation = document.querySelector("#{{ form.pickup_location.id_for_label }}");
-  let lastAutoPickupLocation = "";
-  let pickupLocationWasEdited = Boolean(pickupLocation.value.trim());
-
-  function buildCompanyAddress() {
-    return addressFields
-      .map((field) => field.value.trim())
-      .filter(Boolean)
-      .join(", ");
-  }
-
-  function syncPickupLocationFromAddress() {
-    const companyAddress = buildCompanyAddress();
-    const canSync = !pickupLocationWasEdited || pickupLocation.value === lastAutoPickupLocation;
-
-    if (canSync) {
-      pickupLocation.value = companyAddress;
-      lastAutoPickupLocation = companyAddress;
-      pickupLocationWasEdited = false;
-    }
-  }
-
-  pickupLocation.addEventListener("input", () => {
-    pickupLocationWasEdited = pickupLocation.value !== lastAutoPickupLocation;
-  });
-  addressFields.forEach((field) => field.addEventListener("input", syncPickupLocationFromAddress));
-  syncPickupLocationFromAddress();
 </script>
 {% endblock %}

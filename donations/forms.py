@@ -37,16 +37,6 @@ class DonationForm(forms.ModelForm):
         model = Donation
 
         fields = [
-            "company_name",
-            "address_1",
-            "address_2",
-            "city",
-            "province_or_state",
-            "postal_code",
-            "donor_name",
-            "donor_contact",
-            "contact_email",
-            "contact_phone",
             "pickup_location",
             "pickup_day",
             "pickup_ready_time",

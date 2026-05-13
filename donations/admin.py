@@ -16,7 +16,7 @@ class DonationAdmin(admin.ModelAdmin):
     empty_value_display = "-"
 
     list_display = (
-        "donor_name",
+        "donor_display_name",
         "submitted_by",
         "supplier_organization",
         "food_type_display",
@@ -43,8 +43,8 @@ class DonationAdmin(admin.ModelAdmin):
     )
 
     search_fields = (
-        "donor_name",
-        "donor_contact",
+        "submitted_by__first_name",
+        "submitted_by__last_name",
         "submitted_by__email",
         "supplier_organization__name",
         "pickup_location",
@@ -87,7 +87,8 @@ class FoodRequestAdmin(admin.ModelAdmin):
         "email",
         "requested_by__email",
         "receiver_organization__name",
-        "donation__donor_name",
+        "donation__submitted_by__email",
+        "donation__supplier_organization__name",
         "preferred_storage__name",
     )
     readonly_fields = ("created_at", "updated_at")

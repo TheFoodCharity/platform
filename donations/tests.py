@@ -16,7 +16,9 @@ class DonationFormTests(SimpleTestCase):
     def test_intake_form_has_reference_style_sections(self):
         form = DonationForm()
 
-        self.assertIn("company_name", form.fields)
+        self.assertNotIn("company_name", form.fields)
+        self.assertNotIn("donor_name", form.fields)
+        self.assertNotIn("contact_email", form.fields)
         self.assertIn("pickup_day", form.fields)
         self.assertIn("pickup_ready_time", form.fields)
         self.assertIn("pickup_end_time", form.fields)
@@ -49,18 +51,20 @@ class DonationFormTests(SimpleTestCase):
 
 
 class DonationIntakeViewTests(TestCase):
+    def create_user_with_org(self, email="supplier@example.com", organization_name="Supplier Org"):
+        user = User.objects.create_user(
+            email=email,
+            password="password",
+            first_name="Sam",
+            last_name="Supplier",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(name=organization_name, owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=organization)
+        return user, organization
+
     def donation_post_data(self):
         data = {
-            "company_name": "Neighbourhood Market",
-            "address_1": "123 Main Street",
-            "address_2": "",
-            "city": "Vancouver",
-            "province_or_state": "BC",
-            "postal_code": "V5K 0A1",
-            "donor_name": "Jane Smith",
-            "donor_contact": "Jane Smith",
-            "contact_email": "jane@example.com",
-            "contact_phone": "604-555-0100",
             "pickup_location": "123 Main Street",
             "pickup_day": Donation.PickupDay.TODAY,
             "pickup_ready_time": Donation.PickupReadyTime.READY_NOW,
@@ -97,6 +101,9 @@ class DonationIntakeViewTests(TestCase):
         return data
 
     def test_create_donation_saves_food_items(self):
+        user, organization = self.create_user_with_org()
+        self.client.force_login(user)
+
         response = self.client.post(reverse("donations:create"), self.donation_post_data())
 
         self.assertEqual(response.status_code, 302)
@@ -104,21 +111,14 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(DonationFoodItem.objects.count(), 1)
 
         donation = Donation.objects.get()
-        self.assertEqual(donation.company_name, "Neighbourhood Market")
+        self.assertEqual(donation.submitted_by, user)
+        self.assertEqual(donation.supplier_organization, organization)
         self.assertEqual(donation.food_category, Donation.FoodCategory.PRODUCE)
         self.assertEqual(donation.quantity, 12)
         self.assertIsNotNone(donation.pickup_deadline)
 
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
-        user = User.objects.create_user(
-            email="supplier@example.com",
-            password="password",
-            first_name="Sam",
-            last_name="Supplier",
-            email_verified=True,
-        )
-        organization = Organization.objects.create(name="Supplier Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
+        user, organization = self.create_user_with_org()
         self.client.force_login(user)
 
         response = self.client.post(reverse("donations:create"), self.donation_post_data())
@@ -140,8 +140,12 @@ class DonationIntakeViewTests(TestCase):
             name="Supplier Org",
             owner=user,
             is_active=True,
+            address_line_1="1081 Burrard St",
+            address_line_2="Suite 200",
             municipality="Vancouver",
             region="BC",
+            postal_code="V6Z 1Y6",
+            service_area="123 Farm Road",
             email="donations@supplier.example",
             phone="6045550100",
         )
@@ -150,12 +154,11 @@ class DonationIntakeViewTests(TestCase):
 
         response = self.client.get(reverse("donations:create"))
 
-        self.assertContains(response, 'value="Supplier Org"')
-        self.assertContains(response, 'value="Vancouver"')
-        self.assertContains(response, 'value="BC"')
-        self.assertContains(response, 'value="donations@supplier.example"')
-        self.assertContains(response, 'value="6045550100"')
-        self.assertContains(response, 'value="Sam Supplier"')
+        self.assertContains(response, "Supplier Org")
+        self.assertContains(response, "1081 Burrard St, Suite 200, Vancouver, BC V6Z 1Y6")
+        self.assertContains(response, "donations@supplier.example")
+        self.assertContains(response, "6045550100")
+        self.assertContains(response, "Sam Supplier")
 
     def test_org_members_share_supplier_donation_list(self):
         owner = User.objects.create_user(
@@ -185,8 +188,7 @@ class DonationIntakeViewTests(TestCase):
         Membership.objects.create(user=member, organization=organization)
         Membership.objects.create(user=other_user, organization=other_organization)
         Donation.objects.create(
-            donor_name="Shared Donation",
-            donor_contact="owner@example.com",
+            submitted_by=owner,
             supplier_organization=organization,
             food_category=Donation.FoodCategory.PRODUCE,
             food_type=[Donation.FoodCategory.PRODUCE],
@@ -198,8 +200,7 @@ class DonationIntakeViewTests(TestCase):
             status=Donation.Status.SUBMITTED,
         )
         Donation.objects.create(
-            donor_name="Hidden Donation",
-            donor_contact="other@example.com",
+            submitted_by=other_user,
             supplier_organization=other_organization,
             food_category=Donation.FoodCategory.DAIRY,
             food_type=[Donation.FoodCategory.DAIRY],
@@ -214,15 +215,13 @@ class DonationIntakeViewTests(TestCase):
 
         response = self.client.get(reverse("donations:list"))
 
-        self.assertContains(response, "Shared Donation")
-        self.assertNotContains(response, "Hidden Donation")
+        self.assertContains(response, "Shared Org")
+        self.assertNotContains(response, "Other Org")
 
 
 class FoodRequestTests(TestCase):
     def setUp(self):
         self.donation = Donation.objects.create(
-            donor_name="Neighbourhood Market",
-            donor_contact="donor@example.com",
             food_category=Donation.FoodCategory.PRODUCE,
             food_type=[Donation.FoodCategory.PRODUCE],
             quantity=12,
