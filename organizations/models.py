@@ -277,7 +277,6 @@ class OrganizationApplication(TimestampedModel):
 class Membership(TimestampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="memberships", on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name="memberships", on_delete=models.CASCADE)
-    is_admin = models.BooleanField(default=False)
     role = models.ForeignKey(
         PermissionGroup,
         null=True,
