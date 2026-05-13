@@ -39,19 +39,24 @@
                 </div>
               </div>
 
-              <div class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-5">
                 <p><span class="font-semibold text-slate-900">Topic:</span> {{ space.get_topic_category_display }}</p>
                 <p><span class="font-semibold text-slate-900">Visibility:</span> {{ space.get_visibility_level_display }}</p>
                 <p><span class="font-semibold text-slate-900">Region:</span> {{ space.region|default:"No region" }}</p>
                 <p><span class="font-semibold text-slate-900">Messages:</span> {{ space.message_count }}</p>
-                <p><span class="font-semibold text-slate-900">Created:</span> {{ space.created_at|date:"M j, Y" }}</p>
-                <p class="sm:col-span-2 lg:col-span-3">
-                  <span class="font-semibold text-slate-900">Latest Message:</span>
-                  {% if space.latest_message_at %}
-                    {{ space.latest_message_at|date:"M j, Y g:i A" }}
-                  {% else %}
-                    No messages yet
-                  {% endif %}
+                <p><span class="font-semibold text-slate-900">Files:</span> {{ space.file_count|default:0 }}</p>
+                <p class="sm:col-span-2 lg:col-span-5">
+                   <p>
+                    <span class="font-semibold text-slate-900">Created:</span> {{ space.created_at|date:"M j, Y" }}
+                  </p>
+                  <p>
+                    <span class="font-semibold text-slate-900">Latest Message:</span>
+                    {% if space.latest_message_at %}
+                      {{ space.latest_message_at|date:"M j, Y g:i A" }}
+                    {% else %}
+                      No messages yet
+                    {% endif %}
+                  </p>
                 </p>
               </div>
             </div>

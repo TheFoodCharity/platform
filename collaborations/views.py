@@ -28,6 +28,7 @@ def collaboration_list(request):
             message_count=Count("chat_messages", distinct=True),
             latest_message_at=Max("chat_messages__created_at"),
             linked_record_count=Count("linked_objects", distinct=True),
+            file_count=Count("files", distinct=True),
         )
     )
 
@@ -129,6 +130,7 @@ def collaboration_detail(request, space_id):
 def collaboration_detail_overview(request, space_id):
     space = _get_collaboration_space(request.user, space_id)
     linked_record_count = space.linked_objects.count()
+    file_count = space.files.count()
 
     return render(
         request,
@@ -137,6 +139,7 @@ def collaboration_detail_overview(request, space_id):
             **_build_collaboration_detail_context(space, "overview"),
             "collaboration_detail_template": "collaborations/_detail_overview.html",
             "linked_record_count": linked_record_count,
+            "file_count": file_count,
         },
     )
 
