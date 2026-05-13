@@ -1,0 +1,117 @@
+{% load crispy_forms_tags %}
+
+<section id="files" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-950">Files</h2>
+      <p class="mt-2 text-slate-600">
+        Shared documents for this collaboration.
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6 space-y-3">
+    {% for collaboration_file in files %}
+      <article class="rounded-xl border border-base-300 bg-base-100 p-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 class="text-xl font-bold text-slate-950">{{ collaboration_file.original_filename }}</h3>
+            <p class="mt-2 text-sm text-slate-600">
+              {{ collaboration_file.size|filesizeformat }} · {{ collaboration_file.content_type }}
+            </p>
+            <p class="mt-2 text-xs text-slate-500">
+              Uploaded by {{ collaboration_file.uploaded_by.get_full_name|default:collaboration_file.uploaded_by }}
+              on {{ collaboration_file.created_at|date:"M j, Y" }}.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <a
+              class="btn btn-sm btn-outline btn-primary"
+              href="{% url 'collaborations:file_download' space.id collaboration_file.id %}"
+            >
+              <span class="material-symbols-rounded">download</span>
+              Download
+            </a>
+            {% if can_delete_files %}
+              <form
+                method="post"
+                action="{% url 'collaborations:file_delete' space.id collaboration_file.id %}"
+              >
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline btn-error" type="submit">
+                  <span class="material-symbols-rounded">delete</span>
+                  Delete
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <div class="rounded-xl border border-dashed border-base-300 bg-base-100 p-8 text-center text-slate-600">
+        No files have been uploaded yet.
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if can_upload_files %}
+    <form
+      class="{% if not file_upload_form.errors %}hidden {% endif %}mt-6 rounded-xl border border-base-300 bg-base-100 p-4"
+      method="post"
+      action="{% url 'collaborations:file_upload' space.id %}"
+      enctype="multipart/form-data"
+      data-collaboration-file-form
+    >
+      {% csrf_token %}
+      {% crispy file_upload_form %}
+      <div class="mt-4 flex justify-end gap-2">
+        <button class="btn btn-ghost" type="button" data-collaboration-file-cancel>
+          Cancel
+        </button>
+        <button class="btn btn-primary" type="submit">
+          <span class="material-symbols-rounded">upload_file</span>
+          Upload File
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-6">
+      <button class="btn btn-primary" type="button" data-collaboration-file-open>
+        <span class="material-symbols-rounded">upload_file</span>
+        Add File
+      </button>
+    </div>
+  {% endif %}
+</section>
+
+{% if can_upload_files %}
+  <script>
+    (() => {
+      const form = document.querySelector("[data-collaboration-file-form]");
+      const openButton = document.querySelector("[data-collaboration-file-open]");
+      const cancelButton = document.querySelector("[data-collaboration-file-cancel]");
+      if (!form || !openButton || !cancelButton) {
+        return;
+      }
+
+      const fileInput = form.querySelector("input[type='file']");
+      if (!form.classList.contains("hidden")) {
+        openButton.classList.add("hidden");
+      }
+
+      openButton.addEventListener("click", () => {
+        form.classList.remove("hidden");
+        openButton.classList.add("hidden");
+        if (fileInput) {
+          fileInput.focus();
+        }
+      });
+
+      cancelButton.addEventListener("click", () => {
+        form.classList.add("hidden");
+        openButton.classList.remove("hidden");
+        form.reset();
+      });
+    })();
+  </script>
+{% endif %}

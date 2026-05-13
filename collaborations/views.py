@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Max
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -11,10 +12,11 @@ from storage.models import StorageLocation
 
 from .forms import (
     CollaborationChatMessageForm,
+    CollaborationFileUploadForm,
     CollaborationLinkedRecordForm,
     CollaborationSpaceRequestForm,
 )
-from .models import CollaborationSpace, CollaborationSpaceRequest
+from .models import CollaborationFile, CollaborationSpace, CollaborationSpaceRequest
 
 
 @login_required
@@ -199,6 +201,39 @@ def collaboration_detail_members(request, space_id):
 
 
 @login_required
+def collaboration_detail_files(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    return _render_files(request, space, CollaborationFileUploadForm(space=space))
+
+
+def _render_files(request, space, form):
+    files = space.files.select_related("uploaded_by")
+    can_manage_files = space.can_post(request.user)
+    return render(
+        request,
+        "collaborations/detail.html",
+        {
+            **_build_collaboration_detail_context(space, "files"),
+            "collaboration_detail_template": "collaborations/_detail_files.html",
+            "files": files,
+            "file_upload_form": form,
+            "can_upload_files": can_manage_files,
+            "can_delete_files": can_manage_files,
+        },
+    )
+
+
+def _get_collaboration_file(user, space_id, file_id):
+    return get_object_or_404(
+        CollaborationFile.objects.select_related("space", "uploaded_by").filter(
+            space__in=CollaborationSpace.objects.visible_to(user),
+        ),
+        pk=file_id,
+        space_id=space_id,
+    )
+
+
+@login_required
 def collaboration_detail_links(request, space_id):
     return redirect("collaborations:detail_linked_records", space_id=space_id)
 
@@ -318,3 +353,46 @@ def collaboration_linked_record_create(request, space_id):
         return redirect("collaborations:detail_linked_records", space_id=space.id)
 
     return _render_linked_records(request, space, form)
+
+
+@login_required
+def collaboration_file_upload(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    if not space.can_post(request.user):
+        raise PermissionDenied
+
+    if request.method != "POST":
+        return redirect("collaborations:detail_files", space_id=space.id)
+
+    form = CollaborationFileUploadForm(request.POST, request.FILES, space=space)
+    if form.is_valid():
+        form.save(uploaded_by=request.user)
+        space.last_activity_at = timezone.now()
+        space.save(update_fields=["last_activity_at", "updated_at"])
+        return redirect("collaborations:detail_files", space_id=space.id)
+
+    return _render_files(request, space, form)
+
+
+@login_required
+def collaboration_file_download(request, space_id, file_id):
+    collaboration_file = _get_collaboration_file(request.user, space_id, file_id)
+    return FileResponse(
+        collaboration_file.file.open("rb"),
+        as_attachment=True,
+        filename=collaboration_file.original_filename,
+        content_type=collaboration_file.content_type,
+    )
+
+
+@login_required
+def collaboration_file_delete(request, space_id, file_id):
+    collaboration_file = _get_collaboration_file(request.user, space_id, file_id)
+    if not collaboration_file.space.can_post(request.user):
+        raise PermissionDenied
+
+    if request.method == "POST":
+        collaboration_file.file.delete(save=False)
+        collaboration_file.delete()
+
+    return redirect("collaborations:detail_files", space_id=space_id)
