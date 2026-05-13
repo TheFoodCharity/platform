@@ -181,6 +181,11 @@ DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
 
+# Upload limits
+COLLABORATION_FILE_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
 PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
 
 # File storage directory

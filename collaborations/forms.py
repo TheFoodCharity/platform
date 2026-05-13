@@ -2,6 +2,7 @@ from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
 from django import forms
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 
 from donations.models import Donation, FoodRequest
@@ -16,7 +17,7 @@ from .models import (
     CollaborationSpaceRequest,
 )
 
-MAX_COLLABORATION_FILE_SIZE = 50 * 1024 * 1024
+MAX_COLLABORATION_FILE_SIZE = settings.COLLABORATION_FILE_UPLOAD_MAX_SIZE
 ALLOWED_COLLABORATION_FILE_TYPES = {
     ".pdf": {"application/pdf"},
     ".ppt": {
