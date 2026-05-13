@@ -13,7 +13,17 @@ urlpatterns = [
     path("<uuid:space_id>/overview/", views.collaboration_detail_overview, name="detail_overview"),
     path("<uuid:space_id>/members/", views.collaboration_detail_members, name="detail_members"),
     path("<uuid:space_id>/chat/", views.collaboration_detail_chat, name="detail_chat"),
+    path(
+        "<uuid:space_id>/linked-records/",
+        views.collaboration_detail_linked_records,
+        name="detail_linked_records",
+    ),
     path("<uuid:space_id>/links/", views.collaboration_detail_links, name="detail_links"),
+    path(
+        "<uuid:space_id>/linked-records/add/",
+        views.collaboration_linked_record_create,
+        name="linked_record_create",
+    ),
     path("<uuid:space_id>/admin/", views.collaboration_detail_admin, name="detail_admin"),
     path("<uuid:space_id>/chat/messages/new/", views.collaboration_chat_message_create, name="chat_message_create"),
 ]

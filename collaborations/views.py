@@ -2,11 +2,18 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Max
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 
+from donations.models import Donation, FoodRequest
 from organizations.models import Membership, Organization
+from storage.models import StorageLocation
 
-from .forms import CollaborationChatMessageForm, CollaborationSpaceRequestForm
+from .forms import (
+    CollaborationChatMessageForm,
+    CollaborationLinkedRecordForm,
+    CollaborationSpaceRequestForm,
+)
 from .models import CollaborationSpace, CollaborationSpaceRequest
 
 
@@ -119,6 +126,7 @@ def collaboration_detail(request, space_id):
 @login_required
 def collaboration_detail_overview(request, space_id):
     space = _get_collaboration_space(request.user, space_id)
+    linked_record_count = space.linked_objects.count()
 
     return render(
         request,
@@ -126,6 +134,7 @@ def collaboration_detail_overview(request, space_id):
         {
             **_build_collaboration_detail_context(space, "overview"),
             "collaboration_detail_template": "collaborations/_detail_overview.html",
+            "linked_record_count": linked_record_count,
         },
     )
 
@@ -191,18 +200,51 @@ def collaboration_detail_members(request, space_id):
 
 @login_required
 def collaboration_detail_links(request, space_id):
-    space = _get_collaboration_space(request.user, space_id)
-    linked_objects = space.linked_objects.select_related("content_type")
+    return redirect("collaborations:detail_linked_records", space_id=space_id)
 
+
+@login_required
+def collaboration_detail_linked_records(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    return _render_linked_records(request, space, CollaborationLinkedRecordForm(space=space))
+
+
+def _render_linked_records(request, space, form):
+    linked_objects = space.linked_objects.select_related("content_type", "created_by")
     return render(
         request,
         "collaborations/detail.html",
         {
-            **_build_collaboration_detail_context(space, "links"),
+            **_build_collaboration_detail_context(space, "linked_records"),
             "collaboration_detail_template": "collaborations/_detail_links.html",
-            "linked_objects": linked_objects,
+            "linked_record_rows": _build_linked_record_rows(linked_objects),
+            "linked_record_form": form,
+            "can_link_records": space.can_post(request.user),
         },
     )
+
+
+def _build_linked_record_rows(linked_objects):
+    return [
+        {
+            "linked_object": linked_object,
+            "record": linked_object.content_object,
+            "record_url": _linked_record_url(linked_object.content_object),
+        }
+        for linked_object in linked_objects
+    ]
+
+
+def _linked_record_url(record):
+    match record:
+        case Donation():
+            return reverse("donations:detail", kwargs={"pk": record.pk})
+        case StorageLocation():
+            return reverse("storage:detail", kwargs={"pk": record.pk})
+        case FoodRequest():
+            return reverse("donations:detail", kwargs={"pk": record.donation_id})
+        case _:
+            return ""
 
 
 @login_required
@@ -259,3 +301,20 @@ def collaboration_chat_message_create(request, space_id):
         space.save(update_fields=["last_activity_at", "updated_at"])
 
     return redirect("collaborations:detail_chat", space_id=space.id)
+
+
+@login_required
+def collaboration_linked_record_create(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    if not space.can_post(request.user):
+        raise PermissionDenied
+
+    if request.method != "POST":
+        return redirect("collaborations:detail_linked_records", space_id=space.id)
+
+    form = CollaborationLinkedRecordForm(request.POST, space=space)
+    if form.is_valid():
+        form.save(created_by=request.user)
+        return redirect("collaborations:detail_linked_records", space_id=space.id)
+
+    return _render_linked_records(request, space, form)

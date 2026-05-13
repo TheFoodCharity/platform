@@ -44,8 +44,8 @@
           Members
         </a>
         <a
-          class="tab {% if collaboration_detail_section == 'links' %}tab-active{% endif %}"
-          href="{% url 'collaborations:detail_links' space.id %}"
+          class="tab {% if collaboration_detail_section == 'linked_records' %}tab-active{% endif %}"
+          href="{% url 'collaborations:detail_linked_records' space.id %}"
         >
           Linked Records
         </a>
