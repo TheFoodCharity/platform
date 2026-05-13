@@ -18,7 +18,9 @@ def organization_create(*, owner: User, name: str, organization_type: Organizati
 
 
 def set_current_organization(request: HttpRequest, organization: Organization):
-    if not (request.user.is_authenticated and organization.is_member(request.user)):
+    if not request.user.is_authenticated:
+        return
+    if not (request.user.is_staff or organization.is_member(request.user)):
         return
 
     request.session[SESSION_KEY] = organization.pk
@@ -31,6 +33,8 @@ def get_current_organization(request: HttpRequest) -> Organization | None:
 
     try:
         pk = request.session[SESSION_KEY]
+        if request.user.is_staff:
+            return Organization.active.get(pk=pk)
         return Organization.active.for_user(request.user).get(pk=pk)
     except KeyError, Organization.DoesNotExist:
         pass

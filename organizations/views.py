@@ -147,6 +147,8 @@ class SelectView(LoginRequiredMixin, ListView):
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
+        if self.request.user.is_staff:
+            return Organization.active.all()
         return Organization.active.for_user(self.request.user)
 
     def get_template_names(self):
@@ -160,7 +162,10 @@ class SelectView(LoginRequiredMixin, ListView):
 class ActivateView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
         try:
-            organization = Organization.active.for_user(request.user).get(pk=pk)
+            if request.user.is_staff:
+                organization = Organization.active.get(pk=pk)
+            else:
+                organization = Organization.active.for_user(request.user).get(pk=pk)
             set_current_organization(request, organization)
         except Organization.DoesNotExist:
             pass
