@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 
@@ -8,9 +10,24 @@ from theme.forms import ThemedFormMixin
 
 from .models import (
     CollaborationChatMessage,
+    CollaborationFile,
     CollaborationLinkedObject,
     CollaborationSpaceRequest,
 )
+
+MAX_COLLABORATION_FILE_SIZE = 50 * 1024 * 1024
+ALLOWED_COLLABORATION_FILE_TYPES = {
+    ".pdf": {"application/pdf"},
+    ".ppt": {
+        "application/vnd.ms-powerpoint",
+        "application/mspowerpoint",
+        "application/x-mspowerpoint",
+    },
+    ".pptx": {"application/vnd.openxmlformats-officedocument.presentationml.presentation"},
+    ".jpg": {"image/jpeg"},
+    ".jpeg": {"image/jpeg"},
+    ".png": {"image/png"},
+}
 
 
 class CollaborationSpaceRequestForm(ThemedFormMixin, forms.ModelForm):
@@ -58,6 +75,58 @@ class CollaborationChatMessageForm(forms.ModelForm):
                 }
             ),
         }
+
+
+class CollaborationFileUploadForm(ThemedFormMixin, forms.ModelForm):
+    class Meta:
+        model = CollaborationFile
+        fields = ["file"]
+        labels = {
+            "file": "File",
+        }
+        widgets = {
+            "file": forms.ClearableFileInput(attrs={"class": "file-input file-input-bordered w-full"}),
+        }
+
+    def __init__(self, *args, space=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.space = space
+
+    def clean_file(self):
+        uploaded_file = self.cleaned_data["file"]
+        original_filename = Path(uploaded_file.name).name
+        extension = Path(original_filename).suffix.lower()
+        content_type = getattr(uploaded_file, "content_type", "")
+
+        if not original_filename:
+            raise forms.ValidationError("Upload a valid file.")
+
+        if len(original_filename) > CollaborationFile._meta.get_field("original_filename").max_length:
+            raise forms.ValidationError("The file name is too long.")
+
+        if extension not in ALLOWED_COLLABORATION_FILE_TYPES:
+            raise forms.ValidationError("Upload a PDF, PowerPoint, JPG, or PNG file.")
+
+        if content_type not in ALLOWED_COLLABORATION_FILE_TYPES[extension]:
+            raise forms.ValidationError("The uploaded file type does not match the file extension.")
+
+        if uploaded_file.size > MAX_COLLABORATION_FILE_SIZE:
+            raise forms.ValidationError("Upload a file smaller than 50 MB.")
+
+        return uploaded_file
+
+    def save(self, *, uploaded_by, commit=True):
+        collaboration_file = super().save(commit=False)
+        uploaded_file = self.cleaned_data["file"]
+        collaboration_file.space = self.space
+        collaboration_file.original_filename = Path(uploaded_file.name).name
+        collaboration_file.content_type = uploaded_file.content_type
+        collaboration_file.size = uploaded_file.size
+        collaboration_file.uploaded_by = uploaded_by
+
+        if commit:
+            collaboration_file.save()
+        return collaboration_file
 
 
 class CollaborationLinkedRecordForm(ThemedFormMixin, forms.Form):
