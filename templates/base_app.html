@@ -37,6 +37,9 @@
                 </div>
                 <ul class="menu menu-lg flex-1 p-2">
                     {% block sidenav %}
+                        <li><a href="{% url 'dashboard' %}">
+                            <span class="material-symbols-rounded">dashboard</span> Dashboard
+                        </a></li>
                         <li><a href="{% url 'organizations:list' %}">
                             <span class="material-symbols-rounded">apartment</span> Organizations
                         </a></li>
