@@ -379,9 +379,12 @@ class FoodRequestTests(TestCase):
             last_name="Receiver",
             email_verified=True,
         )
+        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=organization)
         food_request = FoodRequest.objects.create(
             donation=self.donation,
             requested_by=user,
+            receiver_organization=organization,
             status=FoodRequest.Status.SUBMITTED,
         )
         FoodRequestAllocation.objects.create(
@@ -572,9 +575,12 @@ class FoodRequestTests(TestCase):
             last_name="Receiver",
             email_verified=True,
         )
+        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=organization)
         food_request = FoodRequest.objects.create(
             donation=self.donation,
             requested_by=user,
+            receiver_organization=organization,
             status=FoodRequest.Status.SUBMITTED,
         )
         FoodRequestAllocation.objects.create(
