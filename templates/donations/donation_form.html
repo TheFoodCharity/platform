@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 <main class="min-h-screen bg-base-200 px-4 py-10">
@@ -79,36 +80,19 @@
 
         <div class="grid gap-5 md:grid-cols-2">
           <div class="form-control md:col-span-2">
-            {{ form.pickup_location.label_tag }}
-            {{ form.pickup_location }}
-            {{ form.pickup_location.errors }}
+            {{ form.pickup_location|as_crispy_field }}
           </div>
           <div class="form-control md:col-span-2">
-            <span class="mb-2 font-semibold text-slate-800">{{ form.pickup_day.label }}</span>
-            <div class="grid gap-3 sm:grid-cols-2">
-              {% for radio in form.pickup_day %}
-                <label class="flex items-center gap-3 rounded-xl border border-base-300 bg-base-100 p-4">
-                  {{ radio.tag }}
-                  <span>{{ radio.choice_label }}</span>
-                </label>
-              {% endfor %}
-            </div>
-            {{ form.pickup_day.errors }}
+            {{ form.pickup_day|as_crispy_field }}
           </div>
           <div class="form-control">
-            {{ form.pickup_ready_time.label_tag }}
-            {{ form.pickup_ready_time }}
-            {{ form.pickup_ready_time.errors }}
+            {{ form.pickup_ready_time|as_crispy_field }}
           </div>
           <div class="form-control">
-            {{ form.pickup_end_time.label_tag }}
-            {{ form.pickup_end_time }}
-            {{ form.pickup_end_time.errors }}
+            {{ form.pickup_end_time|as_crispy_field }}
           </div>
           <div class="form-control">
-            {{ form.pickup_notes.label_tag }}
-            {{ form.pickup_notes }}
-            {{ form.pickup_notes.errors }}
+            {{ form.pickup_notes|as_crispy_field }}
           </div>
         </div>
       </section>
@@ -141,19 +125,13 @@
 
                 <div class="grid gap-5 md:grid-cols-2">
                   <div class="form-control md:col-span-2">
-                    {{ item_form.packaging.label_tag }}
-                    {{ item_form.packaging }}
-                    {{ item_form.packaging.errors }}
+                    {{ item_form.packaging|as_crispy_field }}
                   </div>
                   <div class="form-control">
-                    {{ item_form.quantity.label_tag }}
-                    {{ item_form.quantity }}
-                    {{ item_form.quantity.errors }}
+                    {{ item_form.quantity|as_crispy_field }}
                   </div>
                   <div class="form-control md:col-span-2">
-                    {{ item_form.description.label_tag }}
-                    {{ item_form.description }}
-                    {{ item_form.description.errors }}
+                    {{ item_form.description|as_crispy_field }}
                   </div>
                 </div>
               </div>
@@ -162,9 +140,7 @@
         </div>
 
         <div class="form-control mt-6 max-w-sm">
-          {{ form.people_fed_estimate.label_tag }}
-          {{ form.people_fed_estimate }}
-          {{ form.people_fed_estimate.errors }}
+          {{ form.people_fed_estimate|as_crispy_field }}
         </div>
       </section>
 
@@ -182,56 +158,24 @@
         <div class="rounded-2xl border border-base-300">
           <div class="grid gap-6 p-6 md:grid-cols-2">
             <div class="form-control">
-              {{ form.storage_requirement.label_tag }}
-              {{ form.storage_requirement }}
-              {{ form.storage_requirement.errors }}
+              {{ form.storage_requirement|as_crispy_field }}
             </div>
 
             <div>
-              <div class="mb-2 font-semibold text-slate-800">Fits in car</div>
-              <div class="grid gap-3 sm:grid-cols-2">
-                {% for radio in form.fits_in_car %}
-                  <label class="flex min-h-14 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                    <span>{{ radio.choice_label }}</span>
-                    {{ radio.tag }}
-                  </label>
-                {% endfor %}
-              </div>
-              {{ form.fits_in_car.errors }}
+              {{ form.fits_in_car|as_crispy_field }}
             </div>
           </div>
 
           <div class="border-t border-base-300 p-6">
             <h3 class="mb-4 text-xl font-bold text-slate-950">Additional logistics requirements</h3>
             <div class="grid gap-4 md:grid-cols-2">
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires van</span>
-                {{ form.requires_van }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires cube van</span>
-                {{ form.requires_cube_van }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires refrigerated vehicle</span>
-                {{ form.requires_refrigerated_vehicle }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires pallet jack</span>
-                {{ form.requires_pallet_jack }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Requires forklift</span>
-                {{ form.requires_forklift }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Loading dock available</span>
-                {{ form.loading_dock_available }}
-              </label>
-              <label class="flex min-h-16 items-center justify-between rounded-xl border border-base-300 bg-base-100 px-4">
-                <span>Donor can help load</span>
-                {{ form.donor_can_help_load }}
-              </label>
+              {{ form.requires_van|as_crispy_field }}
+              {{ form.requires_cube_van|as_crispy_field }}
+              {{ form.requires_refrigerated_vehicle|as_crispy_field }}
+              {{ form.requires_pallet_jack|as_crispy_field }}
+              {{ form.requires_forklift|as_crispy_field }}
+              {{ form.loading_dock_available|as_crispy_field }}
+              {{ form.donor_can_help_load|as_crispy_field }}
             </div>
 
             <div class="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4 text-primary">
@@ -244,16 +188,9 @@
 
       <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         <h2 class="text-2xl font-bold text-slate-950">Food Safety</h2>
-        <label class="mt-4 flex items-start gap-3 rounded-xl border border-base-300 bg-base-100 p-4">
-          {{ form.food_safety_agreement }}
-          <span>
-            <span class="font-semibold">{{ form.food_safety_agreement.label }}</span>
-            <span class="mt-1 block text-sm text-slate-600">
-              The food is safe for human consumption, has been stored properly, and has not been served from a buffet.
-            </span>
-          </span>
-        </label>
-        {{ form.food_safety_agreement.errors }}
+        <div class="mt-4 rounded-xl border border-base-300 bg-base-100 p-4">
+          {{ form.food_safety_agreement|as_crispy_field }}
+        </div>
       </section>
 
       <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
@@ -264,19 +201,13 @@
 
         <div class="space-y-5">
           <div class="form-control">
-            {{ form.special_handling_notes.label_tag }}
-            {{ form.special_handling_notes }}
-            {{ form.special_handling_notes.errors }}
+            {{ form.special_handling_notes|as_crispy_field }}
           </div>
           <div class="form-control">
-            {{ form.chain_of_custody_notes.label_tag }}
-            {{ form.chain_of_custody_notes }}
-            {{ form.chain_of_custody_notes.errors }}
+            {{ form.chain_of_custody_notes|as_crispy_field }}
           </div>
           <div class="form-control">
-            {{ form.other_information.label_tag }}
-            {{ form.other_information }}
-            {{ form.other_information.errors }}
+            {{ form.other_information|as_crispy_field }}
           </div>
         </div>
       </section>

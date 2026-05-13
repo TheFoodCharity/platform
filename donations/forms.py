@@ -1,6 +1,7 @@
 from django import forms
 
 from storage.models import StorageLocation
+from theme.forms import ThemedFormMixin
 
 from .models import Donation, DonationFoodItem, FoodRequest
 
@@ -22,9 +23,14 @@ FOOD_TYPE_INTAKE = [
 ]
 
 
-class DonationForm(forms.ModelForm):
+class DonationForm(ThemedFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields[
+            "food_safety_agreement"
+        ].help_text = (
+            "The food is safe for human consumption, has been stored properly, and has not been served from a buffet."
+        )
         apply_form_control_classes(self.fields)
 
     def clean_food_safety_agreement(self):
@@ -68,7 +74,7 @@ class DonationForm(forms.ModelForm):
         }
 
 
-class DonationFoodItemIntakeForm(forms.Form):
+class DonationFoodItemIntakeForm(ThemedFormMixin, forms.Form):
     selected = forms.BooleanField(required=False)
     food_category = forms.ChoiceField(choices=Donation.FoodCategory.choices, widget=forms.HiddenInput)
     packaging = forms.ChoiceField(
@@ -154,9 +160,12 @@ def get_food_item_initial(donation=None):
     return initial
 
 
-class FoodRequestForm(forms.ModelForm):
+class FoodRequestForm(ThemedFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields[
+            "storage_required"
+        ].help_text = "Select this if you need third-party storage before receiving the food."
         apply_form_control_classes(self.fields)
         self.fields["preferred_storage"].queryset = StorageLocation.objects.filter(
             is_active=True,
@@ -182,7 +191,7 @@ class FoodRequestForm(forms.ModelForm):
         }
 
 
-class FoodRequestAllocationForm(forms.Form):
+class FoodRequestAllocationForm(ThemedFormMixin, forms.Form):
     food_item_id = forms.IntegerField(widget=forms.HiddenInput)
     quantity = forms.IntegerField(required=False, min_value=0, label="Quantity requested")
 

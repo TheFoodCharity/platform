@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
 
 {% block content %}
 <main class="min-h-screen bg-base-200 px-4 py-10">
@@ -176,8 +177,7 @@
                   <td>{{ allocation_form.food_item.allocated_quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
                   <td>{{ allocation_form.food_item.remaining_quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
                   <td>
-                    {{ allocation_form.quantity }}
-                    {{ allocation_form.quantity.errors }}
+                    {{ allocation_form.quantity|as_crispy_field }}
                   </td>
                 </tr>
               {% endfor %}
@@ -187,35 +187,20 @@
       </section>
 
       <div class="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5">
-        <label class="flex items-start gap-3">
-          {{ form.storage_required }}
-          <span>
-            <span class="font-semibold text-slate-900">{{ form.storage_required.label }}</span>
-            <span class="mt-1 block text-sm text-slate-600">
-              Select this if you need third-party storage before receiving the food.
-            </span>
-          </span>
-        </label>
-        {{ form.storage_required.errors }}
+        {{ form.storage_required|as_crispy_field }}
 
         <div class="mt-5 grid gap-5 md:grid-cols-2">
           <div class="form-control md:col-span-2">
-            {{ form.preferred_storage.label_tag }}
-            {{ form.preferred_storage }}
-            {{ form.preferred_storage.errors }}
+            {{ form.preferred_storage|as_crispy_field }}
           </div>
           <div class="form-control md:col-span-2">
-            {{ form.storage_notes.label_tag }}
-            {{ form.storage_notes }}
-            {{ form.storage_notes.errors }}
+            {{ form.storage_notes|as_crispy_field }}
           </div>
         </div>
       </div>
 
       <div class="form-control mt-6">
-        {{ form.notes.label_tag }}
-        {{ form.notes }}
-        {{ form.notes.errors }}
+        {{ form.notes|as_crispy_field }}
       </div>
 
       <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
