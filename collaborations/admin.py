@@ -2,6 +2,7 @@ from django.contrib import admin, messages
 
 from .models import (
     CollaborationChatMessage,
+    CollaborationFile,
     CollaborationLinkedObject,
     CollaborationSpace,
     CollaborationSpaceOrganizationMembership,
@@ -25,6 +26,13 @@ class CollaborationChatMessageInline(admin.TabularInline):
     extra = 0
     fields = ["author", "body", "created_at"]
     readonly_fields = ["created_at"]
+
+
+class CollaborationFileInline(admin.TabularInline):
+    model = CollaborationFile
+    extra = 0
+    fields = ["original_filename", "file", "content_type", "size", "uploaded_by", "created_at"]
+    readonly_fields = ["original_filename", "content_type", "size", "uploaded_by", "created_at"]
 
 
 @admin.register(CollaborationSpaceRequest)
@@ -92,6 +100,7 @@ class CollaborationSpaceAdmin(admin.ModelAdmin):
         CollaborationSpaceUserMembershipInline,
         CollaborationSpaceOrganizationMembershipInline,
         CollaborationChatMessageInline,
+        CollaborationFileInline,
     ]
 
 
@@ -105,3 +114,11 @@ class CollaborationLinkedObjectAdmin(admin.ModelAdmin):
 class CollaborationChatMessageAdmin(admin.ModelAdmin):
     list_display = ["space", "author", "created_at"]
     search_fields = ["body", "space__title", "author__email"]
+
+
+@admin.register(CollaborationFile)
+class CollaborationFileAdmin(admin.ModelAdmin):
+    list_display = ["original_filename", "space", "content_type", "size", "uploaded_by", "created_at"]
+    list_filter = ["content_type", "created_at"]
+    search_fields = ["original_filename", "space__title", "uploaded_by__email"]
+    readonly_fields = ["original_filename", "content_type", "size", "uploaded_by", "created_at"]
