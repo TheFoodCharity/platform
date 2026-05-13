@@ -32,36 +32,38 @@
         <div class="grid gap-4 text-sm md:grid-cols-2">
           <div class="rounded-xl border border-base-300 bg-base-100 p-4">
             <p class="font-semibold text-slate-500">Company name</p>
-            <p class="mt-1 text-lg font-bold text-slate-950">
+            <p class="mt-1 text-lg text-slate-950">
               {{ donor_profile.company_name|default:"No active organization" }}
             </p>
           </div>
           <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-            <p class="font-semibold text-slate-500">Donor name</p>
-            <p class="mt-1 text-lg font-bold text-slate-950">
-              {{ donor_profile.donor_name|default:"Not provided" }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-base-300 bg-base-100 p-4 md:col-span-2">
-            <p class="font-semibold text-slate-500">Address</p>
-            <p class="mt-1 text-lg font-bold text-slate-950">
-              {{ donor_profile.address_display|default:"Not provided" }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-            <p class="font-semibold text-slate-500">Donor contact</p>
-            <p class="mt-1 text-slate-950">
-              {{ donor_profile.donor_contact|default:"Not provided" }}
-            </p>
-          </div>
-          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-            <p class="font-semibold text-slate-500">Contact email</p>
+            <p class="font-semibold text-slate-500">Company email</p>
             <p class="mt-1 text-slate-950">
               {{ donor_profile.contact_email|default:"Not provided" }}
             </p>
           </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4 md:col-span-2">
+            <p class="font-semibold text-slate-500">Address</p>
+            <p class="mt-1 text-lg text-slate-950">
+              {{ donor_profile.address_display|default:"Not provided" }}
+            </p>
+          </div>
           <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-            <p class="font-semibold text-slate-500">Contact phone</p>
+            <p class="font-semibold text-slate-500">Donor name</p>
+            <p class="mt-1 text-lg text-slate-950">
+              {{ donor_profile.donor_name|default:"Not provided" }}
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Donor email</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.donor_contact|default:"Not provided" }}
+            </p>
+          </div>
+
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Organization Phone Number</p>
             <p class="mt-1 text-slate-950">
               {{ donor_profile.contact_phone|default:"Not provided" }}
             </p>

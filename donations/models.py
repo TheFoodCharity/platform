@@ -6,13 +6,9 @@ from storage.models import StorageLocation
 
 class Donation(models.Model):
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
         SUBMITTED = "submitted", "Submitted"
         AVAILABLE = "available", "Available"
-        PENDING = "pending", "Pending"
-        MATCHED = "matched", "Matched"
         IN_TRANSIT = "in_transit", "In Transit"
-        STORED = "stored", "Stored"
         DELIVERED = "delivered", "Delivered"
         COMPLETED = "completed", "Completed"
         EXPIRED = "expired", "Expired"
@@ -44,26 +40,11 @@ class Donation(models.Model):
         OTHER = "other", "Other"
 
     class QuantityUnit(models.TextChoices):
-        ITEMS = "items", "Items"
-        SMALL_BAGS = "small_bags", "Small bags"
-        LARGE_BAGS = "large_bags", "Large bags"
+        BAGS = "bags", "Bags"
         BOXES = "boxes", "Boxes"
         CASES = "cases", "Cases"
-        BAGS = "bags", "Bags"
-        CRATES = "crates", "Crates"
-        FLATS = "flats", "Flats"
-        GALLONS = "gallons", "Gallons"
-        GAYLORDS = "gaylords", "Gaylords"
         PALLETS = "pallets", "Pallets"
-        TRAYS = "trays", "Trays"
-        KILOGRAMS = "kg", "Kilograms"
-        POUNDS = "lb", "Pounds"
-        LITRES = "litres", "Litres"
         OTHER = "other", "Other"
-
-    class WeightUnit(models.TextChoices):
-        KILOGRAMS = "kg", "Kilograms"
-        POUNDS = "lb", "Pounds"
 
     class PickupDay(models.TextChoices):
         TODAY = "today", "Today"
@@ -71,12 +52,20 @@ class Donation(models.Model):
 
     class PickupReadyTime(models.TextChoices):
         READY_NOW = "ready_now", "It is packaged and ready to go"
+        FROM_8AM = "8am", "From 8am"
+        FROM_9AM = "9am", "From 9am"
+        FROM_10AM = "10am", "From 10am"
+        FROM_11AM = "11am", "From 11am"
         FROM_12PM = "12pm", "From 12pm"
         FROM_1PM = "1pm", "From 1pm"
         FROM_2PM = "2pm", "From 2pm"
         FROM_3PM = "3pm", "From 3pm"
+        FROM_4PM = "4pm", "From 4pm"
+        FROM_5PM = "5pm", "From 5pm"
 
     class PickupEndTime(models.TextChoices):
+        BEFORE_noon = "before_noon", "Before noon"
+        BEFORE_1PM = "before_1pm", "Before 1pm"
         BEFORE_2PM = "before_2pm", "Before 2pm"
         BEFORE_3PM = "before_3pm", "Before 3pm"
         BEFORE_4PM = "before_4pm", "Before 4pm"
@@ -119,9 +108,7 @@ class Donation(models.Model):
     )
     food_type = models.JSONField(default=list)
     quantity = models.PositiveIntegerField()
-    unit = models.CharField(max_length=50, choices=QuantityUnit.choices, default=QuantityUnit.ITEMS)
-    estimated_weight = models.PositiveIntegerField(null=True, blank=True)
-    estimated_weight_unit = models.CharField(max_length=20, choices=WeightUnit.choices, default=WeightUnit.POUNDS)
+    unit = models.CharField(max_length=50, choices=QuantityUnit.choices)
 
     pickup_location = models.CharField(max_length=255)
     pickup_window = models.CharField(max_length=255, blank=True)
@@ -168,7 +155,7 @@ class Donation(models.Model):
     status = models.CharField(
         max_length=50,
         choices=Status.choices,
-        default=Status.DRAFT,
+        default=Status.SUBMITTED,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -206,15 +193,9 @@ class Donation(models.Model):
             return ", ".join(labels.get(food_type, food_type) for food_type in self.food_type)
         return labels.get(self.food_type, self.food_type)
 
-    @property
-    def estimated_weight_display(self):
-        if self.estimated_weight is None:
-            return ""
-        return f"{self.estimated_weight} {self.get_estimated_weight_unit_display()}"
-
     def assign_storage(self, storage_location):
         self.assigned_storage = storage_location
-        self.status = self.Status.MATCHED
+        self.status = self.Status.IN_TRANSIT
 
         if storage_location.available_space is not None:
             storage_location.available_space = max(
@@ -229,16 +210,10 @@ class Donation(models.Model):
 
 class DonationFoodItem(models.Model):
     class Packaging(models.TextChoices):
-        SMALL_BAGS = "small_bags", "Small bags"
-        LARGE_BAGS = "large_bags", "Large bags"
+        BAGS = "bags", "Bags"
         BOXES = "boxes", "Boxes"
         CASES = "cases", "Cases"
-        CRATES = "crates", "Crates"
-        FLATS = "flats", "Flats"
-        GALLONS = "gallons", "Gallons"
-        GAYLORDS = "gaylords", "Gaylords"
         PALLETS = "pallets", "Pallets"
-        TRAYS = "trays", "Trays"
         OTHER = "other", "Other"
 
     donation = models.ForeignKey(Donation, on_delete=models.CASCADE, related_name="food_items")
@@ -291,7 +266,6 @@ class FoodRequest(models.Model):
     requested_unit = models.CharField(
         max_length=50,
         choices=Donation.QuantityUnit.choices,
-        default=Donation.QuantityUnit.ITEMS,
     )
     storage_required = models.BooleanField(default=False)
     preferred_storage = models.ForeignKey(

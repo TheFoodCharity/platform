@@ -22,13 +22,6 @@
       <dd class="mt-1 text-slate-950">{{ donation.quantity }} {{ donation.get_unit_display }}</dd>
     </div>
 
-    {% if donation.estimated_weight %}
-      <div>
-        <dt class="text-sm font-semibold text-slate-500">Estimated Weight</dt>
-        <dd class="mt-1 text-slate-950">{{ donation.estimated_weight_display }}</dd>
-      </div>
-    {% endif %}
-
     <div>
       <dt class="text-sm font-semibold text-slate-500">Storage Requirement</dt>
       <dd class="mt-1 text-slate-950">{{ donation.get_storage_requirement_display }}</dd>

@@ -23,7 +23,6 @@ class DonationAdmin(admin.ModelAdmin):
         "food_category",
         "quantity",
         "unit",
-        "estimated_weight_display",
         "storage_requirement",
         "assigned_storage",
         "status",

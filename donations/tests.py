@@ -159,6 +159,8 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "donations@supplier.example")
         self.assertContains(response, "6045550100")
         self.assertContains(response, "Sam Supplier")
+        self.assertContains(response, 'name="pickup_location"')
+        self.assertContains(response, 'value="1081 Burrard St, Suite 200, Vancouver, BC V6Z 1Y6"')
 
     def test_org_members_share_supplier_donation_list(self):
         owner = User.objects.create_user(

@@ -67,21 +67,13 @@ def user_organization(user):
 
 def donor_profile(request, organization):
     full_name = request.user.get_full_name().strip()
-    address_parts = []
-    if organization:
-        region_and_postal = " ".join(part for part in [organization.region, organization.postal_code] if part)
-        address_parts = [
-            organization.address_line_1,
-            organization.address_line_2,
-            organization.municipality,
-            region_and_postal,
-        ]
+    address_display = organization_address_display(organization)
 
     return {
         "company_name": organization.name if organization else "",
         "address_1": organization.address_line_1 if organization else "",
         "address_2": organization.address_line_2 if organization else "",
-        "address_display": ", ".join(part for part in address_parts if part),
+        "address_display": address_display,
         "city": organization.municipality if organization else "",
         "province_or_state": organization.region if organization else "",
         "postal_code": organization.postal_code if organization else "",
@@ -90,6 +82,22 @@ def donor_profile(request, organization):
         "contact_email": organization.email if organization and organization.email else request.user.email,
         "contact_phone": str(organization.phone) if organization and organization.phone else "",
     }
+
+
+def organization_address_display(organization):
+    if organization is None:
+        return ""
+
+    address_parts = []
+    region_and_postal = " ".join(part for part in [organization.region, organization.postal_code] if part)
+    address_parts = [
+        organization.address_line_1,
+        organization.address_line_2,
+        organization.municipality,
+        region_and_postal,
+    ]
+
+    return ", ".join(part for part in address_parts if part)
 
 
 def request_account_initial(request):
@@ -146,7 +154,7 @@ def donation_create(request):
             donation.food_category = Donation.FoodCategory.OTHER
             donation.food_type = []
             donation.quantity = 1
-            donation.unit = Donation.QuantityUnit.ITEMS
+            donation.unit = Donation.QuantityUnit.BOXES
             donation.submitted_by = request.user
             donation.supplier_organization = organization
             set_pickup_deadline_from_pickup_fields(donation)
@@ -155,7 +163,7 @@ def donation_create(request):
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
-        form = DonationForm()
+        form = DonationForm(initial={"pickup_location": organization_address_display(organization)})
         formset = DonationFoodItemFormSet()
 
     return render(
@@ -247,7 +255,6 @@ def donation_assign_storage(request, pk, storage_pk):
 def available_donation_list(request):
     donations = Donation.objects.exclude(
         status__in=[
-            Donation.Status.DRAFT,
             Donation.Status.CANCELLED,
             Donation.Status.EXPIRED,
             Donation.Status.COMPLETED,
