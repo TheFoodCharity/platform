@@ -5,6 +5,7 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import content_disposition_header
 
 from donations.models import Donation, FoodRequest
 from organizations.models import Membership, Organization
@@ -380,12 +381,18 @@ def collaboration_file_upload(request, space_id):
 @login_required
 def collaboration_file_download(request, space_id, file_id):
     collaboration_file = _get_collaboration_file(request.user, space_id, file_id)
-    return FileResponse(
+    response = FileResponse(
         collaboration_file.file.open("rb"),
+        content_type="application/octet-stream",
+    )
+    response["Content-Disposition"] = content_disposition_header(
         as_attachment=True,
         filename=collaboration_file.original_filename,
-        content_type=collaboration_file.content_type,
     )
+    response["Content-Length"] = collaboration_file.size
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Cache-Control"] = "private, no-store"
+    return response
 
 
 @login_required
