@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpRequest
@@ -41,3 +43,28 @@ def get_current_organization(request: HttpRequest) -> Organization | None:
         pass
 
     return None
+
+
+@contextmanager
+def acting_as(user: User, organization: Organization):
+    """Pin the acting organization on ``user`` for the duration of the block.
+
+    Restores the previous value on exit, including on exception and when nested.
+    Handles the case where ``current_organization`` was not set beforehand.
+
+    Use this in signals, management commands, and Celery tasks that need to perform
+    a permission check outside of a request. Routes through the same predicates as views.
+    """
+    sentinel = object()
+    previous = getattr(user, "current_organization", sentinel)
+    user.current_organization = organization
+    try:
+        yield
+    finally:
+        if previous is sentinel:
+            try:
+                del user.current_organization
+            except AttributeError:
+                pass
+        else:
+            user.current_organization = previous
