@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # 1st-party
     "accounts",
     "collaborations",
+    "forums",
     "organizations",
     "public",
     "storage",

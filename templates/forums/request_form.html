@@ -1,0 +1,30 @@
+{% extends "base_app.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Request New Forum{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-ghost btn-sm" href="{% url 'forums:request_list' %}">Cancel</a>
+{% endblock %}
+
+{% block page_body %}
+  <div class="mx-auto max-w-3xl">
+    <div class="mb-8">
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">Forum management</p>
+      <h1 class="mt-2 text-4xl font-bold text-slate-950">Request New Forum</h1>
+      <p class="mt-2 text-slate-600">Submit the discussion space details for admin review.</p>
+    </div>
+
+    {% include "forums/_nav.html" %}
+
+    <form class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm" method="post">
+      {% csrf_token %}
+      {% crispy form %}
+
+      <div class="mt-6 flex justify-end gap-2">
+        <a class="btn btn-ghost" href="{% url 'forums:request_list' %}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Submit Request</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}
