@@ -13,6 +13,7 @@
 
     <form method="post" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
       {% csrf_token %}
+      {{ formset.management_form }}
 
       {% if form.non_field_errors %}
         <div class="alert alert-error mb-6">
@@ -20,38 +21,74 @@
         </div>
       {% endif %}
 
-      <div class="grid gap-5 md:grid-cols-2">
-        <div class="form-control">
-          {{ form.receiver_name.label_tag }}
-          {{ form.receiver_name }}
-          {{ form.receiver_name.errors }}
+      {% if formset.non_form_errors %}
+        <div class="alert alert-error mb-6">
+          {{ formset.non_form_errors }}
         </div>
-        <div class="form-control">
-          {{ form.organization.label_tag }}
-          {{ form.organization }}
-          {{ form.organization.errors }}
+      {% endif %}
+
+      <section class="rounded-xl border border-base-300 bg-base-100 p-5">
+        <h2 class="text-xl font-bold text-slate-950">Receiver information</h2>
+        <dl class="mt-4 grid gap-4 md:grid-cols-2">
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Name</dt>
+            <dd class="mt-1 text-slate-950">{{ receiver_profile.receiver_name }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Organization</dt>
+            <dd class="mt-1 text-slate-950">{{ receiver_profile.organization|default:"No organization connected" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Email</dt>
+            <dd class="mt-1 text-slate-950">{{ receiver_profile.email }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Phone</dt>
+            <dd class="mt-1 text-slate-950">{{ receiver_profile.phone|default:"Not provided" }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="mt-6 rounded-xl border border-base-300 bg-base-100 p-5">
+        <h2 class="text-xl font-bold text-slate-950">Food requested</h2>
+        <p class="mt-1 text-sm text-slate-600">Enter the amount you want from each available food item.</p>
+
+        <div class="mt-5 overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Food</th>
+                <th>Available</th>
+                <th>Already requested</th>
+                <th>Remaining</th>
+                <th>Request</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for allocation_form in formset %}
+                <tr>
+                  <td>
+                    {{ allocation_form.food_item_id }}
+                    <div class="font-semibold text-slate-950">
+                      {{ allocation_form.food_item.get_food_category_display }}
+                    </div>
+                    {% if allocation_form.food_item.description %}
+                      <div class="text-sm text-slate-500">{{ allocation_form.food_item.description }}</div>
+                    {% endif %}
+                  </td>
+                  <td>{{ allocation_form.food_item.quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
+                  <td>{{ allocation_form.food_item.allocated_quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
+                  <td>{{ allocation_form.food_item.remaining_quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
+                  <td>
+                    {{ allocation_form.quantity }}
+                    {{ allocation_form.quantity.errors }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
-        <div class="form-control">
-          {{ form.email.label_tag }}
-          {{ form.email }}
-          {{ form.email.errors }}
-        </div>
-        <div class="form-control">
-          {{ form.phone.label_tag }}
-          {{ form.phone }}
-          {{ form.phone.errors }}
-        </div>
-        <div class="form-control">
-          {{ form.requested_quantity.label_tag }}
-          {{ form.requested_quantity }}
-          {{ form.requested_quantity.errors }}
-        </div>
-        <div class="form-control">
-          {{ form.requested_unit.label_tag }}
-          {{ form.requested_unit }}
-          {{ form.requested_unit.errors }}
-        </div>
-      </div>
+      </section>
 
       <div class="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5">
         <label class="flex items-start gap-3">

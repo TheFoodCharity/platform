@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Sum
 
 from storage.models import StorageLocation
 
@@ -230,6 +231,20 @@ class DonationFoodItem(models.Model):
     def __str__(self):
         return f"{self.quantity} {self.get_packaging_display()} of {self.get_food_category_display()}"
 
+    @property
+    def allocated_quantity(self):
+        allocated = self.request_allocations.exclude(
+            food_request__status__in=[
+                FoodRequest.Status.DECLINED,
+                FoodRequest.Status.CANCELLED,
+            ],
+        ).aggregate(total=Sum("quantity"))["total"]
+        return allocated or 0
+
+    @property
+    def remaining_quantity(self):
+        return max(self.quantity - self.allocated_quantity, 0)
+
 
 class FoodRequest(models.Model):
     class Status(models.TextChoices):
@@ -258,15 +273,6 @@ class FoodRequest(models.Model):
         blank=True,
         related_name="food_requests",
     )
-    receiver_name = models.CharField(max_length=255)
-    organization = models.CharField(max_length=255, blank=True)
-    email = models.EmailField()
-    phone = models.CharField(max_length=50, blank=True)
-    requested_quantity = models.PositiveIntegerField()
-    requested_unit = models.CharField(
-        max_length=50,
-        choices=Donation.QuantityUnit.choices,
-    )
     storage_required = models.BooleanField(default=False)
     preferred_storage = models.ForeignKey(
         StorageLocation,
@@ -287,4 +293,52 @@ class FoodRequest(models.Model):
         verbose_name_plural = "Food Requests"
 
     def __str__(self):
-        return f"{self.receiver_name} request for {self.donation}"
+        return f"{self.receiver_display_name} request for {self.donation}"
+
+    @property
+    def receiver_display_name(self):
+        if self.requested_by_id:
+            return self.requested_by.get_full_name().strip() or self.requested_by.email
+        return "Unknown receiver"
+
+    @property
+    def receiver_organization_display(self):
+        if self.receiver_organization_id:
+            return self.receiver_organization.name
+        return ""
+
+    @property
+    def receiver_email_display(self):
+        if self.receiver_organization_id and self.receiver_organization.email:
+            return self.receiver_organization.email
+        if self.requested_by_id:
+            return self.requested_by.email
+        return ""
+
+    @property
+    def receiver_phone_display(self):
+        if self.receiver_organization_id and self.receiver_organization.phone:
+            return str(self.receiver_organization.phone)
+        return ""
+
+
+class FoodRequestAllocation(models.Model):
+    food_request = models.ForeignKey(
+        FoodRequest,
+        on_delete=models.CASCADE,
+        related_name="allocations",
+    )
+    donation_food_item = models.ForeignKey(
+        DonationFoodItem,
+        on_delete=models.CASCADE,
+        related_name="request_allocations",
+    )
+    quantity = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Food Request Allocation"
+        verbose_name_plural = "Food Request Allocations"
+
+    def __str__(self):
+        return f"{self.quantity} from {self.donation_food_item}"

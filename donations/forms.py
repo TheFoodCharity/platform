@@ -171,12 +171,6 @@ class FoodRequestForm(forms.ModelForm):
     class Meta:
         model = FoodRequest
         fields = [
-            "receiver_name",
-            "organization",
-            "email",
-            "phone",
-            "requested_quantity",
-            "requested_unit",
             "storage_required",
             "preferred_storage",
             "storage_notes",
@@ -186,6 +180,57 @@ class FoodRequestForm(forms.ModelForm):
             "storage_notes": forms.Textarea(attrs={"rows": 4}),
             "notes": forms.Textarea(attrs={"rows": 4}),
         }
+
+
+class FoodRequestAllocationForm(forms.Form):
+    food_item_id = forms.IntegerField(widget=forms.HiddenInput)
+    quantity = forms.IntegerField(required=False, min_value=0, label="Quantity requested")
+
+    def __init__(self, *args, **kwargs):
+        self.food_item = kwargs.pop("food_item", None)
+        super().__init__(*args, **kwargs)
+        apply_form_control_classes(self.fields)
+
+    def clean_quantity(self):
+        quantity = self.cleaned_data["quantity"] or 0
+        if self.food_item is not None and quantity > self.food_item.remaining_quantity:
+            raise forms.ValidationError(
+                f"Only {self.food_item.remaining_quantity} {self.food_item.get_packaging_display()} remaining.",
+            )
+        return quantity
+
+
+BaseFoodRequestAllocationFormSet = forms.formset_factory(
+    FoodRequestAllocationForm,
+    extra=0,
+    min_num=1,
+    validate_min=False,
+)
+
+
+class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
+    def __init__(self, *args, **kwargs):
+        self.donation = kwargs.pop("donation")
+        initial = [
+            {
+                "food_item_id": food_item.id,
+                "quantity": None,
+            }
+            for food_item in self.donation.food_items.all()
+        ]
+        super().__init__(*args, initial=initial, prefix="allocations", **kwargs)
+
+        food_items = list(self.donation.food_items.all())
+        for form, food_item in zip(self.forms, food_items, strict=False):
+            form.food_item = food_item
+
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+
+        if not any(form.cleaned_data.get("quantity", 0) > 0 for form in self.forms):
+            raise forms.ValidationError("Request at least one food item.")
 
 
 def apply_form_control_classes(fields):

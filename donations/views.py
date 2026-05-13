@@ -6,8 +6,8 @@ from django.utils import timezone
 
 from storage.models import StorageLocation
 
-from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestForm
-from .models import Donation, DonationFoodItem
+from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestAllocationFormSet, FoodRequestForm
+from .models import Donation, DonationFoodItem, FoodRequestAllocation
 
 PICKUP_END_HOURS = {
     Donation.PickupEndTime.BEFORE_2PM: 14,
@@ -100,19 +100,35 @@ def organization_address_display(organization):
     return ", ".join(part for part in address_parts if part)
 
 
-def request_account_initial(request):
-    if not request.user.is_authenticated:
-        return {}
-
+def receiver_profile(request, organization):
     full_name = request.user.get_full_name().strip()
-    initial = {
+    return {
         "email": request.user.email,
         "receiver_name": full_name or request.user.email,
+        "organization": organization.name if organization else "",
+        "phone": str(organization.phone) if organization and organization.phone else "",
     }
-    organization = user_organization(request.user)
-    if organization is not None:
-        initial["organization"] = organization.name
-    return initial
+
+
+def save_food_request_allocations(food_request, formset):
+    allocations = []
+    food_items = {item.id: item for item in food_request.donation.food_items.all()}
+
+    for form in formset:
+        quantity = form.cleaned_data.get("quantity") or 0
+        if quantity <= 0:
+            continue
+
+        food_item = food_items[form.cleaned_data["food_item_id"]]
+        allocations.append(
+            FoodRequestAllocation(
+                food_request=food_request,
+                donation_food_item=food_item,
+                quantity=quantity,
+            ),
+        )
+
+    FoodRequestAllocation.objects.bulk_create(allocations)
 
 
 @login_required
@@ -216,7 +232,19 @@ def donation_edit(request, pk):
 
 @login_required
 def donation_detail(request, pk):
-    donation = get_object_or_404(Donation, pk=pk)
+    donation = get_object_or_404(
+        Donation.objects.select_related(
+            "submitted_by",
+            "supplier_organization",
+            "assigned_storage",
+        ).prefetch_related(
+            "food_items",
+            "food_requests__requested_by",
+            "food_requests__receiver_organization",
+            "food_requests__allocations__donation_food_item",
+        ),
+        pk=pk,
+    )
 
     matching_storage = StorageLocation.objects.filter(
         is_active=True,
@@ -270,23 +298,36 @@ def available_donation_detail(request, pk):
     return render(request, "donations/available_donation_detail.html", {"donation": donation})
 
 
+@login_required
 def food_request_create(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
+    organization = user_organization(request.user)
 
     if request.method == "POST":
         form = FoodRequestForm(request.POST)
-        if form.is_valid():
+        formset = FoodRequestAllocationFormSet(request.POST, donation=donation)
+        if form.is_valid() and formset.is_valid():
             food_request = form.save(commit=False)
             food_request.donation = donation
-            if request.user.is_authenticated:
-                food_request.requested_by = request.user
-                food_request.receiver_organization = user_organization(request.user)
+            food_request.requested_by = request.user
+            food_request.receiver_organization = organization
             food_request.save()
+            save_food_request_allocations(food_request, formset)
             return redirect("donations:request_thanks", pk=food_request.pk)
     else:
-        form = FoodRequestForm(initial=request_account_initial(request))
+        form = FoodRequestForm()
+        formset = FoodRequestAllocationFormSet(donation=donation)
 
-    return render(request, "donations/food_request_form.html", {"form": form, "donation": donation})
+    return render(
+        request,
+        "donations/food_request_form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "donation": donation,
+            "receiver_profile": receiver_profile(request, organization),
+        },
+    )
 
 
 def food_request_thanks(request, pk):

@@ -6,8 +6,14 @@ from django.utils import timezone
 from organizations.models import Membership, Organization
 from storage.models import StorageLocation
 
-from .forms import FOOD_TYPE_INTAKE, DonationFoodItemFormSet, DonationForm, FoodRequestForm
-from .models import Donation, DonationFoodItem, FoodRequest
+from .forms import (
+    FOOD_TYPE_INTAKE,
+    DonationFoodItemFormSet,
+    DonationForm,
+    FoodRequestAllocationFormSet,
+    FoodRequestForm,
+)
+from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
 User = get_user_model()
 
@@ -220,6 +226,58 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Shared Org")
         self.assertNotContains(response, "Other Org")
 
+    def test_donation_detail_shows_allocation_and_request_history_sections(self):
+        supplier, supplier_organization = self.create_user_with_org()
+        receiver = User.objects.create_user(
+            email="receiver@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        receiver_organization = Organization.objects.create(name="Receiver Org", owner=receiver, is_active=True)
+        Membership.objects.create(user=receiver, organization=receiver_organization)
+        donation = Donation.objects.create(
+            submitted_by=supplier,
+            supplier_organization=supplier_organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.SUBMITTED,
+        )
+        food_item = DonationFoodItem.objects.create(
+            donation=donation,
+            food_category=Donation.FoodCategory.PRODUCE,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=12,
+            description="Mixed produce",
+        )
+        food_request = FoodRequest.objects.create(
+            donation=donation,
+            requested_by=receiver,
+            receiver_organization=receiver_organization,
+            status=FoodRequest.Status.SUBMITTED,
+        )
+        FoodRequestAllocation.objects.create(
+            food_request=food_request,
+            donation_food_item=food_item,
+            quantity=4,
+        )
+        self.client.force_login(supplier)
+
+        response = self.client.get(reverse("donations:detail", args=[donation.pk]))
+
+        self.assertContains(response, "Current Remaining Food")
+        self.assertContains(response, "Receiver Requests")
+        self.assertContains(response, "12 Boxes")
+        self.assertContains(response, "4 Boxes")
+        self.assertContains(response, "8 Boxes")
+        self.assertContains(response, "Receiver Org")
+
 
 class FoodRequestTests(TestCase):
     def setUp(self):
@@ -232,6 +290,13 @@ class FoodRequestTests(TestCase):
             pickup_deadline=timezone.now() + timezone.timedelta(days=1),
             storage_requirement=Donation.StorageRequirement.DRY,
             status=Donation.Status.SUBMITTED,
+        )
+        self.food_item = DonationFoodItem.objects.create(
+            donation=self.donation,
+            food_category=Donation.FoodCategory.PRODUCE,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=12,
+            description="Mixed produce",
         )
         self.storage = StorageLocation.objects.create(
             name="Third Party Cold Storage",
@@ -275,12 +340,12 @@ class FoodRequestTests(TestCase):
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
             {
-                "receiver_name": "City Shelter",
-                "organization": "City Shelter",
-                "email": "receiver@example.com",
-                "phone": "604-555-0100",
-                "requested_quantity": 4,
-                "requested_unit": Donation.QuantityUnit.BOXES,
+                "allocations-TOTAL_FORMS": "1",
+                "allocations-INITIAL_FORMS": "0",
+                "allocations-MIN_NUM_FORMS": "1",
+                "allocations-MAX_NUM_FORMS": "1000",
+                "allocations-0-food_item_id": self.food_item.id,
+                "allocations-0-quantity": 4,
                 "storage_required": "on",
                 "preferred_storage": self.storage.pk,
                 "storage_notes": "Receiver has no cold storage capacity.",
@@ -288,17 +353,21 @@ class FoodRequestTests(TestCase):
             },
         )
 
-        self.assertRedirects(response, reverse("donations:request_thanks", args=[1]))
         self.assertEqual(FoodRequest.objects.count(), 1)
 
         food_request = FoodRequest.objects.get()
+        self.assertRedirects(response, reverse("donations:request_thanks", args=[food_request.pk]))
         self.assertEqual(food_request.donation, self.donation)
-        self.assertEqual(food_request.receiver_name, "City Shelter")
         self.assertTrue(food_request.storage_required)
         self.assertEqual(food_request.preferred_storage, self.storage)
         self.assertEqual(food_request.status, FoodRequest.Status.SUBMITTED)
         self.assertEqual(food_request.requested_by, user)
         self.assertEqual(food_request.receiver_organization, organization)
+        self.assertEqual(food_request.receiver_display_name, "Rae Receiver")
+        self.assertEqual(food_request.receiver_organization_display, "Receiver Org")
+        self.assertEqual(food_request.allocations.count(), 1)
+        self.assertEqual(food_request.allocations.get().donation_food_item, self.food_item)
+        self.assertEqual(food_request.allocations.get().quantity, 4)
 
     def test_food_request_form_exposes_storage_fields_not_internal_fields(self):
         form = FoodRequestForm()
@@ -306,6 +375,12 @@ class FoodRequestTests(TestCase):
         self.assertNotIn("status", form.fields)
         self.assertNotIn("donation", form.fields)
         self.assertNotIn("intended_use", form.fields)
+        self.assertNotIn("receiver_name", form.fields)
+        self.assertNotIn("organization", form.fields)
+        self.assertNotIn("email", form.fields)
+        self.assertNotIn("phone", form.fields)
+        self.assertNotIn("requested_quantity", form.fields)
+        self.assertNotIn("requested_unit", form.fields)
         self.assertIn("storage_required", form.fields)
         self.assertIn("preferred_storage", form.fields)
 
@@ -326,3 +401,40 @@ class FoodRequestTests(TestCase):
 
         self.assertIn(self.storage, form.fields["preferred_storage"].queryset)
         self.assertNotIn(unavailable_storage, form.fields["preferred_storage"].queryset)
+
+    def test_request_allocation_tracks_remaining_quantity_per_food_item(self):
+        user = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        food_request = FoodRequest.objects.create(
+            donation=self.donation,
+            requested_by=user,
+            status=FoodRequest.Status.SUBMITTED,
+        )
+        FoodRequestAllocation.objects.create(
+            food_request=food_request,
+            donation_food_item=self.food_item,
+            quantity=5,
+        )
+
+        self.assertEqual(self.food_item.allocated_quantity, 5)
+        self.assertEqual(self.food_item.remaining_quantity, 7)
+
+    def test_request_allocation_formset_rejects_more_than_remaining_quantity(self):
+        formset = FoodRequestAllocationFormSet(
+            {
+                "allocations-TOTAL_FORMS": "1",
+                "allocations-INITIAL_FORMS": "0",
+                "allocations-MIN_NUM_FORMS": "1",
+                "allocations-MAX_NUM_FORMS": "1000",
+                "allocations-0-food_item_id": self.food_item.id,
+                "allocations-0-quantity": 13,
+            },
+            donation=self.donation,
+        )
+
+        self.assertFalse(formset.is_valid())

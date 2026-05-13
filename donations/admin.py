@@ -1,11 +1,18 @@
 from django.contrib import admin
 
-from .models import Donation, DonationFoodItem, FoodRequest
+from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
 
 class DonationFoodItemInline(admin.TabularInline):
     model = DonationFoodItem
     extra = 1
+
+
+class FoodRequestAllocationInline(admin.TabularInline):
+    model = FoodRequestAllocation
+    extra = 0
+    readonly_fields = ("donation_food_item", "quantity")
+    can_delete = False
 
 
 @admin.register(Donation)
@@ -58,15 +65,13 @@ class DonationAdmin(admin.ModelAdmin):
 
 @admin.register(FoodRequest)
 class FoodRequestAdmin(admin.ModelAdmin):
+    inlines = [FoodRequestAllocationInline]
     ordering = ("-created_at",)
     list_display = (
-        "receiver_name",
+        "receiver_display_name",
         "requested_by",
         "receiver_organization",
-        "organization",
         "donation",
-        "requested_quantity",
-        "requested_unit",
         "storage_required",
         "preferred_storage",
         "status",
@@ -75,16 +80,14 @@ class FoodRequestAdmin(admin.ModelAdmin):
     list_filter = (
         "status",
         "storage_required",
-        "requested_unit",
         "preferred_storage",
         "receiver_organization",
         "created_at",
     )
     search_fields = (
-        "receiver_name",
-        "organization",
-        "email",
         "requested_by__email",
+        "requested_by__first_name",
+        "requested_by__last_name",
         "receiver_organization__name",
         "donation__submitted_by__email",
         "donation__supplier_organization__name",

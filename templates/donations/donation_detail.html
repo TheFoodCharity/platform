@@ -15,6 +15,111 @@
       {% include "donations/partials/donation_detail.html" with donation=donation show_donor=True show_status=True show_pickup_location=True %}
 
       <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food allocation</p>
+            <h2 class="mt-1 text-2xl font-bold text-slate-950">Current Remaining Food</h2>
+          </div>
+          <span class="badge badge-primary badge-outline">Live request totals</span>
+        </div>
+
+        <div class="mt-6 overflow-x-auto rounded-xl border border-base-300">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Food item</th>
+                <th>Original amount</th>
+                <th>Requested</th>
+                <th>Remaining</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in donation.food_items.all %}
+                <tr>
+                  <td>
+                    <div class="font-semibold text-slate-950">{{ item.get_food_category_display }}</div>
+                    {% if item.description %}
+                      <div class="text-sm text-slate-500">{{ item.description }}</div>
+                    {% endif %}
+                  </td>
+                  <td>{{ item.quantity }} {{ item.get_packaging_display }}</td>
+                  <td>{{ item.allocated_quantity }} {{ item.get_packaging_display }}</td>
+                  <td>
+                    <span class="badge {% if item.remaining_quantity %}badge-success{% else %}badge-neutral{% endif %} badge-outline">
+                      {{ item.remaining_quantity }} {{ item.get_packaging_display }}
+                    </span>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-slate-600">No food items added.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-primary">Request history</p>
+          <h2 class="mt-1 text-2xl font-bold text-slate-950">Receiver Requests</h2>
+        </div>
+
+        <div class="mt-6 overflow-x-auto rounded-xl border border-base-300">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Receiver organization</th>
+                <th>Requested by</th>
+                <th>Food item</th>
+                <th>Quantity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for food_request in donation.food_requests.all %}
+                {% for allocation in food_request.allocations.all %}
+                  <tr>
+                    <td>{{ food_request.created_at|date:"M j, Y" }}</td>
+                    <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
+                    <td>{{ food_request.receiver_display_name }}</td>
+                    <td>
+                      <div class="font-semibold text-slate-950">
+                        {{ allocation.donation_food_item.get_food_category_display }}
+                      </div>
+                      {% if allocation.donation_food_item.description %}
+                        <div class="text-sm text-slate-500">{{ allocation.donation_food_item.description }}</div>
+                      {% endif %}
+                    </td>
+                    <td>{{ allocation.quantity }} {{ allocation.donation_food_item.get_packaging_display }}</td>
+                    <td>
+                      <span class="badge badge-primary badge-outline">{{ food_request.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td>{{ food_request.created_at|date:"M j, Y" }}</td>
+                    <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
+                    <td>{{ food_request.receiver_display_name }}</td>
+                    <td colspan="2" class="text-slate-600">No food quantities recorded.</td>
+                    <td>
+                      <span class="badge badge-primary badge-outline">{{ food_request.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="text-slate-600">No requests have been submitted for this donation yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         <h2 class="text-2xl font-bold text-slate-950">Assigned Storage</h2>
         {% if donation.assigned_storage %}
           <dl class="mt-6 grid gap-4 md:grid-cols-3">
