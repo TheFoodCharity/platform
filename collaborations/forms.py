@@ -1,4 +1,5 @@
 from pathlib import Path
+from zipfile import BadZipFile, ZipFile
 
 from django import forms
 from django.contrib.contenttypes.models import ContentType
@@ -28,6 +29,35 @@ ALLOWED_COLLABORATION_FILE_TYPES = {
     ".jpeg": {"image/jpeg"},
     ".png": {"image/png"},
 }
+
+
+def _uploaded_file_matches_extension(uploaded_file, extension):
+    uploaded_file.seek(0)
+    try:
+        match extension:
+            case ".pdf":
+                return uploaded_file.read(5) == b"%PDF-"
+            case ".png":
+                return uploaded_file.read(8) == b"\x89PNG\r\n\x1a\n"
+            case ".jpg" | ".jpeg":
+                return uploaded_file.read(3) == b"\xff\xd8\xff"
+            case ".ppt":
+                return uploaded_file.read(8) == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+            case ".pptx":
+                return _uploaded_file_is_powerpoint_zip(uploaded_file)
+            case _:
+                return False
+    finally:
+        uploaded_file.seek(0)
+
+
+def _uploaded_file_is_powerpoint_zip(uploaded_file):
+    try:
+        with ZipFile(uploaded_file) as archive:
+            names = set(archive.namelist())
+    except BadZipFile:
+        return False
+    return "[Content_Types].xml" in names and any(name.startswith("ppt/") for name in names)
 
 
 class CollaborationSpaceRequestForm(ThemedFormMixin, forms.ModelForm):
@@ -109,6 +139,9 @@ class CollaborationFileUploadForm(ThemedFormMixin, forms.ModelForm):
 
         if content_type not in ALLOWED_COLLABORATION_FILE_TYPES[extension]:
             raise forms.ValidationError("The uploaded file type does not match the file extension.")
+
+        if not _uploaded_file_matches_extension(uploaded_file, extension):
+            raise forms.ValidationError("The uploaded file contents do not match the file extension.")
 
         if uploaded_file.size > MAX_COLLABORATION_FILE_SIZE:
             raise forms.ValidationError("Upload a file smaller than 50 MB.")
