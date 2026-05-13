@@ -112,7 +112,7 @@ class Donation(models.Model):
     unit = models.CharField(max_length=50, choices=QuantityUnit.choices)
 
     pickup_location = models.CharField(max_length=255)
-    pickup_window = models.CharField(max_length=255, blank=True)
+    pickup_notes = models.CharField(max_length=255, blank=True)
     pickup_day = models.CharField(max_length=20, choices=PickupDay.choices, default=PickupDay.TODAY)
     pickup_ready_time = models.CharField(
         max_length=30,
@@ -172,6 +172,12 @@ class Donation(models.Model):
         return f"{self.food_type_display} - {self.donor_display_name}"
 
     @property
+    def ticket_number(self):
+        if self.pk is None:
+            return "DON-unsaved"
+        return f"DON-{self.pk:06d}"
+
+    @property
     def donor_display_name(self):
         if self.supplier_organization_id:
             return self.supplier_organization.name
@@ -188,11 +194,48 @@ class Donation(models.Model):
         return ""
 
     @property
+    def donor_public_phone_display(self):
+        if self.supplier_organization_id and self.supplier_organization.phone:
+            return str(self.supplier_organization.phone)
+        return ""
+
+    @property
     def food_type_display(self):
         labels = dict(self.FoodCategory.choices)
         if isinstance(self.food_type, list):
             return ", ".join(labels.get(food_type, food_type) for food_type in self.food_type)
         return labels.get(self.food_type, self.food_type)
+
+    @property
+    def category_list_display(self):
+        labels = dict(self.FoodCategory.choices)
+        categories = []
+
+        for food_item in self.food_items.all():
+            if food_item.food_category not in categories:
+                categories.append(food_item.food_category)
+
+        if not categories and isinstance(self.food_type, list):
+            categories = self.food_type
+
+        if not categories:
+            categories = [self.food_category]
+
+        return ", ".join(labels.get(category, category) for category in categories)
+
+    @property
+    def total_remaining_quantity(self):
+        return sum(food_item.remaining_quantity for food_item in self.food_items.all())
+
+    @property
+    def is_fully_requested(self):
+        return self.food_items.exists() and self.total_remaining_quantity == 0
+
+    @property
+    def allocation_status_display(self):
+        if self.is_fully_requested:
+            return "Fully requested"
+        return "Available"
 
     def assign_storage(self, storage_location):
         self.assigned_storage = storage_location
@@ -294,6 +337,12 @@ class FoodRequest(models.Model):
 
     def __str__(self):
         return f"{self.receiver_display_name} request for {self.donation}"
+
+    @property
+    def ticket_number(self):
+        if self.pk is None:
+            return "REQ-unsaved"
+        return f"REQ-{self.pk:06d}"
 
     @property
     def receiver_display_name(self):

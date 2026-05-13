@@ -7,7 +7,7 @@ from django.utils import timezone
 from storage.models import StorageLocation
 
 from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestAllocationFormSet, FoodRequestForm
-from .models import Donation, DonationFoodItem, FoodRequestAllocation
+from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
 PICKUP_END_HOURS = {
     Donation.PickupEndTime.BEFORE_2PM: 14,
@@ -129,6 +129,13 @@ def save_food_request_allocations(food_request, formset):
         )
 
     FoodRequestAllocation.objects.bulk_create(allocations)
+    sync_donation_status_from_allocations(food_request.donation)
+
+
+def sync_donation_status_from_allocations(donation):
+    if donation.is_fully_requested and donation.status != Donation.Status.COMPLETED:
+        donation.status = Donation.Status.COMPLETED
+        donation.save(update_fields=["status", "updated_at"])
 
 
 @login_required
@@ -281,19 +288,60 @@ def donation_assign_storage(request, pk, storage_pk):
 
 
 def available_donation_list(request):
-    donations = Donation.objects.exclude(
-        status__in=[
-            Donation.Status.CANCELLED,
-            Donation.Status.EXPIRED,
-            Donation.Status.COMPLETED,
-        ],
-    ).order_by("-created_at")
+    donations = (
+        Donation.objects.exclude(
+            status__in=[
+                Donation.Status.CANCELLED,
+                Donation.Status.EXPIRED,
+            ],
+        )
+        .prefetch_related(
+            "food_items",
+            "food_items__request_allocations__food_request",
+        )
+        .select_related(
+            "supplier_organization",
+            "submitted_by",
+        )
+        .order_by("-created_at")
+    )
 
-    return render(request, "donations/available_donation_list.html", {"donations": donations})
+    category = request.GET.get("category")
+    availability = request.GET.get("availability")
+
+    if category:
+        donations = donations.filter(food_items__food_category=category).distinct()
+
+    donation_list = list(donations)
+    if availability == "available":
+        donation_list = [donation for donation in donation_list if not donation.is_fully_requested]
+    elif availability == "fully_requested":
+        donation_list = [donation for donation in donation_list if donation.is_fully_requested]
+
+    return render(
+        request,
+        "donations/available_donation_list.html",
+        {
+            "donations": donation_list,
+            "category_choices": Donation.FoodCategory.choices,
+            "availability": availability,
+            "category": category,
+        },
+    )
 
 
 def available_donation_detail(request, pk):
-    donation = get_object_or_404(Donation, pk=pk)
+    donation = get_object_or_404(
+        Donation.objects.select_related(
+            "submitted_by",
+            "supplier_organization",
+            "assigned_storage",
+        ).prefetch_related(
+            "food_items",
+            "food_items__request_allocations__food_request",
+        ),
+        pk=pk,
+    )
 
     return render(request, "donations/available_donation_detail.html", {"donation": donation})
 
@@ -331,4 +379,5 @@ def food_request_create(request, pk):
 
 
 def food_request_thanks(request, pk):
-    return render(request, "donations/food_request_thanks.html", {"request_id": pk})
+    food_request = get_object_or_404(FoodRequest, pk=pk)
+    return render(request, "donations/food_request_thanks.html", {"food_request": food_request})

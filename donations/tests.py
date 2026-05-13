@@ -75,7 +75,7 @@ class DonationIntakeViewTests(TestCase):
             "pickup_day": Donation.PickupDay.TODAY,
             "pickup_ready_time": Donation.PickupReadyTime.READY_NOW,
             "pickup_end_time": Donation.PickupEndTime.BEFORE_5PM,
-            "pickup_window": "Today before 5pm",
+            "pickup_notes": "Today before 5pm",
             "storage_requirement": Donation.StorageRequirement.DRY,
             "people_fed_estimate": Donation.PeopleFedEstimate.FIFTY,
             "fits_in_car": "True",
@@ -273,6 +273,10 @@ class DonationIntakeViewTests(TestCase):
 
         self.assertContains(response, "Current Remaining Food")
         self.assertContains(response, "Receiver Requests")
+        self.assertContains(response, "Description")
+        self.assertContains(response, donation.ticket_number)
+        self.assertContains(response, food_request.ticket_number)
+        self.assertContains(response, "Mixed produce")
         self.assertContains(response, "12 Boxes")
         self.assertContains(response, "4 Boxes")
         self.assertContains(response, "8 Boxes")
@@ -281,7 +285,23 @@ class DonationIntakeViewTests(TestCase):
 
 class FoodRequestTests(TestCase):
     def setUp(self):
+        self.supplier = User.objects.create_user(
+            email="supplier@example.com",
+            password="password",
+            first_name="Sam",
+            last_name="Supplier",
+            email_verified=True,
+        )
+        self.supplier_organization = Organization.objects.create(
+            name="Supplier Org",
+            owner=self.supplier,
+            is_active=True,
+            phone="6045550199",
+        )
+        Membership.objects.create(user=self.supplier, organization=self.supplier_organization)
         self.donation = Donation.objects.create(
+            submitted_by=self.supplier,
+            supplier_organization=self.supplier_organization,
             food_category=Donation.FoodCategory.PRODUCE,
             food_type=[Donation.FoodCategory.PRODUCE],
             quantity=12,
@@ -315,13 +335,84 @@ class FoodRequestTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Available Donations")
+        self.assertContains(response, self.donation.ticket_number)
         self.assertContains(response, "Fresh Produce")
+        self.assertContains(response, "Supplier Org")
+        self.assertContains(response, "Available")
         self.assertContains(response, "Request this food")
+
+    def test_available_donation_list_can_filter_by_category(self):
+        other_donation = Donation.objects.create(
+            submitted_by=self.supplier,
+            supplier_organization=self.supplier_organization,
+            food_category=Donation.FoodCategory.DAIRY,
+            food_type=[Donation.FoodCategory.DAIRY],
+            quantity=4,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="456 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.REFRIGERATED,
+            status=Donation.Status.SUBMITTED,
+        )
+        DonationFoodItem.objects.create(
+            donation=other_donation,
+            food_category=Donation.FoodCategory.DAIRY,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=4,
+            description="Milk",
+        )
+
+        response = self.client.get(
+            reverse("donations:available_list"),
+            {"category": Donation.FoodCategory.DAIRY},
+        )
+
+        self.assertContains(response, "Dairy")
+        self.assertContains(response, other_donation.ticket_number)
+        self.assertNotContains(response, "Mixed produce")
+
+    def test_available_donation_list_can_filter_by_allocation_status(self):
+        user = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        food_request = FoodRequest.objects.create(
+            donation=self.donation,
+            requested_by=user,
+            status=FoodRequest.Status.SUBMITTED,
+        )
+        FoodRequestAllocation.objects.create(
+            food_request=food_request,
+            donation_food_item=self.food_item,
+            quantity=12,
+        )
+
+        available_response = self.client.get(
+            reverse("donations:available_list"),
+            {"availability": "available"},
+        )
+        fully_requested_response = self.client.get(
+            reverse("donations:available_list"),
+            {"availability": "fully_requested"},
+        )
+
+        self.assertNotContains(available_response, "Mixed produce")
+        self.assertContains(fully_requested_response, "Fully requested")
+        self.assertContains(fully_requested_response, self.donation.ticket_number)
 
     def test_receiver_can_view_available_donation_detail(self):
         response = self.client.get(reverse("donations:available_detail", args=[self.donation.pk]))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Donation Details")
+        self.assertContains(response, self.donation.ticket_number)
+        self.assertContains(response, "Supplier Org")
+        self.assertContains(response, "123 Main Street")
+        self.assertContains(response, "Current Remaining Food")
+        self.assertContains(response, "Mixed produce")
         self.assertContains(response, "Fresh Produce")
         self.assertContains(response, "Request this food")
 
@@ -368,6 +459,77 @@ class FoodRequestTests(TestCase):
         self.assertEqual(food_request.allocations.count(), 1)
         self.assertEqual(food_request.allocations.get().donation_food_item, self.food_item)
         self.assertEqual(food_request.allocations.get().quantity, 4)
+
+        thanks_response = self.client.get(reverse("donations:request_thanks", args=[food_request.pk]))
+        self.assertContains(thanks_response, food_request.ticket_number)
+        self.assertContains(thanks_response, self.donation.ticket_number)
+
+    def test_requesting_all_remaining_food_marks_donation_completed(self):
+        user = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=organization)
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("donations:request_create", args=[self.donation.pk]),
+            {
+                "allocations-TOTAL_FORMS": "1",
+                "allocations-INITIAL_FORMS": "0",
+                "allocations-MIN_NUM_FORMS": "1",
+                "allocations-MAX_NUM_FORMS": "1000",
+                "allocations-0-food_item_id": self.food_item.id,
+                "allocations-0-quantity": 12,
+                "storage_required": "",
+                "preferred_storage": "",
+                "storage_notes": "",
+                "notes": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, Donation.Status.COMPLETED)
+
+    def test_food_request_form_shows_donor_and_pickup_information(self):
+        self.donation.requires_van = True
+        self.donation.requires_pallet_jack = True
+        self.donation.loading_dock_available = True
+        self.donation.special_handling_notes = "Use loading bay door."
+        self.donation.save()
+        self.client.force_login(
+            User.objects.create_user(
+                email="receiver-user@example.com",
+                password="password",
+                first_name="Rae",
+                last_name="Receiver",
+                email_verified=True,
+            ),
+        )
+
+        response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
+
+        self.assertContains(response, "Donor and pickup information")
+        self.assertContains(response, "Description")
+        self.assertContains(response, self.donation.ticket_number)
+        self.assertContains(response, "Mixed produce")
+        self.assertContains(response, "Supplier Org")
+        self.assertContains(response, "Public phone")
+        self.assertContains(response, "6045550199")
+        self.assertContains(response, "123 Main Street")
+        self.assertContains(response, "Today")
+        self.assertContains(response, "Donor logistics")
+        self.assertContains(response, "Dry Storage")
+        self.assertContains(response, "Requires van")
+        self.assertContains(response, "Pallet jack")
+        self.assertContains(response, "Loading dock available")
+        self.assertContains(response, "Use loading bay door.")
+        self.assertNotContains(response, "Forklift")
 
     def test_food_request_form_exposes_storage_fields_not_internal_fields(self):
         form = FoodRequestForm()

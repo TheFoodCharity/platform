@@ -11,7 +11,10 @@
       Thank you. Your food request has been submitted for review.
     </p>
     <p class="mt-4 text-sm font-semibold uppercase tracking-wide text-primary">
-      Request number: {{ request_id }}
+      Request ticket: {{ food_request.ticket_number }}
+    </p>
+    <p class="mt-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      Donation ticket: {{ food_request.donation.ticket_number }}
     </p>
     <a class="btn btn-primary mt-8" href="{% url 'donations:available_list' %}">
       View Available Donations

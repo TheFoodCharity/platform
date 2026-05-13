@@ -7,6 +7,7 @@
       <div>
         <p class="text-sm font-semibold uppercase tracking-wide text-primary">Donation management</p>
         <h1 class="mt-2 text-4xl font-bold text-slate-950">Donation Details</h1>
+        <p class="mt-2 text-sm font-semibold uppercase tracking-wide text-primary">{{ donation.ticket_number }}</p>
       </div>
       <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
     </div>
@@ -28,6 +29,7 @@
             <thead>
               <tr>
                 <th>Food item</th>
+                <th>Description</th>
                 <th>Original amount</th>
                 <th>Requested</th>
                 <th>Remaining</th>
@@ -38,10 +40,8 @@
                 <tr>
                   <td>
                     <div class="font-semibold text-slate-950">{{ item.get_food_category_display }}</div>
-                    {% if item.description %}
-                      <div class="text-sm text-slate-500">{{ item.description }}</div>
-                    {% endif %}
                   </td>
+                  <td>{{ item.description|default:"No description provided." }}</td>
                   <td>{{ item.quantity }} {{ item.get_packaging_display }}</td>
                   <td>{{ item.allocated_quantity }} {{ item.get_packaging_display }}</td>
                   <td>
@@ -52,7 +52,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="4" class="text-slate-600">No food items added.</td>
+                  <td colspan="5" class="text-slate-600">No food items added.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -71,6 +71,7 @@
             <thead>
               <tr>
                 <th>Date</th>
+                <th>Request ticket</th>
                 <th>Receiver organization</th>
                 <th>Requested by</th>
                 <th>Food item</th>
@@ -83,6 +84,7 @@
                 {% for allocation in food_request.allocations.all %}
                   <tr>
                     <td>{{ food_request.created_at|date:"M j, Y" }}</td>
+                    <td class="font-semibold text-primary">{{ food_request.ticket_number }}</td>
                     <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
                     <td>{{ food_request.receiver_display_name }}</td>
                     <td>
@@ -101,6 +103,7 @@
                 {% empty %}
                   <tr>
                     <td>{{ food_request.created_at|date:"M j, Y" }}</td>
+                    <td class="font-semibold text-primary">{{ food_request.ticket_number }}</td>
                     <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
                     <td>{{ food_request.receiver_display_name }}</td>
                     <td colspan="2" class="text-slate-600">No food quantities recorded.</td>
@@ -111,7 +114,7 @@
                 {% endfor %}
               {% empty %}
                 <tr>
-                  <td colspan="6" class="text-slate-600">No requests have been submitted for this donation yet.</td>
+                  <td colspan="7" class="text-slate-600">No requests have been submitted for this donation yet.</td>
                 </tr>
               {% endfor %}
             </tbody>

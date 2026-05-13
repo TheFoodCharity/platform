@@ -41,7 +41,7 @@ class DonationForm(forms.ModelForm):
             "pickup_day",
             "pickup_ready_time",
             "pickup_end_time",
-            "pickup_window",
+            "pickup_notes",
             "storage_requirement",
             "requires_van",
             "requires_cube_van",
