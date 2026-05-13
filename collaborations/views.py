@@ -367,9 +367,9 @@ def collaboration_file_upload(request, space_id):
     if request.method != "POST":
         return redirect("collaborations:detail_files", space_id=space.id)
 
-    form = CollaborationFileUploadForm(request.POST, request.FILES, space=space)
+    form = CollaborationFileUploadForm(request.POST, request.FILES, space=space, uploaded_by=request.user)
     if form.is_valid():
-        form.save(uploaded_by=request.user)
+        form.save()
         space.last_activity_at = timezone.now()
         space.save(update_fields=["last_activity_at", "updated_at"])
         return redirect("collaborations:detail_files", space_id=space.id)

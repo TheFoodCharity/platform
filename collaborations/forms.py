@@ -119,9 +119,10 @@ class CollaborationFileUploadForm(ThemedFormMixin, forms.ModelForm):
             "file": forms.ClearableFileInput(attrs={"class": "file-input file-input-bordered w-full"}),
         }
 
-    def __init__(self, *args, space=None, **kwargs):
+    def __init__(self, *args, space=None, uploaded_by=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.space = space
+        self.uploaded_by = uploaded_by
 
     def clean_file(self):
         uploaded_file = self.cleaned_data["file"]
@@ -149,14 +150,17 @@ class CollaborationFileUploadForm(ThemedFormMixin, forms.ModelForm):
 
         return uploaded_file
 
-    def save(self, *, uploaded_by, commit=True):
+    def save(self, commit=True):
+        if self.uploaded_by is None:
+            raise ValueError("CollaborationFileUploadForm requires uploaded_by before saving.")
+
         collaboration_file = super().save(commit=False)
         uploaded_file = self.cleaned_data["file"]
         collaboration_file.space = self.space
         collaboration_file.original_filename = Path(uploaded_file.name).name
         collaboration_file.content_type = uploaded_file.content_type
         collaboration_file.size = uploaded_file.size
-        collaboration_file.uploaded_by = uploaded_by
+        collaboration_file.uploaded_by = self.uploaded_by
 
         if commit:
             collaboration_file.save()
