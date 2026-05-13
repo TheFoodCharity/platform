@@ -21,5 +21,8 @@ class CurrentOrganizationMiddleware:
         elif not hasattr(request, "user"):
             raise ImproperlyConfigured("The organization middleware requires authentication middleware to be installed")
 
-        request.organization = SimpleLazyObject(lambda: get_current_organization(request))
+        request.organization = request.user.current_organization = SimpleLazyObject(
+            lambda: get_current_organization(request)
+        )
+
         return self.get_response(request)
