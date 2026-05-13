@@ -2,6 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
+from .constants import Scope
 from .models import (
     Invitation,
     LegalStatus,
@@ -96,7 +97,7 @@ class CapabilitiesWidget(FilteredSelectMultiple):
 
 class OrganizationAdminForm(forms.ModelForm):
     capabilities = forms.ModelMultipleChoiceField(
-        queryset=PermissionGroup.objects.filter(scope=PermissionGroup.Scope.ORGANIZATION),
+        queryset=PermissionGroup.objects.filter(scope=Scope.ORGANIZATION),
         required=False,
         widget=FilteredSelectMultiple("capabilities", is_stacked=False),
     )
@@ -205,7 +206,7 @@ class MembershipAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["role"].queryset = PermissionGroup.objects.filter(scope=PermissionGroup.Scope.USER)
+        self.fields["role"].queryset = PermissionGroup.objects.filter(scope=Scope.USER)
 
 
 class MembershipPermissionOverrideInline(admin.TabularInline):

@@ -7,6 +7,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
+from .constants import Scope
+
 if TYPE_CHECKING:
     from accounts.models import User
 
@@ -37,10 +39,6 @@ class Permission(models.Model):
 
 
 class PermissionGroup(models.Model):
-    class Scope(models.IntegerChoices):
-        USER = 1, "User role"
-        ORGANIZATION = 2, "Organization capability"
-
     name = models.CharField(max_length=100)
     scope = models.PositiveSmallIntegerField(choices=Scope.choices)
     description = models.CharField(max_length=500, blank=True)
@@ -172,7 +170,7 @@ class Organization(TimestampedModel):
 
     capabilities = models.ManyToManyField(
         PermissionGroup,
-        limit_choices_to={"scope": PermissionGroup.Scope.ORGANIZATION},
+        limit_choices_to={"scope": Scope.ORGANIZATION},
         blank=True,
         related_name="organizations",
         verbose_name=_("capabilities"),
@@ -210,9 +208,7 @@ class Organization(TimestampedModel):
     def create(cls, name: str, owner: "User") -> "Organization":
         with transaction.atomic():
             organization = cls.objects.create(name=name, is_active=False, owner=owner, status=cls.Status.DRAFT)
-            manager_role = PermissionGroup.objects.filter(
-                name="Organization Manager", scope=PermissionGroup.Scope.USER
-            ).first()
+            manager_role = PermissionGroup.objects.filter(name="Organization Manager", scope=Scope.USER).first()
             Membership.objects.create(organization=organization, user=owner, role=manager_role)
             OrganizationApplication.objects.create(organization=organization)
         return organization
@@ -282,7 +278,7 @@ class Membership(TimestampedModel):
         null=True,
         blank=True,
         on_delete=models.PROTECT,
-        limit_choices_to={"scope": PermissionGroup.Scope.USER},
+        limit_choices_to={"scope": Scope.USER},
         related_name="memberships",
         verbose_name=_("role"),
     )

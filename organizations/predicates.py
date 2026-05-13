@@ -1,12 +1,12 @@
 import rules
 
+from .constants import Scope
 from .models import (
     Membership,
     MembershipPermissionOverride,
     Organization,
     OrganizationPermissionOverride,
     Permission,
-    PermissionGroup,
 )
 
 
@@ -103,7 +103,7 @@ def _effective_permissions(user, organization) -> frozenset[str]:
     org_capability_codes: set[str] = set(
         Permission.objects.filter(
             groups__organizations=organization,
-            groups__scope=PermissionGroup.Scope.ORGANIZATION,
+            groups__scope=Scope.ORGANIZATION,
         ).values_list("code", flat=True)
     )
 

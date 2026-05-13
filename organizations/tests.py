@@ -5,6 +5,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError
 from django.test import RequestFactory, TestCase
 
+from .constants import Scope
 from .managers import TenantScopedQuerySet
 from .models import (
     Membership,
@@ -298,8 +299,8 @@ class CascadeTests(TestCase):
         cls.perm_b = Permission.objects.create(code="test.perm_b", description="Perm B")
         cls.perm_c = Permission.objects.create(code="test.perm_c", description="Perm C")
 
-        cls.user_role = PermissionGroup.objects.create(name="Test User Role", scope=PermissionGroup.Scope.USER)
-        cls.org_cap = PermissionGroup.objects.create(name="Test Org Cap", scope=PermissionGroup.Scope.ORGANIZATION)
+        cls.user_role = PermissionGroup.objects.create(name="Test User Role", scope=Scope.USER)
+        cls.org_cap = PermissionGroup.objects.create(name="Test Org Cap", scope=Scope.ORGANIZATION)
 
     def setUp(self):
         # Clear any cached permission results between tests
@@ -415,9 +416,9 @@ class MemberPermissionPredicateTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.perm = Permission.objects.create(code="test.mp_perm", description="mp perm")
-        cls.user_role = PermissionGroup.objects.create(name="MP Test Role", scope=PermissionGroup.Scope.USER)
+        cls.user_role = PermissionGroup.objects.create(name="MP Test Role", scope=Scope.USER)
         cls.user_role.permissions.add(cls.perm)
-        cls.org_cap = PermissionGroup.objects.create(name="MP Test Cap", scope=PermissionGroup.Scope.ORGANIZATION)
+        cls.org_cap = PermissionGroup.objects.create(name="MP Test Cap", scope=Scope.ORGANIZATION)
         cls.org_cap.permissions.add(cls.perm)
 
         cls.member = make_user()
