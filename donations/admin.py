@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
@@ -89,7 +91,7 @@ class FoodRequestAdmin(admin.ModelAdmin):
         "receiver_display_name",
         "requested_by",
         "receiver_organization",
-        "donation",
+        "donation_link",
         "storage_required",
         "preferred_storage",
         "status",
@@ -111,4 +113,9 @@ class FoodRequestAdmin(admin.ModelAdmin):
         "donation__supplier_organization__name",
         "preferred_storage__name",
     )
-    readonly_fields = ("ticket_number", "created_at", "updated_at")
+    readonly_fields = ("ticket_number", "donation_link", "created_at", "updated_at")
+
+    @admin.display(description="Donation", ordering="donation")
+    def donation_link(self, food_request):
+        url = reverse("admin:donations_donation_change", args=[food_request.donation_id])
+        return format_html('<a href="{}">{}</a>', url, food_request.donation.ticket_number)
