@@ -359,12 +359,30 @@ def collaboration_file_upload_to(instance, filename):
 
 
 class CollaborationFile(models.Model):
+    class ScanStatus(models.TextChoices):
+        PENDING = "pending", "Pending scan"
+        SCANNING = "scanning", "Scanning"
+        CLEAN = "clean", "Clean"
+        INFECTED = "infected", "Infected"
+        FAILED = "failed", "Scan failed"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     space = models.ForeignKey(CollaborationSpace, related_name="files", on_delete=models.CASCADE)
-    file = models.FileField(upload_to=collaboration_file_upload_to)
+    file = models.FileField(upload_to=collaboration_file_upload_to, max_length=255)
     original_filename = models.CharField(max_length=255)
     content_type = models.CharField(max_length=255)
     size = models.PositiveBigIntegerField()
+    scan_status = models.CharField(
+        max_length=20,
+        choices=ScanStatus.choices,
+        default=ScanStatus.PENDING,
+        db_index=True,
+    )
+    scan_result = models.CharField(max_length=255, blank=True)
+    scan_error = models.TextField(blank=True)
+    scan_attempts = models.PositiveSmallIntegerField(default=0)
+    scan_started_at = models.DateTimeField(null=True, blank=True)
+    scanned_at = models.DateTimeField(null=True, blank=True)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="uploaded_collaboration_files",
