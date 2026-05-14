@@ -1,6 +1,6 @@
 import rules
 
-from permissions.constants import Scope
+from permissions import Scope
 from permissions.models import MembershipPermissionOverride, OrganizationPermissionOverride, Permission
 
 from .models import AnonymousOrganization, Membership, Organization

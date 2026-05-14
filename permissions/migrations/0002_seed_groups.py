@@ -2,7 +2,7 @@
 
 from django.db import migrations
 
-from permissions.constants import Scope, SystemCapability, SystemRole
+from permissions import Scope, SystemCapability, SystemRole
 
 USER_ROLES = [
     (SystemRole.FOOD_CHARITY_ADMIN, "Platform administration and moderation."),

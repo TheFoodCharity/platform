@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpRequest
 
-from permissions.constants import Scope, SystemCapability, SystemRole
+from permissions import Scope, SystemCapability, SystemRole
 from permissions.models import PermissionGroup
 
 from .models import AnonymousOrganization, Membership, Organization, OrganizationApplication, OrganizationType

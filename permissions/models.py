@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .constants import Scope
+from .constants import Scope  # noqa: TID251
 
 
 class Permission(models.Model):

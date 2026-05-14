@@ -3,7 +3,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from permissions.constants import Scope, SystemCapability, SystemRole
+from permissions import Scope, SystemCapability, SystemRole
 from permissions.registry import registered_permissions
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
@@ -98,7 +98,7 @@ def _render_migration(to_add, to_remove, last):
         imports.append("SystemRole")
     if has_caps:
         imports.append("SystemCapability")
-    constants_import = f"from permissions.constants import {', '.join(sorted(imports))}"
+    constants_import = f"from permissions import {', '.join(sorted(imports))}"
 
     list_blocks = []
     if to_add:

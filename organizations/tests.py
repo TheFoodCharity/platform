@@ -3,7 +3,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError
 from django.test import RequestFactory, TestCase
 
-from permissions.constants import Scope
+from permissions import Scope
 from permissions.models import MembershipPermissionOverride, OrganizationPermissionOverride, Permission, PermissionGroup
 
 from .managers import TenantScopedQuerySet

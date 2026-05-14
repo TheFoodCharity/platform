@@ -1,6 +1,6 @@
 from django.db import migrations
 
-from permissions.constants import Scope, SystemCapability, SystemRole
+from permissions import Scope, SystemCapability, SystemRole
 
 PERMISSIONS = [
     (

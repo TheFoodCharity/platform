@@ -3,7 +3,7 @@ from django.core.checks import run_checks
 from django.test import TestCase
 
 from .models import Permission
-from .registry import register_permission, registered_permissions
+from .registry import register_permission, registered_permissions  # noqa: TID251
 
 # ---------------------------------------------------------------------------
 # Registry tests

@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
-from permissions.constants import Scope
+from permissions import Scope
 
 if TYPE_CHECKING:
     from accounts.models import User

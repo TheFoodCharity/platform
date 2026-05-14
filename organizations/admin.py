@@ -2,7 +2,7 @@ from django import forms
 from django.contrib import admin
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
-from permissions.constants import Scope
+from permissions import Scope
 from permissions.models import MembershipPermissionOverride, OrganizationPermissionOverride, PermissionGroup
 
 from .models import Invitation, LegalStatus, Membership, Organization, OrganizationApplication, OrganizationType
