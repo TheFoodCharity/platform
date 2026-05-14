@@ -355,7 +355,12 @@ class CollaborationChatMessage(models.Model):
 
 def collaboration_file_upload_to(instance, filename):
     ext = Path(filename).suffix.lower()
-    return f"collaborations/{instance.space_id}/files/{instance.id}{ext}"
+    return f"quarantine/collaborations/{instance.space_id}/files/{instance.id}{ext}"
+
+
+def collaboration_clean_file_path(instance):
+    ext = Path(instance.original_filename).suffix.lower()
+    return f"clean/collaborations/{instance.space_id}/files/{instance.id}{ext}"
 
 
 class CollaborationFile(models.Model):
