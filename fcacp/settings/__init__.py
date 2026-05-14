@@ -181,6 +181,15 @@ DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
 
+# Background jobs
+CELERY_BROKER_URL = environment.celery_broker_url
+CELERY_TASK_IGNORE_RESULT = True
+
+# Malware scanning
+CLAMAV_HOST = environment.clamav_host
+CLAMAV_PORT = environment.clamav_port
+CLAMAV_TIMEOUT = environment.clamav_timeout
+
 # Upload limits
 COLLABORATION_FILE_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
