@@ -49,6 +49,20 @@ class LegalStatus(models.Model):
         return self.name
 
 
+class OrganizationsManager(models.Manager):
+    def for_user(self, user: User):
+        return self.filter(users=user)
+
+
+class ActiveOrganizationsManager(OrganizationsManager):
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .filter(is_active=True, status__in=(Organization.Status.APPROVED, Organization.Status.APPROVED_LIMITED))
+        )
+
+
 class Organization(TimestampedModel):
     class Status(models.IntegerChoices):
         DRAFT = 0, "Draft"
@@ -109,6 +123,10 @@ class Organization(TimestampedModel):
     )
 
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Membership", related_name="organizations")
+
+    # Managers
+    objects = OrganizationsManager()
+    active = ActiveOrganizationsManager()
 
     class Meta:
         ordering = ["name"]

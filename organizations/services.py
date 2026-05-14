@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.http import HttpRequest
 
 from .models import Membership, Organization, OrganizationApplication, OrganizationType
+
+SESSION_KEY = "_organizations_current_id"
 
 User = get_user_model()
 
@@ -12,3 +15,24 @@ def organization_create(*, owner: User, name: str, organization_type: Organizati
     Membership.objects.create(user=owner, organization=organization, is_admin=True)
     OrganizationApplication.objects.create(organization=organization)
     return organization
+
+
+def set_current_organization(request: HttpRequest, organization: Organization):
+    if not (request.user.is_authenticated and organization.is_member(request.user)):
+        return
+
+    request.session[SESSION_KEY] = organization.pk
+    request.session.cycle_key()
+
+
+def get_current_organization(request: HttpRequest) -> Organization | None:
+    if not request.user.is_authenticated:
+        return None
+
+    try:
+        pk = request.session[SESSION_KEY]
+        return Organization.active.for_user(request.user).get(pk=pk)
+    except KeyError, Organization.DoesNotExist:
+        pass
+
+    return None

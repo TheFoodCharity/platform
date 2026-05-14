@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    ActivateView,
     ApplicationBasicDetailsView,
     ApplicationContactView,
     ApplicationDashboardView,
@@ -9,6 +10,7 @@ from .views import (
     ApplyView,
     DispatchView,
     OrganizationsView,
+    SelectView,
 )
 
 app_name = "organizations"
@@ -16,6 +18,8 @@ app_name = "organizations"
 urlpatterns = [
     path("", OrganizationsView.as_view(), name="list"),
     path("dispatch", DispatchView.as_view(), name="dispatch"),
+    path("select", SelectView.as_view(), name="select"),
+    path("select/<int:pk>", ActivateView.as_view(), name="activate"),
     path("apply", ApplyView.as_view(), name="apply"),
     path("<int:pk>/application", ApplicationDashboardView.as_view(), name="application"),
     path("<int:pk>/application/basic", ApplicationBasicDetailsView.as_view(), name="application_basic"),
