@@ -1,53 +1,45 @@
-{% extends "base.html" %}
+{% extends "base_standalone.html" %}
 
-{% block content %}
-    <main class="min-h-screen bg-base-200 px-4 py-10">
-        <div class="card card-border bg-base-100 mx-auto max-w-lg">
-            <div class="card-body gap-6">
-                <div>
-                    <h2 class="card-title text-2xl">Select an Organization</h2>
-                    <p class="text-base-content/60 text-sm mt-1">Choose which organization you'd like to work as.</p>
-                </div>
+{% block page_title %}Select an Organization{% endblock %}
+{% block page_subtitle %}Choose which organization you'd like to work as.{% endblock %}
 
-                {% partialdef options inline %}
-                    <ul class="menu bg-base-100 rounded-box border border-base-200 divide-y divide-base-200 w-full p-2">
-                        {% for organization in organizations %}
-                            <li>
-                                <button hx-post="{% url 'organizations:activate' organization.pk %}"
-                                        {% if request.GET.next %}hx-vals='{"next": "{{ request.GET.next|escapejs }}"}'{% endif %}
-                                        class="flex items-center gap-3">
-                                    <div class="flex-1 min-w-0 text-left">
-                                        <div class="flex items-center gap-2 font-medium truncate">
-                                            {{ organization.name }}
-                                        </div>
-                                        {% if organization.organization_type or organization.municipality %}
-                                            <p class="text-xs text-base-content/50 font-normal mt-0.5">
-                                                {{ organization.organization_type }}
-                                            </p>
-                                        {% endif %}
-                                    </div>
-                                    {% if current_organization.pk == organization.pk %}
-                                        <span class="badge badge-primary badge-xs shrink-0">Current</span>
-                                    {% else %}
-                                        <span class="material-symbols-rounded text-base-content/60 text-xl shrink-0">chevron_right</span>
-                                    {% endif %}
-                                </button>
-                            </li>
-                        {% empty %}
-                            <li>
-                                {% include "components/_empty_state.html" with message="No organizations available." icon="apartment" %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endpartialdef %}
+{% block page_content %}
+    {% partialdef options inline %}
+        <ul class="menu bg-base-100 rounded-box border border-base-200 divide-y divide-base-200 w-full p-2">
+            {% for organization in organizations %}
+                <li>
+                    <button hx-post="{% url 'organizations:activate' organization.pk %}"
+                            {% if request.GET.next %}hx-vals='{"next": "{{ request.GET.next|escapejs }}"}'{% endif %}
+                            class="flex items-center gap-3">
+                        <div class="flex-1 min-w-0 text-left">
+                            <div class="flex items-center gap-2 font-medium truncate">
+                                {{ organization.name }}
+                            </div>
+                            {% if organization.organization_type or organization.municipality %}
+                                <p class="text-xs text-base-content/50 font-normal mt-0.5">
+                                    {{ organization.organization_type }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        {% if current_organization.pk == organization.pk %}
+                            <span class="badge badge-primary badge-xs shrink-0">Current</span>
+                        {% else %}
+                            <span class="material-symbols-rounded text-base-content/60 text-xl shrink-0">chevron_right</span>
+                        {% endif %}
+                    </button>
+                </li>
+            {% empty %}
+                <li>
+                    {% include "components/_empty_state.html" with message="No organizations available." icon="apartment" %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endpartialdef %}
+{% endblock %}
 
-                <div class="card-actions justify-center border-t border-base-200 pt-2">
-                    <a href="{% url 'organizations:apply' %}" class="btn btn-outline btn-sm">
-                        <span class="material-symbols-rounded">add</span>
-                        Apply for a new organization
-                    </a>
-                </div>
-            </div>
-        </div>
-    </main>
+{% block page_actions %}
+    <a href="{% url 'organizations:apply' %}" class="btn btn-outline btn-sm">
+        <span class="material-symbols-rounded">add</span>
+        Apply for a new organization
+    </a>
 {% endblock %}
