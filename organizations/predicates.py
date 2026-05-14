@@ -1,14 +1,9 @@
 import rules
 
-from .constants import Scope
-from .models import (
-    AnonymousOrganization,
-    Membership,
-    MembershipPermissionOverride,
-    Organization,
-    OrganizationPermissionOverride,
-    Permission,
-)
+from permissions.constants import Scope
+from permissions.models import MembershipPermissionOverride, OrganizationPermissionOverride, Permission
+
+from .models import AnonymousOrganization, Membership, Organization
 
 
 def _current_organization(user) -> Organization | AnonymousOrganization:

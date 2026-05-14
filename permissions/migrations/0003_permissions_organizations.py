@@ -1,14 +1,8 @@
 from django.db import migrations
 
-from organizations.constants import Scope, SystemCapability, SystemRole
+from permissions.constants import Scope, SystemCapability, SystemRole
 
 PERMISSIONS = [
-    (
-        "organizations.view_application",
-        "View the organization application dashboard and section forms",
-        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
-        [SystemCapability.DEFAULT],
-    ),
     (
         "organizations.edit_application",
         "Edit organization application sections",
@@ -16,15 +10,9 @@ PERMISSIONS = [
         [SystemCapability.DEFAULT],
     ),
     (
-        "organizations.submit_application",
-        "Submit or resubmit the organization application",
+        "organizations.edit_member_permissions",
+        "Modify the permissions of organization members",
         [SystemRole.ORGANIZATION_MANAGER],
-        [SystemCapability.DEFAULT],
-    ),
-    (
-        "organizations.view_profile",
-        "View the organization profile",
-        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
         [SystemCapability.DEFAULT],
     ),
     (
@@ -40,20 +28,14 @@ PERMISSIONS = [
         [SystemCapability.DEFAULT],
     ),
     (
-        "organizations.view_members",
-        "View organization members",
-        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
-        [SystemCapability.DEFAULT],
-    ),
-    (
-        "organizations.edit_member_permissions",
-        "Modify the permissions of organization members",
+        "organizations.remove_member",
+        "Remove a member from the organization",
         [SystemRole.ORGANIZATION_MANAGER],
         [SystemCapability.DEFAULT],
     ),
     (
-        "organizations.remove_member",
-        "Remove a member from the organization",
+        "organizations.submit_application",
+        "Submit or resubmit the organization application",
         [SystemRole.ORGANIZATION_MANAGER],
         [SystemCapability.DEFAULT],
     ),
@@ -63,13 +45,30 @@ PERMISSIONS = [
         [],
         [SystemCapability.DEFAULT],
     ),
+    (
+        "organizations.view_application",
+        "View the organization application dashboard and section forms",
+        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
+        [SystemCapability.DEFAULT],
+    ),
+    (
+        "organizations.view_members",
+        "View organization members",
+        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
+        [SystemCapability.DEFAULT],
+    ),
+    (
+        "organizations.view_profile",
+        "View the organization profile",
+        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
+        [SystemCapability.DEFAULT],
+    ),
 ]
 
 
 def add_permissions(apps, schema_editor):
-    Permission = apps.get_model("organizations", "Permission")
-    PermissionGroup = apps.get_model("organizations", "PermissionGroup")
-
+    Permission = apps.get_model("permissions", "Permission")
+    PermissionGroup = apps.get_model("permissions", "PermissionGroup")
     for code, description, roles, capabilities in PERMISSIONS:
         perm, _ = Permission.objects.update_or_create(code=code, defaults={"description": description})
         for role in roles:
@@ -79,13 +78,13 @@ def add_permissions(apps, schema_editor):
 
 
 def remove_permissions(apps, schema_editor):
-    Permission = apps.get_model("organizations", "Permission")
+    Permission = apps.get_model("permissions", "Permission")
     Permission.objects.filter(code__in=[code for code, *_ in PERMISSIONS]).delete()
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("organizations", "0007_remove_membership_is_admin"),
+        ("permissions", "0002_seed_groups"),
     ]
 
     operations = [

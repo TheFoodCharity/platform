@@ -20,7 +20,7 @@ def check_permission_registry_consistency(app_configs, **kwargs):
             Error(
                 f"Permission {code!r} is registered in django-rules but was not registered "
                 "via register_permission(). Use register_permission() instead of rules.add_perm() directly.",
-                id="organizations.E001",
+                id="permissions.E001",
             )
         )
     return errors
@@ -52,7 +52,7 @@ def check_permission_db_sync(app_configs, databases=None, **kwargs):
         errors.append(
             Warning(
                 f"Permission {code!r} is registered but has no corresponding Permission row. Run migrate to sync.",
-                id="organizations.W001",
+                id="permissions.W001",
             )
         )
     for code in sorted(db_codes - registered):
@@ -60,7 +60,7 @@ def check_permission_db_sync(app_configs, databases=None, **kwargs):
             Error(
                 f"Permission {code!r} exists in the database but is not registered. "
                 "Register it via register_permission() or remove the database row.",
-                id="organizations.E002",
+                id="permissions.E002",
             )
         )
 

@@ -4,15 +4,10 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpRequest
 
-from .constants import Scope, SystemCapability, SystemRole
-from .models import (
-    AnonymousOrganization,
-    Membership,
-    Organization,
-    OrganizationApplication,
-    OrganizationType,
-    PermissionGroup,
-)
+from permissions.constants import Scope, SystemCapability, SystemRole
+from permissions.models import PermissionGroup
+
+from .models import AnonymousOrganization, Membership, Organization, OrganizationApplication, OrganizationType
 
 SESSION_KEY = "_organizations_current_id"
 

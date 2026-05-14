@@ -2,12 +2,12 @@ import uuid
 from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .constants import Scope
+from permissions.constants import Scope
 
 if TYPE_CHECKING:
     from accounts.models import User
@@ -23,48 +23,6 @@ class TimestampedModel(models.Model):
     def save(self, *args, **kwargs):
         self.modified = timezone.now()
         super().save(*args, **kwargs)
-
-
-class Permission(models.Model):
-    code = models.CharField(max_length=200, unique=True)
-    description = models.CharField(max_length=500, blank=True)
-
-    class Meta:
-        ordering = ("code",)
-        verbose_name = _("permission")
-        verbose_name_plural = _("permissions")
-
-    def __str__(self):
-        return self.code
-
-
-class PermissionGroup(models.Model):
-    name = models.CharField(max_length=100)
-    scope = models.PositiveSmallIntegerField(choices=Scope.choices)
-    description = models.CharField(max_length=500, blank=True)
-    permissions = models.ManyToManyField(Permission, related_name="groups", blank=True)
-    is_system = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ("name", "scope")
-        ordering = ("scope", "name")
-        verbose_name = _("permission group")
-        verbose_name_plural = _("permission groups")
-
-    def __str__(self):
-        return f"{self.name} ({self.get_scope_display()})"
-
-
-class PermissionOverrideBase(models.Model):
-    class Effect(models.IntegerChoices):
-        ALLOW = 1
-        DENY = 2
-
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
-    effect = models.PositiveSmallIntegerField(choices=Effect.choices)
-
-    class Meta:
-        abstract = True
 
 
 class OrganizationType(models.Model):
@@ -172,7 +130,7 @@ class Organization(TimestampedModel):
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Membership", related_name="organizations")
 
     capabilities = models.ManyToManyField(
-        PermissionGroup,
+        "permissions.PermissionGroup",
         limit_choices_to={"scope": Scope.ORGANIZATION},
         blank=True,
         related_name="organizations",
@@ -206,15 +164,6 @@ class Organization(TimestampedModel):
         if self.status in (self.Status.DRAFT, self.Status.NEEDS_INFO):
             self.status = self.Status.PENDING
             self.save(update_fields=["status"])
-
-    @classmethod
-    def create(cls, name: str, owner: "User") -> "Organization":
-        with transaction.atomic():
-            organization = cls.objects.create(name=name, is_active=False, owner=owner, status=cls.Status.DRAFT)
-            manager_role = PermissionGroup.objects.filter(name="Organization Manager", scope=Scope.USER).first()
-            Membership.objects.create(organization=organization, user=owner, role=manager_role)
-            OrganizationApplication.objects.create(organization=organization)
-        return organization
 
 
 class AnonymousOrganization:
@@ -283,7 +232,7 @@ class Membership(TimestampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="memberships", on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name="memberships", on_delete=models.CASCADE)
     role = models.ForeignKey(
-        PermissionGroup,
+        "permissions.PermissionGroup",
         null=True,
         blank=True,
         on_delete=models.PROTECT,
@@ -326,35 +275,3 @@ class Invitation(TimestampedModel):
         if not self.guid:
             self.guid = uuid.uuid4()
         super().save(**kwargs)
-
-
-class OrganizationPermissionOverride(PermissionOverrideBase):
-    organization = models.ForeignKey(
-        Organization,
-        on_delete=models.CASCADE,
-        related_name="permission_overrides",
-    )
-
-    class Meta:
-        unique_together = ("organization", "permission")
-        verbose_name = _("organization permission override")
-        verbose_name_plural = _("organization permission overrides")
-
-    def __str__(self):
-        return f"{self.organization}: {self.permission.code} ({self.get_effect_display()})"
-
-
-class MembershipPermissionOverride(PermissionOverrideBase):
-    membership = models.ForeignKey(
-        Membership,
-        on_delete=models.CASCADE,
-        related_name="permission_overrides",
-    )
-
-    class Meta:
-        unique_together = ("membership", "permission")
-        verbose_name = _("membership permission override")
-        verbose_name_plural = _("membership permission overrides")
-
-    def __str__(self):
-        return f"{self.membership}: {self.permission.code} ({self.get_effect_display()})"

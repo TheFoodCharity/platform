@@ -1,6 +1,7 @@
-from .constants import SystemCapability, SystemRole
+from permissions.constants import SystemCapability, SystemRole
+from permissions.registry import register_permission
+
 from .predicates import application_permission, is_organization_owner, member_permission
-from .registry import register_permission
 
 register_permission(
     "organizations.view_application",

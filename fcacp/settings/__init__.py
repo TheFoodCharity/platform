@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "collaborations",
     "forums",
     "organizations",
+    "permissions",
     "public",
     "storage",
     "donations",

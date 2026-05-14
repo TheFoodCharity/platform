@@ -3,8 +3,8 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from organizations.constants import Scope, SystemCapability, SystemRole
-from organizations.registry import registered_permissions
+from permissions.constants import Scope, SystemCapability, SystemRole
+from permissions.registry import registered_permissions
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations"
 
@@ -73,10 +73,10 @@ def _render_step(name, delete_vars, add_vars, has_roles, has_caps):
     needs_groups = add_vars and (has_roles or has_caps)
     lines = [
         f"def {name}(apps, schema_editor):",
-        '    Permission = apps.get_model("organizations", "Permission")',
+        '    Permission = apps.get_model("permissions", "Permission")',
     ]
     if needs_groups:
-        lines.append('    PermissionGroup = apps.get_model("organizations", "PermissionGroup")')
+        lines.append('    PermissionGroup = apps.get_model("permissions", "PermissionGroup")')
     blocks = ["\n".join(lines)]
     blocks += [_render_delete(v) for v in delete_vars]
     blocks += [_render_add(v, has_roles, has_caps) for v in add_vars]
@@ -98,7 +98,7 @@ def _render_migration(to_add, to_remove, last):
         imports.append("SystemRole")
     if has_caps:
         imports.append("SystemCapability")
-    constants_import = f"from organizations.constants import {', '.join(sorted(imports))}"
+    constants_import = f"from permissions.constants import {', '.join(sorted(imports))}"
 
     list_blocks = []
     if to_add:
@@ -124,7 +124,7 @@ def _render_migration(to_add, to_remove, last):
     migration_class = (
         "class Migration(migrations.Migration):\n"
         "    dependencies = [\n"
-        f'        ("organizations", "{last}"),\n'
+        f'        ("permissions", "{last}"),\n'
         "    ]\n"
         "\n"
         "    operations = [\n"
@@ -145,7 +145,7 @@ class Command(BaseCommand):
     help = "Generate data migrations for newly registered or recently removed permissions."
 
     def handle(self, *args, **options):
-        from organizations.models import Permission, PermissionGroup
+        from permissions.models import Permission, PermissionGroup
 
         registry = registered_permissions()
         registry_codes = set(registry)
