@@ -87,8 +87,11 @@ class Organization(TimestampedModel):
     interest_areas = models.TextField(blank=True, help_text=_("Main interest areas and project interests"))
 
     # Location
+    address_line_1 = models.CharField(max_length=255, blank=True)
+    address_line_2 = models.CharField(max_length=255, blank=True)
     municipality = models.CharField(max_length=200, blank=True)
     region = models.CharField(max_length=200, blank=True)
+    postal_code = models.CharField(max_length=20, blank=True)
     service_area = models.TextField(blank=True, help_text=_("Geographic or community area the organization serves"))
 
     # Public-facing contact (shown to the public for organizations that provide direct public support)

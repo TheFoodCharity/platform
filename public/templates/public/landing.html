@@ -19,7 +19,8 @@
                 and communicate with community partners all from a centralized dashboard.
             </p>
             <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <a href="{% url 'donations:create' %}" class="btn btn-primary text-xl">Get Started</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-primary text-xl">Log In</a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-outline btn-primary text-xl rounded-full">Register</a>
                 <button
                     class="btn btn-outline btn-primary text-xl rounded-full"
                     hx-get="{% url 'demo_interest' %}"

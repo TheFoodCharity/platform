@@ -1,114 +1,119 @@
 {% extends "base_app.html" %}
 {% load crispy_forms_tags %}
 
+{% block page_title %}{{ title }}{% endblock %}
+
 {% block page_body %}
-    <div class="mx-auto max-w-5xl">
-        <div class="mb-8">
-            <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food donation</p>
-            <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ title }}</h1>
-            <p class="mt-3 max-w-2xl text-lg text-slate-600">
-                Share the food, pickup, safety, and logistics details so the team can match this donation quickly.
-            </p>
-        </div>
-
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-
-            {% if form.non_field_errors or formset.non_form_errors %}
-                <div class="alert alert-error">
-                    <div>
-                        {{ form.non_field_errors }}
-                        {{ formset.non_form_errors }}
-                    </div>
-                </div>
-            {% endif %}
-
-            {% crispy form %}
-
-            <div class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-                <h2 class="mb-4 text-xl font-bold text-slate-950">Food Types</h2>
-
-                {{ formset.management_form }}
-
-                <div id="food-items" class="divide-y divide-base-200">
-                    {% for item_form in formset %}
-                        {% include "donations/_food_item_row.html" with item_form=item_form %}
-                    {% endfor %}
-                </div>
-
-                <template id="food-item-template">
-                    {% include "donations/_food_item_row.html" with item_form=formset.empty_form %}
-                </template>
-
-                <button type="button" id="add-food-item" class="btn btn-outline btn-sm mt-4">
-                    Add another food type
-                </button>
-            </div>
-
-            <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
-                <button type="submit" class="btn btn-primary">
-                    <span class="material-symbols-rounded">save</span>
-                    Submit Donation
-                </button>
-            </div>
-        </form>
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8">
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food donation</p>
+      <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ title }}</h1>
+      <p class="mt-3 max-w-2xl text-lg text-slate-600">
+        Share the food, pickup, safety, and logistics details so the team can match this donation quickly.
+      </p>
     </div>
 
-    <script>
-      const totalForms = document.getElementById("id_food_items-TOTAL_FORMS");
-      const container = document.getElementById("food-items");
-      const tpl = document.getElementById("food-item-template");
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
 
-      document.getElementById("add-food-item").addEventListener("click", () => {
-        const index = parseInt(totalForms.value, 10);
-        const html = tpl.innerHTML.replaceAll("__prefix__", index);
-        container.insertAdjacentHTML("beforeend", html);
-        totalForms.value = index + 1;
-      });
+      {% if form.non_field_errors or formset.non_form_errors %}
+        <div class="alert alert-error">
+          <div>
+            {{ form.non_field_errors }}
+            {{ formset.non_form_errors }}
+          </div>
+        </div>
+      {% endif %}
 
-      container.addEventListener("click", (e) => {
-        const btn = e.target.closest(".remove-food-item");
-        if (!btn) return;
-        const row = btn.closest(".food-item-row");
-        const deleteBox = row.querySelector('input[type="checkbox"]');
-        if (deleteBox) deleteBox.checked = true;
-        row.hidden = true;
-      });
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-950">Donor Information</h2>
+          <p class="mt-1 text-slate-600">This information comes from your account and organization profile.</p>
+        </div>
 
-      const addressFields = [
-        document.querySelector("#{{ form.address_1.id_for_label }}"),
-        document.querySelector("#{{ form.address_2.id_for_label }}"),
-        document.querySelector("#{{ form.city.id_for_label }}"),
-        document.querySelector("#{{ form.province_or_state.id_for_label }}"),
-        document.querySelector("#{{ form.postal_code.id_for_label }}"),
-      ];
-      const pickupLocation = document.querySelector("#{{ form.pickup_location.id_for_label }}");
-      let lastAutoPickupLocation = "";
-      let pickupLocationWasEdited = Boolean(pickupLocation.value.trim());
+        <div class="grid gap-4 text-sm md:grid-cols-2">
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Company name</p>
+            <p class="mt-1 text-lg text-slate-950">
+              {{ donor_profile.company_name|default:"No active organization" }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Company email</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.contact_email|default:"Not provided" }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4 md:col-span-2">
+            <p class="font-semibold text-slate-500">Address</p>
+            <p class="mt-1 text-lg text-slate-950">
+              {{ donor_profile.address_display|default:"Not provided" }}
+            </p>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Donor name</p>
+            <p class="mt-1 text-lg text-slate-950">
+              {{ donor_profile.donor_name|default:"Not provided" }}
+            </p>
+          </div>
 
-      function buildCompanyAddress() {
-        return addressFields
-          .map((field) => field.value.trim())
-          .filter(Boolean)
-          .join(", ");
-      }
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Donor email</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.donor_contact|default:"Not provided" }}
+            </p>
+          </div>
 
-      function syncPickupLocationFromAddress() {
-        const companyAddress = buildCompanyAddress();
-        const canSync = !pickupLocationWasEdited || pickupLocation.value === lastAutoPickupLocation;
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <p class="font-semibold text-slate-500">Organization Phone Number</p>
+            <p class="mt-1 text-slate-950">
+              {{ donor_profile.contact_phone|default:"Not provided" }}
+            </p>
+          </div>
+        </div>
+      </section>
 
-        if (canSync) {
-          pickupLocation.value = companyAddress;
-          lastAutoPickupLocation = companyAddress;
-          pickupLocationWasEdited = false;
-        }
-      }
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div class="mb-6">
+          <h2 class="text-2xl font-bold text-slate-950">Food Types</h2>
+          <p class="mt-1 text-slate-600">Select each food type included in this donation.</p>
+        </div>
 
-      pickupLocation.addEventListener("input", () => {
-        pickupLocationWasEdited = pickupLocation.value !== lastAutoPickupLocation;
-      });
-      addressFields.forEach((field) => field.addEventListener("input", syncPickupLocationFromAddress));
-      syncPickupLocationFromAddress();
-    </script>
+        {{ formset.management_form }}
+
+        <div class="space-y-4">
+          {% for item_form in formset %}
+            <div class="donation-food-type rounded-xl border border-base-300 bg-base-100 p-4">
+              {% crispy item_form %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% crispy form %}
+
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
+        <button type="submit" class="btn btn-primary">
+          <span class="material-symbols-rounded">save</span>
+          Submit Donation
+        </button>
+      </div>
+    </form>
+  </div>
+
+<script>
+  document.querySelectorAll(".donation-food-type").forEach((foodType) => {
+    const checkbox = foodType.querySelector('input[type="checkbox"]');
+    const details = foodType.querySelector(".donation-food-type-details");
+
+    function syncDetails() {
+      details.classList.toggle("hidden", !checkbox.checked);
+    }
+
+    checkbox.addEventListener("change", syncDetails);
+    syncDetails();
+  });
+
+</script>
 {% endblock %}

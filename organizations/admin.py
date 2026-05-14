@@ -59,7 +59,7 @@ class OrganizationAdmin(admin.ModelAdmin):
         ),
         (
             "Location",
-            {"fields": ["municipality", "region", "service_area"]},
+            {"fields": ["address_line_1", "address_line_2", "municipality", "region", "postal_code", "service_area"]},
         ),
         (
             "Public contact",

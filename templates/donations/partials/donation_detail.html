@@ -1,68 +1,87 @@
-<section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-  <h2 class="text-2xl font-bold text-slate-950">Donation Information</h2>
-
-  <dl class="mt-6 grid gap-4 md:grid-cols-2">
-    {% if show_donor %}
-      <div>
-        <dt class="text-sm font-semibold text-slate-500">Donor Name</dt>
-        <dd class="mt-1 text-slate-950">{{ donation.donor_name }}</dd>
-      </div>
-    {% endif %}
-
+<section class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
     <div>
-      <dt class="text-sm font-semibold text-slate-500">Food Type</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.food_type_display }}</dd>
+      <p class="text-sm font-semibold uppercase tracking-wide text-primary">Donation information</p>
+      <h2 class="mt-1 text-2xl font-bold text-slate-950">{{ donation.ticket_number }}</h2>
     </div>
-    <div>
-      <dt class="text-sm font-semibold text-slate-500">Food Category</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.get_food_category_display }}</dd>
-    </div>
-    <div>
-      <dt class="text-sm font-semibold text-slate-500">Quantity</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.quantity }} {{ donation.get_unit_display }}</dd>
-    </div>
-
-    {% if donation.estimated_weight %}
-      <div>
-        <dt class="text-sm font-semibold text-slate-500">Estimated Weight</dt>
-        <dd class="mt-1 text-slate-950">{{ donation.estimated_weight_display }}</dd>
-      </div>
-    {% endif %}
-
-    <div>
-      <dt class="text-sm font-semibold text-slate-500">Storage Requirement</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.get_storage_requirement_display }}</dd>
-    </div>
-
     {% if show_status %}
-      <div>
-        <dt class="text-sm font-semibold text-slate-500">Status</dt>
-        <dd class="mt-1">
-          <span class="badge badge-primary badge-outline">{{ donation.get_status_display }}</span>
-        </dd>
+      <span class="badge badge-primary badge-outline">{{ donation.get_status_display }}</span>
+    {% endif %}
+  </div>
+
+  <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    {% if show_donor %}
+      <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Donor</p>
+        <p class="mt-1 font-semibold text-slate-950">{{ donation.donor_display_name }}</p>
+        <p class="mt-1 text-sm text-slate-600">{{ donation.donor_contact_display|default:"No email" }}</p>
+        <p class="text-sm text-slate-600">{{ donation.donor_public_phone_display|default:"No public phone" }}</p>
       </div>
     {% endif %}
 
-    {% if show_pickup_location %}
-      <div class="md:col-span-2">
-        <dt class="text-sm font-semibold text-slate-500">Pickup Location</dt>
-        <dd class="mt-1 text-slate-950">{{ donation.pickup_location }}</dd>
-      </div>
-    {% endif %}
+    <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Food</p>
+      <p class="mt-1 font-semibold text-slate-950">{{ donation.category_list_display }}</p>
+      <p class="mt-1 text-sm text-slate-600">{{ donation.quantity_summary_display }}</p>
+      <p class="text-sm text-slate-600">People fed: {{ donation.people_fed_estimate|default:"Not provided" }}</p>
+    </div>
 
-    <div>
-      <dt class="text-sm font-semibold text-slate-500">Pickup Window</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.pickup_window }}</dd>
+    <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Pickup</p>
+      {% if show_pickup_location %}
+        <p class="mt-1 font-semibold text-slate-950">{{ donation.pickup_location }}</p>
+      {% endif %}
+      <p class="mt-1 text-sm text-slate-600">
+        {{ donation.get_pickup_day_display }},
+        {{ donation.get_pickup_ready_time_display }} to {{ donation.get_pickup_end_time_display }}
+      </p>
+      <p class="text-sm text-slate-600">Deadline: {{ donation.pickup_deadline|date:"M j, Y g:i A" }}</p>
     </div>
-    <div>
-      <dt class="text-sm font-semibold text-slate-500">Pickup Timing</dt>
-      <dd class="mt-1 text-slate-950">
-        {{ donation.get_pickup_day_display }}, {{ donation.get_pickup_ready_time_display }} to {{ donation.get_pickup_end_time_display }}
-      </dd>
+
+    <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Storage</p>
+      <p class="mt-1 font-semibold text-slate-950">{{ donation.get_storage_requirement_display }}</p>
+      <p class="mt-1 text-sm text-slate-600">Fits in car: {{ donation.fits_in_car|yesno:"Yes,No" }}</p>
+      <p class="text-sm text-slate-600">Assigned: {{ donation.assigned_storage.name|default:"Not assigned" }}</p>
     </div>
-    <div class="md:col-span-2">
-      <dt class="text-sm font-semibold text-slate-500">Special Handling Notes</dt>
-      <dd class="mt-1 text-slate-950">{{ donation.special_handling_notes|default:"None provided." }}</dd>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-2">
+    {% if donation.food_safety_agreement %}<span class="badge badge-success badge-outline">Food safety confirmed</span>{% endif %}
+    {% if donation.requires_van %}<span class="badge badge-primary badge-outline">Requires van</span>{% endif %}
+    {% if donation.requires_cube_van %}<span class="badge badge-primary badge-outline">Requires cube van</span>{% endif %}
+    {% if donation.requires_refrigerated_vehicle %}<span class="badge badge-primary badge-outline">Requires Refrigerated vehicle</span>{% endif %}
+    {% if donation.requires_pallet_jack %}<span class="badge badge-primary badge-outline">Requires Pallet jack</span>{% endif %}
+    {% if donation.requires_forklift %}<span class="badge badge-primary badge-outline">Requires Forklift</span>{% endif %}
+    {% if donation.loading_dock_available %}<span class="badge badge-primary badge-outline">Loading dock available</span>{% endif %}
+    {% if donation.donor_can_help_load %}<span class="badge badge-primary badge-outline">Donor can help load</span>{% endif %}
+    {% if not donation.requires_van and not donation.requires_cube_van and not donation.requires_refrigerated_vehicle and not donation.requires_pallet_jack and not donation.requires_forklift and not donation.loading_dock_available and not donation.donor_can_help_load %}
+      <span class="badge badge-ghost">No extra logistics requirements</span>
+    {% endif %}
+  </div>
+
+  {% if donation.pickup_notes or donation.special_handling_notes or donation.chain_of_custody_notes or donation.other_information %}
+    <div class="mt-4 grid gap-3 md:grid-cols-2">
+      {% if donation.pickup_notes %}
+        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
+          <span class="font-semibold text-slate-950">Pickup notes:</span> {{ donation.pickup_notes }}
+        </p>
+      {% endif %}
+      {% if donation.special_handling_notes %}
+        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
+          <span class="font-semibold text-slate-950">Special handling:</span> {{ donation.special_handling_notes }}
+        </p>
+      {% endif %}
+      {% if donation.chain_of_custody_notes %}
+        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
+          <span class="font-semibold text-slate-950">Chain of custody:</span> {{ donation.chain_of_custody_notes }}
+        </p>
+      {% endif %}
+      {% if donation.other_information %}
+        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
+          <span class="font-semibold text-slate-950">Other information:</span> {{ donation.other_information }}
+        </p>
+      {% endif %}
     </div>
-  </dl>
+  {% endif %}
 </section>
