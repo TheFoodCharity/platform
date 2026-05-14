@@ -151,8 +151,8 @@ class SelectView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Organization.active.all()
-        return Organization.active.for_user(self.request.user)
+            return Organization.objects.all()
+        return Organization.objects.for_user(self.request.user)
 
     def get_template_names(self):
         names = super().get_template_names()
