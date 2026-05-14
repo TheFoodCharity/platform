@@ -73,13 +73,13 @@ class SystemCheckE001Tests(TestCase):
     def test_e001_fires_for_stray_add_perm(self):
         rules.add_perm("test.stray_perm", rules.always_true)
         errors = run_checks(tags=None)
-        e001_errors = [e for e in errors if getattr(e, "id", None) == "organizations.E001"]
+        e001_errors = [e for e in errors if getattr(e, "id", None) == "permissions.E001"]
         self.assertTrue(any("test.stray_perm" in e.msg for e in e001_errors))
 
     def test_e001_clean_when_registered_via_register_permission(self):
         register_permission("test.clean_perm", "Clean", rule=rules.always_true)
         errors = run_checks(tags=None)
-        e001_errors = [e for e in errors if getattr(e, "id", None) == "organizations.E001"]
+        e001_errors = [e for e in errors if getattr(e, "id", None) == "permissions.E001"]
         self.assertFalse(any("test.clean_perm" in e.msg for e in e001_errors))
 
 
@@ -105,19 +105,19 @@ class SystemCheckE002Tests(TestCase):
     def test_w001_fires_when_registered_but_no_db_row(self):
         register_permission("test.e002_no_db", "No DB row", rule=rules.always_true)
         errors = run_checks(tags=None, databases=["default"])
-        w001s = [e for e in errors if getattr(e, "id", None) == "organizations.W001"]
+        w001s = [e for e in errors if getattr(e, "id", None) == "permissions.W001"]
         self.assertTrue(any("test.e002_no_db" in e.msg for e in w001s))
 
     def test_e002_fires_when_db_row_not_registered(self):
         Permission.objects.create(code="test.e002_orphan", description="Orphan")
         errors = run_checks(tags=None, databases=["default"])
-        e002s = [e for e in errors if getattr(e, "id", None) == "organizations.E002"]
+        e002s = [e for e in errors if getattr(e, "id", None) == "permissions.E002"]
         self.assertTrue(any("test.e002_orphan" in e.msg for e in e002s))
 
     def test_no_errors_when_db_and_registry_match(self):
         register_permission("test.e002_match", "Match", rule=rules.always_true)
         Permission.objects.get_or_create(code="test.e002_match", defaults={"description": "Match"})
         errors = run_checks(tags=None)
-        check_ids = {"organizations.E001", "organizations.E002", "organizations.W001"}
+        check_ids = {"permissions.E001", "permissions.E002", "permissions.W001"}
         relevant = [e for e in errors if getattr(e, "id", None) in check_ids and "test.e002_match" in e.msg]
         self.assertEqual(relevant, [])
