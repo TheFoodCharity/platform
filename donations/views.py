@@ -19,6 +19,7 @@ PICKUP_END_HOURS = {
 
 
 def set_pickup_deadline_from_pickup_fields(donation):
+    """Convert the selected pickup day/end window into a concrete deadline."""
     pickup_date = timezone.localdate()
     if donation.pickup_day == Donation.PickupDay.TOMORROW:
         pickup_date += timedelta(days=1)
@@ -28,6 +29,7 @@ def set_pickup_deadline_from_pickup_fields(donation):
 
 
 def sync_donation_summary_from_items(donation):
+    """Update denormalized donation summary fields from the saved food items."""
     first_item = donation.food_items.first()
     if first_item is None:
         return
@@ -41,6 +43,7 @@ def sync_donation_summary_from_items(donation):
 
 
 def save_food_items(donation, formset):
+    """Replace a donation's food item rows from the selected intake formset rows."""
     donation.food_items.all().delete()
 
     items = []
@@ -62,12 +65,14 @@ def save_food_items(donation, formset):
 
 
 def user_organization(user):
+    """Return the active organization that should own a user's donation activity."""
     if not user.is_authenticated:
         return None
     return user.organizations.filter(is_active=True).first()
 
 
 def donor_profile(request, organization):
+    """Shape account and organization data for the read-only donor summary panel."""
     full_name = request.user.get_full_name().strip()
     address_display = organization_address_display(organization)
 
@@ -87,6 +92,7 @@ def donor_profile(request, organization):
 
 
 def organization_address_display(organization):
+    """Format an organization address for pickup-location defaults."""
     if organization is None:
         return ""
 
@@ -102,6 +108,7 @@ def organization_address_display(organization):
 
 
 def receiver_profile(request, organization):
+    """Shape account and organization data for the read-only receiver summary panel."""
     full_name = request.user.get_full_name().strip()
     return {
         "email": request.user.email,
@@ -112,6 +119,7 @@ def receiver_profile(request, organization):
 
 
 def save_food_request_allocations(food_request, formset):
+    """Persist the requested quantities for each selected donation food item."""
     allocations = []
     food_items = {item.id: item for item in food_request.donation.food_items.all()}
 
@@ -134,6 +142,7 @@ def save_food_request_allocations(food_request, formset):
 
 
 def sync_donation_status_from_allocations(donation):
+    """Mark a donation completed once every food item has been fully requested."""
     if donation.is_fully_requested and donation.status != Donation.Status.COMPLETED:
         donation.status = Donation.Status.COMPLETED
         donation.save(update_fields=["status", "updated_at"])

@@ -6,11 +6,15 @@ from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocati
 
 
 class DonationFoodItemInline(admin.TabularInline):
+    """Edit donation food item rows directly from a donation admin page."""
+
     model = DonationFoodItem
     extra = 1
 
 
 class FoodRequestAllocationInline(admin.TabularInline):
+    """Show request allocations without allowing edits from the request admin page."""
+
     model = FoodRequestAllocation
     extra = 0
     readonly_fields = ("donation_food_item", "quantity")
@@ -18,6 +22,8 @@ class FoodRequestAllocationInline(admin.TabularInline):
 
 
 class FoodRequestInline(admin.TabularInline):
+    """Show the one-to-many relationship from donation to related food requests."""
+
     model = FoodRequest
     extra = 0
     fields = (
@@ -34,6 +40,8 @@ class FoodRequestInline(admin.TabularInline):
 
 @admin.register(Donation)
 class DonationAdmin(admin.ModelAdmin):
+    """Admin list/detail configuration for donation tickets."""
+
     inlines = [DonationFoodItemInline, FoodRequestInline]
     ordering = ("-created_at",)
     list_per_page = 25
@@ -84,6 +92,8 @@ class DonationAdmin(admin.ModelAdmin):
 
 @admin.register(FoodRequest)
 class FoodRequestAdmin(admin.ModelAdmin):
+    """Admin list/detail configuration for receiver food requests."""
+
     inlines = [FoodRequestAllocationInline]
     ordering = ("-created_at",)
     list_display = (
@@ -117,5 +127,6 @@ class FoodRequestAdmin(admin.ModelAdmin):
 
     @admin.display(description="Donation", ordering="donation")
     def donation_link(self, food_request):
+        """Link back to the parent donation from a food request admin page."""
         url = reverse("admin:donations_donation_change", args=[food_request.donation_id])
         return format_html('<a href="{}">{}</a>', url, food_request.donation.ticket_number)

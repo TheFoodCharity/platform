@@ -20,6 +20,9 @@ FOOD_TYPE_INTAKE = [
 
 
 class DonationForm(ThemedFormMixin, forms.ModelForm):
+    """Main supplier intake form; food item quantities are captured by a separate formset."""
+
+    # Keep the custom donation page on crispy forms while preserving its sectioned workflow.
     layout = Layout(
         Fieldset(
             "Pickup Details",
@@ -113,6 +116,8 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
 
 
 class DonationFoodItemIntakeForm(ThemedFormMixin, forms.Form):
+    """One selectable food category row in the donation intake formset."""
+
     layout = Layout(
         "food_category",
         "selected",
@@ -140,6 +145,7 @@ class DonationFoodItemIntakeForm(ThemedFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
 
     def clean(self):
+        """Treat any entered package details as selecting that food type."""
         cleaned_data = super().clean()
         selected = cleaned_data.get("selected")
         packaging = cleaned_data.get("packaging")
@@ -168,6 +174,8 @@ BaseDonationFoodItemFormSet = forms.formset_factory(
 
 
 class DonationFoodItemFormSet(BaseDonationFoodItemFormSet):
+    """Build the fixed list of supported donation food categories."""
+
     def __init__(self, *args, **kwargs):
         donation = kwargs.pop("donation", None)
         initial = kwargs.pop("initial", None)
@@ -190,6 +198,7 @@ class DonationFoodItemFormSet(BaseDonationFoodItemFormSet):
 
 
 def get_food_item_initial(donation=None):
+    """Prefill the fixed food category list when editing an existing donation."""
     existing_items = {}
     if donation is not None and donation.pk:
         existing_items = {item.food_category: item for item in donation.food_items.all()}
@@ -210,6 +219,8 @@ def get_food_item_initial(donation=None):
 
 
 class FoodRequestForm(ThemedFormMixin, forms.ModelForm):
+    """Receiver request details outside of per-item quantity allocation."""
+
     layout = Layout(
         "storage_required",
         Div(
@@ -250,6 +261,8 @@ class FoodRequestForm(ThemedFormMixin, forms.ModelForm):
 
 
 class FoodRequestAllocationForm(ThemedFormMixin, forms.Form):
+    """One quantity input for a food item available on a donation."""
+
     layout = Layout("food_item_id", "quantity")
 
     food_item_id = forms.IntegerField(widget=forms.HiddenInput)
@@ -260,6 +273,7 @@ class FoodRequestAllocationForm(ThemedFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
 
     def clean_quantity(self):
+        """Prevent receivers from requesting more than the current remaining quantity."""
         quantity = self.cleaned_data["quantity"] or 0
         if self.food_item is not None and quantity > self.food_item.remaining_quantity:
             raise forms.ValidationError(
@@ -277,6 +291,8 @@ BaseFoodRequestAllocationFormSet = forms.formset_factory(
 
 
 class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
+    """Create one allocation input per food item in the selected donation."""
+
     def __init__(self, *args, **kwargs):
         self.donation = kwargs.pop("donation")
         initial = [

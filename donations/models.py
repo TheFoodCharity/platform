@@ -6,6 +6,8 @@ from storage.models import StorageLocation
 
 
 class Donation(models.Model):
+    """A supplier's donation ticket, tracked with the user and organization that submitted it."""
+
     class Status(models.TextChoices):
         SUBMITTED = "submitted", "Submitted"
         AVAILABLE = "available", "Available"
@@ -169,6 +171,7 @@ class Donation(models.Model):
 
     @property
     def ticket_number(self):
+        """Human-readable identifier used in app screens and admin lists."""
         if self.pk is None:
             return "DON-unsaved"
         return f"DON-{self.pk:06d}"
@@ -191,6 +194,7 @@ class Donation(models.Model):
 
     @property
     def food_type_display(self):
+        """Render the stored category list with labels instead of raw enum values."""
         labels = dict(self.FoodCategory.choices)
         if isinstance(self.food_type, list):
             return ", ".join(labels.get(food_type, food_type) for food_type in self.food_type)
@@ -198,6 +202,7 @@ class Donation(models.Model):
 
     @property
     def category_list_display(self):
+        """Prefer current food item categories, falling back to legacy summary fields."""
         labels = dict(self.FoodCategory.choices)
         categories = []
 
@@ -215,6 +220,7 @@ class Donation(models.Model):
 
     @property
     def total_remaining_quantity(self):
+        """Total packages still available across all food items."""
         return sum(food_item.remaining_quantity for food_item in self.food_items.all())
 
     @property
@@ -247,6 +253,7 @@ class Donation(models.Model):
         return "Available"
 
     def assign_storage(self, storage_location):
+        """Assign storage and reserve the donation's summarized package count from capacity."""
         self.assigned_storage = storage_location
         self.status = self.Status.IN_TRANSIT
 
@@ -262,6 +269,8 @@ class Donation(models.Model):
 
 
 class DonationFoodItem(models.Model):
+    """A specific food category and package count within a donation."""
+
     class Packaging(models.TextChoices):
         BAGS = "bags", "Bags"
         BOXES = "boxes", "Boxes"
@@ -285,6 +294,7 @@ class DonationFoodItem(models.Model):
 
     @property
     def allocated_quantity(self):
+        """Quantity requested from this item, excluding declined or cancelled requests."""
         allocated = self.request_allocations.exclude(
             food_request__status__in=[
                 FoodRequest.Status.DECLINED,
@@ -299,6 +309,8 @@ class DonationFoodItem(models.Model):
 
 
 class FoodRequest(models.Model):
+    """A receiver organization's request for some or all food from a donation."""
+
     class Status(models.TextChoices):
         SUBMITTED = "submitted", "Submitted"
         APPROVED = "approved", "Approved"
@@ -345,6 +357,7 @@ class FoodRequest(models.Model):
 
     @property
     def ticket_number(self):
+        """Human-readable identifier used in app screens and admin lists."""
         if self.pk is None:
             return "REQ-unsaved"
         return f"REQ-{self.pk:06d}"
@@ -371,6 +384,8 @@ class FoodRequest(models.Model):
 
 
 class FoodRequestAllocation(models.Model):
+    """The requested quantity for one donation food item within a food request."""
+
     food_request = models.ForeignKey(
         FoodRequest,
         on_delete=models.CASCADE,
