@@ -50,6 +50,12 @@ def is_staff_acting(user, obj=None):
 
 
 @rules.predicate
+def is_organization_owner(user):
+    organization = _current_organization(user)
+    return not organization.is_anonymous and user.is_authenticated and organization.owner_id == user.pk
+
+
+@rules.predicate
 def has_membership_in_current(user, obj=None):
     organization = _current_organization(user)
     return not organization.is_anonymous and organization.is_member(user)
