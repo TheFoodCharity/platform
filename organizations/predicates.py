@@ -2,6 +2,7 @@ import rules
 
 from .constants import Scope
 from .models import (
+    AnonymousOrganization,
     Membership,
     MembershipPermissionOverride,
     Organization,
@@ -10,11 +11,15 @@ from .models import (
 )
 
 
+def _current_organization(user) -> Organization | AnonymousOrganization:
+    return getattr(user, "current_organization", AnonymousOrganization())
+
+
 def _organization_in_state(*states):
     @rules.predicate
     def predicate(user, obj=None):
-        organization = getattr(user, "current_organization", None)
-        return organization is not None and organization.is_active and organization.status in states
+        organization = _current_organization(user)
+        return not organization.is_anonymous and organization.is_active and organization.status in states
 
     return predicate
 
@@ -40,13 +45,14 @@ organization_is_readable = _organization_in_state(
 
 @rules.predicate
 def is_staff_acting(user, obj=None):
-    return user.is_authenticated and user.is_staff and getattr(user, "current_organization", None) is not None
+    organization = _current_organization(user)
+    return user.is_authenticated and user.is_staff and not organization.is_anonymous
 
 
 @rules.predicate
 def has_membership_in_current(user, obj=None):
-    organization = getattr(user, "current_organization", None)
-    return organization is not None and organization.is_member(user)
+    organization = _current_organization(user)
+    return not organization.is_anonymous and organization.is_member(user)
 
 
 @rules.predicate
@@ -59,8 +65,8 @@ def belongs_to_current_organization(user, obj):
     """
     if obj is None:
         return True
-    organization = getattr(user, "current_organization", None)
-    return organization is not None and getattr(obj, "owner_organization_id", None) == organization.pk
+    organization = _current_organization(user)
+    return not organization.is_anonymous and getattr(obj, "owner_organization_id", None) == organization.pk
 
 
 def _effective_permissions(user, organization) -> frozenset[str]:
@@ -130,10 +136,8 @@ def cascade_grants(code: str):
 
     @rules.predicate(name=f"cascade_grants:{code}")
     def predicate(user, obj=None):
-        organization = getattr(user, "current_organization", None)
-        if organization is None:
-            return False
-        return code in _effective_permissions(user, organization)
+        organization = _current_organization(user)
+        return not organization.is_anonymous and code in _effective_permissions(user, organization)
 
     return predicate
 

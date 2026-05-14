@@ -5,7 +5,14 @@ from django.db import transaction
 from django.http import HttpRequest
 
 from .constants import Scope
-from .models import Membership, Organization, OrganizationApplication, OrganizationType, PermissionGroup
+from .models import (
+    AnonymousOrganization,
+    Membership,
+    Organization,
+    OrganizationApplication,
+    OrganizationType,
+    PermissionGroup,
+)
 
 SESSION_KEY = "_organizations_current_id"
 
@@ -31,19 +38,19 @@ def set_current_organization(request: HttpRequest, organization: Organization):
     request.session.cycle_key()
 
 
-def get_current_organization(request: HttpRequest) -> Organization | None:
+def get_current_organization(request: HttpRequest) -> Organization | AnonymousOrganization:
     if not request.user.is_authenticated:
-        return None
+        return AnonymousOrganization()
 
     try:
         pk = request.session[SESSION_KEY]
         if request.user.is_staff:
-            return Organization.active.get(pk=pk)
-        return Organization.active.for_user(request.user).get(pk=pk)
+            return Organization.objects.get(pk=pk)
+        return Organization.objects.for_user(request.user).get(pk=pk)
     except KeyError, Organization.DoesNotExist:
         pass
 
-    return None
+    return AnonymousOrganization()
 
 
 @contextmanager

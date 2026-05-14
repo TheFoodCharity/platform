@@ -117,6 +117,9 @@ class Organization(TimestampedModel):
         DECLINED = 5, "Declined"
         ARCHIVED = 6, "Archived"
 
+    # Class vars
+    is_anonymous = False
+
     # Core identity
     name = models.CharField(max_length=200, help_text=_("The name of the organization"))
     is_active = models.BooleanField(default=True)
@@ -212,6 +215,12 @@ class Organization(TimestampedModel):
             Membership.objects.create(organization=organization, user=owner, role=manager_role)
             OrganizationApplication.objects.create(organization=organization)
         return organization
+
+
+class AnonymousOrganization:
+    pk = None
+    is_anonymous = True
+    is_active = False
 
 
 class OrganizationApplication(TimestampedModel):
