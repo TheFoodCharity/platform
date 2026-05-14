@@ -54,18 +54,26 @@
                 </div>
                 <ul class="menu menu-lg flex-1 p-2 w-full">
                     {% block sidenav %}
-                        <li><a href="{% url 'donations:list' %}">
-                            <span class="material-symbols-rounded">hand_package</span> Donations
-                        </a></li>
-                        <li><a href="{% url 'storage:list' %}">
-                            <span class="material-symbols-rounded">warehouse</span> Storage
-                        </a></li>
-                        <li><a href="{% url 'collaborations:list' %}">
-                            <span class="material-symbols-rounded">handshake</span> Collaborations
-                        </a></li>
-                        <li><a href="{% url 'forums:list' %}">
-                            <span class="material-symbols-rounded">forum</span> Forums
-                        </a></li>
+                        {% if not current_organization.is_anonymous %}
+                            {% if current_organization.is_approved %}
+                                <li><a href="{% url 'donations:list' %}">
+                                    <span class="material-symbols-rounded">hand_package</span> Donations
+                                </a></li>
+                                <li><a href="{% url 'storage:list' %}">
+                                    <span class="material-symbols-rounded">warehouse</span> Storage
+                                </a></li>
+                                <li><a href="{% url 'collaborations:list' %}">
+                                    <span class="material-symbols-rounded">handshake</span> Collaborations
+                                </a></li>
+                                <li><a href="{% url 'forums:list' %}">
+                                    <span class="material-symbols-rounded">forum</span> Forums
+                                </a></li>
+                            {% else %}
+                                <li><a href="{% url 'organizations:application' %}">
+                                    <span class="material-symbols-rounded">edit_note</span> Application
+                                </a></li>
+                            {% endif %}
+                        {% endif %}
                     {% endblock %}
                 </ul>
                 <div class="p-4">
