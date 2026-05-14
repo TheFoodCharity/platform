@@ -23,12 +23,14 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
     layout = Layout(
         Fieldset(
             "Pickup Details",
-            Div("pickup_location", css_class="md:col-span-2"),
-            Div("pickup_day", css_class="md:col-span-2"),
-            "pickup_ready_time",
-            "pickup_end_time",
-            "pickup_notes",
-            css_class="grid gap-5 md:grid-cols-2",
+            Div(
+                Div("pickup_location", css_class="md:col-span-2"),
+                Div("pickup_day", css_class="md:col-span-2"),
+                "pickup_ready_time",
+                "pickup_end_time",
+                Div("pickup_notes", css_class="md:col-span-2"),
+                css_class="grid gap-5 md:grid-cols-2",
+            ),
         ),
         Fieldset(
             "Donation Details",
