@@ -1,15 +1,19 @@
+from urllib.parse import urlencode
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http.response import Http404
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
 from django.views.generic.list import ListView
-from django_htmx.http import HttpResponseClientRefresh
+from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 from rules.contrib.views import PermissionRequiredMixin
 
+from .decorators import OrganizationRequiredMixin
 from .forms import (
     ApplicationBasicDetailsForm,
     ApplicationContactForm,
@@ -20,6 +24,15 @@ from .forms import (
 )
 from .models import Organization
 from .services import organization_create, set_current_organization
+
+
+def _safe_next(request, source):
+    next_url = source.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return next_url
+    return None
 
 
 class OrganizationPermissionMixin(PermissionRequiredMixin):
@@ -33,15 +46,19 @@ class OrganizationPermissionMixin(PermissionRequiredMixin):
 
 class DispatchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+        next_url = _safe_next(request, request.GET)
         match list(request.user.organizations.all()[:2]):
             case []:
                 return redirect(reverse("organizations:apply"))
             case [organization]:
                 set_current_organization(request, organization)
                 # TODO(alex): redirect to that org's dashboard once it exists
-                return redirect("/")
+                return redirect(next_url or "/")
             case _:
-                return redirect(reverse("organizations:select"))
+                select_url = reverse("organizations:select")
+                if next_url:
+                    select_url = f"{select_url}?{urlencode({'next': next_url})}"
+                return redirect(select_url)
 
 
 class ApplyView(LoginRequiredMixin, FormView):
@@ -66,7 +83,7 @@ class ApplyView(LoginRequiredMixin, FormView):
         return data
 
 
-class ApplicationDashboardView(LoginRequiredMixin, OrganizationPermissionMixin, SingleObjectMixin, FormView):
+class ApplicationDashboardView(OrganizationRequiredMixin, SingleObjectMixin, FormView):
     template_name = "organizations/application/dashboard.html"
     model = Organization
     form_class = ApplicationSubmitForm
@@ -113,7 +130,7 @@ class ApplicationDashboardView(LoginRequiredMixin, OrganizationPermissionMixin, 
         return super().form_valid(form)
 
 
-class ApplicationFormView(LoginRequiredMixin, OrganizationPermissionMixin, UpdateView):
+class ApplicationFormView(OrganizationRequiredMixin, UpdateView):
     template_name = "organizations/application/form.html"
     model = Organization
     section: str
@@ -167,8 +184,9 @@ class SelectView(LoginRequiredMixin, ListView):
     context_object_name = "organizations"
 
     def get(self, request, *args, **kwargs):
-        if (not request.htmx or request.htmx.boosted) and request.organization:
-            return redirect("/")  # TODO(alex): redirect to dashboard
+        if (not request.htmx or request.htmx.boosted) and not request.organization.is_anonymous:
+            next_url = _safe_next(request, request.GET)
+            return redirect(next_url or "/")  # TODO(alex): redirect to dashboard
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -186,13 +204,15 @@ class SelectView(LoginRequiredMixin, ListView):
 
 class ActivateView(LoginRequiredMixin, View):
     def post(self, request, pk, *args, **kwargs):
+        was_anonymous = request.organization.is_anonymous
         try:
-            if request.user.is_staff:
-                organization = Organization.active.get(pk=pk)
-            else:
-                organization = Organization.active.for_user(request.user).get(pk=pk)
+            qs = Organization.objects if request.user.is_staff else Organization.objects.for_user(request.user)
+            organization = qs.get(pk=pk)
             set_current_organization(request, organization)
         except Organization.DoesNotExist:
-            pass
+            return HttpResponseClientRefresh()
 
+        if was_anonymous:
+            next_url = _safe_next(request, request.POST)
+            return HttpResponseClientRedirect(next_url or "/")
         return HttpResponseClientRefresh()
