@@ -15,9 +15,24 @@ class FoodRequestAllocationInline(admin.TabularInline):
     can_delete = False
 
 
+class FoodRequestInline(admin.TabularInline):
+    model = FoodRequest
+    extra = 0
+    fields = (
+        "ticket_number",
+        "requested_by",
+        "receiver_organization",
+        "status",
+        "created_at",
+    )
+    readonly_fields = fields
+    can_delete = False
+    show_change_link = True
+
+
 @admin.register(Donation)
 class DonationAdmin(admin.ModelAdmin):
-    inlines = [DonationFoodItemInline]
+    inlines = [DonationFoodItemInline, FoodRequestInline]
     ordering = ("-created_at",)
     list_per_page = 25
     empty_value_display = "-"
