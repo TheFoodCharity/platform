@@ -126,7 +126,7 @@ class ApplicationFormView(LoginRequiredMixin, OrganizationPermissionMixin, Updat
         return super().get_context_data(section_title=self.section_title, **kwargs)
 
     def form_valid(self, form):
-        if not self.request.user.has_perm("organization.edit_application"):
+        if not self.request.user.has_perm("organizations.edit_application"):
             raise PermissionDenied()
 
         response = super().form_valid(form)
