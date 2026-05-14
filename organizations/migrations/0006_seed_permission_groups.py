@@ -9,6 +9,7 @@ USER_ROLES = [
 ]
 
 ORGANIZATION_CAPABILITIES = [
+    (SystemCapability.DEFAULT, "Default capability granted to all approved organizations."),
     (SystemCapability.FOOD_DONOR, "Submit and manage food supply listings."),
     (SystemCapability.FOOD_RECEIVER, "Express interest in food listings and confirm receipt."),
     (SystemCapability.STORAGE_PROVIDER, "Submit and maintain storage location records."),
