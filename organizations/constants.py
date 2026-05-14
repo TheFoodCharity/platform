@@ -7,7 +7,6 @@ class Scope(models.IntegerChoices):
 
 
 class SystemRole:
-    SUPER_ADMIN = "Super Admin"
     FOOD_CHARITY_ADMIN = "Food Charity Admin"
     ORGANIZATION_MANAGER = "Organization Manager"
     ORGANIZATION_USER = "Organization User"
