@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.http import HttpRequest
 
-from .constants import Scope
+from .constants import Scope, SystemCapability, SystemRole
 from .models import (
     AnonymousOrganization,
     Membership,
@@ -21,8 +21,12 @@ User = get_user_model()
 
 @transaction.atomic()
 def organization_create(*, owner: User, name: str, organization_type: OrganizationType) -> Organization:
+    manager_role = PermissionGroup.objects.get(name=SystemRole.ORGANIZATION_MANAGER, scope=Scope.USER)
+    default_capability = PermissionGroup.objects.get(name=SystemCapability.DEFAULT, scope=Scope.ORGANIZATION)
+
     organization = Organization.objects.create(owner=owner, name=name, organization_type=organization_type)
-    manager_role = PermissionGroup.objects.filter(name="Organization Manager", scope=Scope.USER).first()
+    organization.capabilities.add(default_capability)
+
     Membership.objects.create(user=owner, organization=organization, role=manager_role)
     OrganizationApplication.objects.create(organization=organization)
     return organization
