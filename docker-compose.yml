@@ -13,5 +13,37 @@ services:
         source: database
         target: /var/lib/postgresql
 
+  redis:
+    image: redis:alpine
+    ports:
+      - protocol: tcp
+        target: 6379
+        published: 6379
+
+  clamav:
+    image: clamav/clamav:stable
+    ports:
+      - protocol: tcp
+        target: 3310
+        published: 3310
+    volumes:
+      - clamav-db:/var/lib/clamav
+
+  celery:
+    build: .
+    command: celery -A fcacp worker -l info
+    depends_on:
+      - database
+      - redis
+      - clamav
+    environment:
+      DATABASE_URL: postgresql://fcacp:super-secure-password@database:5432/fcacp
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: 3310
+    volumes:
+      - ./private_media:/app/private_media
+
 volumes:
   database:
+  clamav-db:
