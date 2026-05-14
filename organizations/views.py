@@ -48,21 +48,22 @@ class ApplyView(LoginRequiredMixin, FormView):
     template_name = "organizations/apply.html"
     form_class = ApplicationCreateForm
 
-    def __init__(self):
-        super().__init__()
-        self.object = None
-
     def get_success_url(self):
         return reverse("organizations:application")
 
     def form_valid(self, form):
-        self.object = organization_create(
+        organization = organization_create(
             owner=self.request.user,
             name=form.cleaned_data["name"],
             organization_type=form.cleaned_data["organization_type"],
         )
-        set_current_organization(self.request, self.object)
+        set_current_organization(self.request, organization)
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        data["organization_count"] = Organization.objects.for_user(self.request.user).count()
+        return data
 
 
 class ApplicationDashboardView(LoginRequiredMixin, OrganizationPermissionMixin, SingleObjectMixin, FormView):
