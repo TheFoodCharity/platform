@@ -36,12 +36,17 @@ def check_permission_db_sync(app_configs, databases=None, **kwargs):
     if databases is None:
         return []
 
+    from django.db import DatabaseError
+
     from .models import Permission
 
     errors = []
 
     registered = set(registered_permissions())
-    db_codes = set(Permission.objects.values_list("code", flat=True))
+    try:
+        db_codes = set(Permission.objects.values_list("code", flat=True))
+    except DatabaseError:
+        return []
 
     for code in sorted(registered - db_codes):
         errors.append(
