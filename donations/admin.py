@@ -23,6 +23,7 @@ class DonationAdmin(admin.ModelAdmin):
     empty_value_display = "-"
 
     list_display = (
+        "ticket_number",
         "donor_display_name",
         "submitted_by",
         "supplier_organization",
@@ -58,6 +59,7 @@ class DonationAdmin(admin.ModelAdmin):
     )
 
     readonly_fields = (
+        "ticket_number",
         "created_at",
         "updated_at",
     )
@@ -68,6 +70,7 @@ class FoodRequestAdmin(admin.ModelAdmin):
     inlines = [FoodRequestAllocationInline]
     ordering = ("-created_at",)
     list_display = (
+        "ticket_number",
         "receiver_display_name",
         "requested_by",
         "receiver_organization",
@@ -93,4 +96,4 @@ class FoodRequestAdmin(admin.ModelAdmin):
         "donation__supplier_organization__name",
         "preferred_storage__name",
     )
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("ticket_number", "created_at", "updated_at")
