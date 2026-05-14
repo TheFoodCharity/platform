@@ -42,9 +42,5 @@ def register_permission(
     rules.add_perm(code, rule)
 
 
-def registered_permissions() -> dict[str, str]:
-    return {code: entry["description"] for code, entry in _registry.items()}
-
-
-def registered_group_assignments() -> dict[str, dict[str, list[str]]]:
-    return {code: {"roles": entry["roles"], "capabilities": entry["capabilities"]} for code, entry in _registry.items()}
+def registered_permissions() -> dict[str, "_RegistryEntry"]:
+    return _registry

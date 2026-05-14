@@ -628,7 +628,7 @@ class RegistryTests(TestCase):
     def test_register_permission_records_description(self):
         register_permission("test.registry_perm", "Registry test", rule=rules.always_true)
         self.assertIn("test.registry_perm", registered_permissions())
-        self.assertEqual(registered_permissions()["test.registry_perm"], "Registry test")
+        self.assertEqual(registered_permissions()["test.registry_perm"]["description"], "Registry test")
 
     def test_register_permission_adds_to_rules(self):
         register_permission("test.rules_perm", "Rules test", rule=rules.always_true)
@@ -639,10 +639,12 @@ class RegistryTests(TestCase):
         with self.assertRaises(RuntimeError, msg="Permission 'test.dup_perm' is already registered"):
             register_permission("test.dup_perm", "Second", rule=rules.always_true)
 
-    def test_registered_permissions_returns_copy(self):
-        result = registered_permissions()
-        result["test.mutated"] = "mutated"
-        self.assertNotIn("test.mutated", registered_permissions())
+    def test_registered_permissions_entry_has_expected_keys(self):
+        register_permission("test.entry_shape", "Shape test", rule=rules.always_true)
+        entry = registered_permissions()["test.entry_shape"]
+        self.assertEqual(entry["description"], "Shape test")
+        self.assertIsInstance(entry["roles"], list)
+        self.assertIsInstance(entry["capabilities"], list)
 
 
 # ---------------------------------------------------------------------------

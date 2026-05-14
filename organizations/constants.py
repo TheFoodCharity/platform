@@ -13,6 +13,7 @@ class SystemRole:
 
 
 class SystemCapability:
+    DEFAULT = "Default"
     FOOD_DONOR = "Food Donor"
     FOOD_RECEIVER = "Food Receiver"
     STORAGE_PROVIDER = "Storage Provider"
