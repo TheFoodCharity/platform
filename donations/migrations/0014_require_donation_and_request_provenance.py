@@ -10,6 +10,7 @@ def backfill_required_provenance(apps, schema_editor):
     only_membership = None
     active_memberships = list(Membership.objects.filter(organization__is_active=True).order_by("id")[:2])
     if len(active_memberships) == 1:
+        # Backfill old local/dev rows only when there is no ambiguity about provenance.
         only_membership = active_memberships[0]
 
     for donation in Donation.objects.filter(submitted_by__isnull=True).exclude(supplier_organization__isnull=True):

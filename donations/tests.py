@@ -539,15 +539,16 @@ class FoodRequestTests(TestCase):
         self.donation.loading_dock_available = True
         self.donation.special_handling_notes = "Use loading bay door."
         self.donation.save()
-        self.client.force_login(
-            User.objects.create_user(
-                email="receiver-user@example.com",
-                password="password",
-                first_name="Rae",
-                last_name="Receiver",
-                email_verified=True,
-            ),
+        receiver = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
         )
+        receiver_organization = Organization.objects.create(name="Receiver Org", owner=receiver, is_active=True)
+        Membership.objects.create(user=receiver, organization=receiver_organization)
+        self.client.force_login(receiver)
 
         response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 

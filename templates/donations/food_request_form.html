@@ -1,8 +1,9 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 {% load crispy_forms_tags %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
+{% block page_title %}Request Food{% endblock %}
+
+{% block page_body %}
   <div class="mx-auto max-w-3xl">
     <div class="mb-8">
       <p class="text-sm font-semibold uppercase tracking-wide text-primary">Receiver request</p>
@@ -177,7 +178,7 @@
                   <td>{{ allocation_form.food_item.allocated_quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
                   <td>{{ allocation_form.food_item.remaining_quantity }} {{ allocation_form.food_item.get_packaging_display }}</td>
                   <td>
-                    {{ allocation_form.quantity|as_crispy_field }}
+                    {% crispy allocation_form %}
                   </td>
                 </tr>
               {% endfor %}
@@ -187,20 +188,7 @@
       </section>
 
       <div class="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5">
-        {{ form.storage_required|as_crispy_field }}
-
-        <div class="mt-5 grid gap-5 md:grid-cols-2">
-          <div class="form-control md:col-span-2">
-            {{ form.preferred_storage|as_crispy_field }}
-          </div>
-          <div class="form-control md:col-span-2">
-            {{ form.storage_notes|as_crispy_field }}
-          </div>
-        </div>
-      </div>
-
-      <div class="form-control mt-6">
-        {{ form.notes|as_crispy_field }}
+        {% crispy form %}
       </div>
 
       <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -214,5 +202,4 @@
       </div>
     </form>
   </div>
-</main>
 {% endblock %}

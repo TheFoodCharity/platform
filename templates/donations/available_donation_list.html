@@ -1,7 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
+{% block page_title %}Available Donations{% endblock %}
+
+{% block page_body %}
   <div class="mx-auto max-w-5xl">
     <div class="mb-8">
       <p class="text-sm font-semibold uppercase tracking-wide text-primary">Receiver marketplace</p>
@@ -50,5 +51,4 @@
       {% endfor %}
     </div>
   </div>
-</main>
 {% endblock %}

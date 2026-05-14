@@ -1,7 +1,8 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
+{% block page_title %}Donation Details{% endblock %}
+
+{% block page_body %}
   <div class="mx-auto max-w-5xl">
     <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
@@ -167,5 +168,4 @@
       </section>
     </div>
   </div>
-</main>
 {% endblock %}

@@ -1,8 +1,9 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 {% load crispy_forms_tags %}
 
-{% block content %}
-<main class="min-h-screen bg-base-200 px-4 py-10">
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block page_body %}
   <div class="mx-auto max-w-5xl">
     <div class="mb-8">
       <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food donation</p>
@@ -74,31 +75,6 @@
 
       <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-950">Pickup Details</h2>
-          <p class="mt-1 text-slate-600">Set the timing and pickup instructions for the donation.</p>
-        </div>
-
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="form-control md:col-span-2">
-            {{ form.pickup_location|as_crispy_field }}
-          </div>
-          <div class="form-control md:col-span-2">
-            {{ form.pickup_day|as_crispy_field }}
-          </div>
-          <div class="form-control">
-            {{ form.pickup_ready_time|as_crispy_field }}
-          </div>
-          <div class="form-control">
-            {{ form.pickup_end_time|as_crispy_field }}
-          </div>
-          <div class="form-control">
-            {{ form.pickup_notes|as_crispy_field }}
-          </div>
-        </div>
-      </section>
-
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6">
           <h2 class="text-2xl font-bold text-slate-950">Food Types</h2>
           <p class="mt-1 text-slate-600">Select each food type included in this donation.</p>
         </div>
@@ -108,109 +84,13 @@
         <div class="space-y-4">
           {% for item_form in formset %}
             <div class="donation-food-type rounded-xl border border-base-300 bg-base-100 p-4">
-              {% for hidden in item_form.hidden_fields %}
-                {{ hidden }}
-              {% endfor %}
-
-              <label class="flex items-start gap-4 text-lg">
-                {{ item_form.selected }}
-                <span>
-                  <span class="font-semibold text-slate-900">{{ item_form.food_label }}</span>
-                  <span class="text-slate-500">({{ item_form.food_example }})</span>
-                </span>
-              </label>
-
-              <div class="donation-food-type-details mt-4 hidden rounded-xl border border-primary/20 bg-primary/5 p-5">
-                {{ item_form.non_field_errors }}
-
-                <div class="grid gap-5 md:grid-cols-2">
-                  <div class="form-control md:col-span-2">
-                    {{ item_form.packaging|as_crispy_field }}
-                  </div>
-                  <div class="form-control">
-                    {{ item_form.quantity|as_crispy_field }}
-                  </div>
-                  <div class="form-control md:col-span-2">
-                    {{ item_form.description|as_crispy_field }}
-                  </div>
-                </div>
-              </div>
+              {% crispy item_form %}
             </div>
           {% endfor %}
         </div>
-
-        <div class="form-control mt-6 max-w-sm">
-          {{ form.people_fed_estimate|as_crispy_field }}
-        </div>
       </section>
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6 flex items-center gap-4">
-          <div class="grid h-14 w-14 place-items-center rounded-full bg-primary/10 text-primary">
-            <span class="material-symbols-rounded text-3xl">local_shipping</span>
-          </div>
-          <div>
-            <h2 class="text-2xl font-bold text-slate-950">Logistics</h2>
-            <p class="mt-1 text-slate-600">Define the storage and transportation requirements for this donation.</p>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-base-300">
-          <div class="grid gap-6 p-6 md:grid-cols-2">
-            <div class="form-control">
-              {{ form.storage_requirement|as_crispy_field }}
-            </div>
-
-            <div>
-              {{ form.fits_in_car|as_crispy_field }}
-            </div>
-          </div>
-
-          <div class="border-t border-base-300 p-6">
-            <h3 class="mb-4 text-xl font-bold text-slate-950">Additional logistics requirements</h3>
-            <div class="grid gap-4 md:grid-cols-2">
-              {{ form.requires_van|as_crispy_field }}
-              {{ form.requires_cube_van|as_crispy_field }}
-              {{ form.requires_refrigerated_vehicle|as_crispy_field }}
-              {{ form.requires_pallet_jack|as_crispy_field }}
-              {{ form.requires_forklift|as_crispy_field }}
-              {{ form.loading_dock_available|as_crispy_field }}
-              {{ form.donor_can_help_load|as_crispy_field }}
-            </div>
-
-            <div class="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4 text-primary">
-              <p class="font-bold">Tip</p>
-              <p class="mt-1">Accurate logistics information helps match this donation with the right recipients.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <h2 class="text-2xl font-bold text-slate-950">Food Safety</h2>
-        <div class="mt-4 rounded-xl border border-base-300 bg-base-100 p-4">
-          {{ form.food_safety_agreement|as_crispy_field }}
-        </div>
-      </section>
-
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-950">Other Information</h2>
-          <p class="mt-1 text-slate-600">Add anything else the team should know before matching this donation.</p>
-        </div>
-
-        <div class="space-y-5">
-          <div class="form-control">
-            {{ form.special_handling_notes|as_crispy_field }}
-          </div>
-          <div class="form-control">
-            {{ form.chain_of_custody_notes|as_crispy_field }}
-          </div>
-          <div class="form-control">
-            {{ form.other_information|as_crispy_field }}
-          </div>
-        </div>
-      </section>
+      {% crispy form %}
 
       <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
@@ -221,7 +101,6 @@
       </div>
     </form>
   </div>
-</main>
 
 <script>
   document.querySelectorAll(".donation-food-type").forEach((foodType) => {

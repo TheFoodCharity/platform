@@ -1,5 +1,6 @@
 from datetime import datetime, time, timedelta
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -31,6 +32,7 @@ def sync_donation_summary_from_items(donation):
     if first_item is None:
         return
 
+    # Keep legacy summary columns aligned for admin lists, storage matching, and older templates.
     donation.food_category = first_item.food_category
     donation.food_type = list(donation.food_items.values_list("food_category", flat=True).distinct())
     donation.quantity = sum(donation.food_items.values_list("quantity", flat=True))
@@ -88,7 +90,6 @@ def organization_address_display(organization):
     if organization is None:
         return ""
 
-    address_parts = []
     region_and_postal = " ".join(part for part in [organization.region, organization.postal_code] if part)
     address_parts = [
         organization.address_line_1,
@@ -143,7 +144,7 @@ def donation_list(request):
     donations = Donation.objects.all().order_by("-created_at")
     organization = user_organization(request.user)
 
-    if request.user.is_authenticated and not request.user.is_staff:
+    if not request.user.is_staff:
         donations = donations.filter(supplier_organization=organization)
 
     status = request.GET.get("status")
@@ -167,6 +168,9 @@ def donation_list(request):
 @login_required
 def donation_create(request):
     organization = user_organization(request.user)
+    if organization is None:
+        messages.error(request, "You need an active organization before submitting a donation.")
+        return redirect("organizations:apply")
 
     if request.method == "POST":
         form = DonationForm(request.POST)
@@ -211,10 +215,6 @@ def donation_edit(request, pk):
         formset = DonationFoodItemFormSet(request.POST, donation=donation)
         if form.is_valid() and formset.is_valid():
             donation = form.save(commit=False)
-            if request.user.is_authenticated and donation.submitted_by_id is None:
-                donation.submitted_by = request.user
-            if request.user.is_authenticated and donation.supplier_organization_id is None:
-                donation.supplier_organization = user_organization(request.user)
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
             save_food_items(donation, formset)
@@ -350,6 +350,9 @@ def available_donation_detail(request, pk):
 def food_request_create(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
     organization = user_organization(request.user)
+    if organization is None:
+        messages.error(request, "You need an active organization before requesting food.")
+        return redirect("organizations:apply")
 
     if request.method == "POST":
         form = FoodRequestForm(request.POST)

@@ -175,23 +175,17 @@ class Donation(models.Model):
 
     @property
     def donor_display_name(self):
-        if self.supplier_organization_id:
-            return self.supplier_organization.name
-        if self.submitted_by_id:
-            return self.submitted_by.get_full_name().strip() or self.submitted_by.email
-        return "Unknown donor"
+        return self.supplier_organization.name
 
     @property
     def donor_contact_display(self):
-        if self.supplier_organization_id and self.supplier_organization.email:
+        if self.supplier_organization.email:
             return self.supplier_organization.email
-        if self.submitted_by_id:
-            return self.submitted_by.email
-        return ""
+        return self.submitted_by.email
 
     @property
     def donor_public_phone_display(self):
-        if self.supplier_organization_id and self.supplier_organization.phone:
+        if self.supplier_organization.phone:
             return str(self.supplier_organization.phone)
         return ""
 
@@ -228,6 +222,7 @@ class Donation(models.Model):
         totals_by_packaging = {}
         packaging_labels = dict(DonationFoodItem.Packaging.choices)
 
+        # Only combine quantities that share the same packaging unit.
         for food_item in self.food_items.all():
             totals_by_packaging[food_item.packaging] = (
                 totals_by_packaging.get(food_item.packaging, 0) + food_item.quantity
@@ -356,27 +351,21 @@ class FoodRequest(models.Model):
 
     @property
     def receiver_display_name(self):
-        if self.requested_by_id:
-            return self.requested_by.get_full_name().strip() or self.requested_by.email
-        return "Unknown receiver"
+        return self.requested_by.get_full_name().strip() or self.requested_by.email
 
     @property
     def receiver_organization_display(self):
-        if self.receiver_organization_id:
-            return self.receiver_organization.name
-        return ""
+        return self.receiver_organization.name
 
     @property
     def receiver_email_display(self):
-        if self.receiver_organization_id and self.receiver_organization.email:
+        if self.receiver_organization.email:
             return self.receiver_organization.email
-        if self.requested_by_id:
-            return self.requested_by.email
-        return ""
+        return self.requested_by.email
 
     @property
     def receiver_phone_display(self):
-        if self.receiver_organization_id and self.receiver_organization.phone:
+        if self.receiver_organization.phone:
             return str(self.receiver_organization.phone)
         return ""
 

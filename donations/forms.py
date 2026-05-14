@@ -1,14 +1,10 @@
+from crispy_forms.layout import Div, Fieldset, Layout
 from django import forms
 
 from storage.models import StorageLocation
 from theme.forms import ThemedFormMixin
 
 from .models import Donation, DonationFoodItem, FoodRequest
-
-INPUT_CLASS = "input input-bordered w-full"
-SELECT_CLASS = "select select-bordered w-full"
-TEXTAREA_CLASS = "textarea textarea-bordered w-full"
-CHECKBOX_CLASS = "checkbox checkbox-primary"
 
 FOOD_TYPE_INTAKE = [
     (Donation.FoodCategory.BAKED_GOODS, "Baked Goods", "e.g. Bread, pastries"),
@@ -24,6 +20,47 @@ FOOD_TYPE_INTAKE = [
 
 
 class DonationForm(ThemedFormMixin, forms.ModelForm):
+    layout = Layout(
+        Fieldset(
+            "Pickup Details",
+            Div("pickup_location", css_class="md:col-span-2"),
+            Div("pickup_day", css_class="md:col-span-2"),
+            "pickup_ready_time",
+            "pickup_end_time",
+            "pickup_notes",
+            css_class="grid gap-5 md:grid-cols-2",
+        ),
+        Fieldset(
+            "Donation Details",
+            "people_fed_estimate",
+        ),
+        Fieldset(
+            "Logistics",
+            "storage_requirement",
+            "fits_in_car",
+            Div(
+                "requires_van",
+                "requires_cube_van",
+                "requires_refrigerated_vehicle",
+                "requires_pallet_jack",
+                "requires_forklift",
+                "loading_dock_available",
+                "donor_can_help_load",
+                css_class="grid gap-4 md:grid-cols-2",
+            ),
+        ),
+        Fieldset(
+            "Food Safety",
+            "food_safety_agreement",
+        ),
+        Fieldset(
+            "Other Information",
+            "special_handling_notes",
+            "chain_of_custody_notes",
+            "other_information",
+        ),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields[
@@ -31,7 +68,6 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
         ].help_text = (
             "The food is safe for human consumption, has been stored properly, and has not been served from a buffet."
         )
-        apply_form_control_classes(self.fields)
 
     def clean_food_safety_agreement(self):
         agreed = self.cleaned_data["food_safety_agreement"]
@@ -75,6 +111,17 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
 
 
 class DonationFoodItemIntakeForm(ThemedFormMixin, forms.Form):
+    layout = Layout(
+        "food_category",
+        "selected",
+        Div(
+            "packaging",
+            "quantity",
+            "description",
+            css_class="donation-food-type-details mt-4 hidden rounded-xl border border-primary/20 bg-primary/5 p-5",
+        ),
+    )
+
     selected = forms.BooleanField(required=False)
     food_category = forms.ChoiceField(choices=Donation.FoodCategory.choices, widget=forms.HiddenInput)
     packaging = forms.ChoiceField(
@@ -89,7 +136,6 @@ class DonationFoodItemIntakeForm(ThemedFormMixin, forms.Form):
         self.food_label = kwargs.pop("food_label", "")
         self.food_example = kwargs.pop("food_example", "")
         super().__init__(*args, **kwargs)
-        apply_form_control_classes(self.fields)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -130,6 +176,7 @@ class DonationFoodItemFormSet(BaseDonationFoodItemFormSet):
         for form, (_, label, example) in zip(self.forms, FOOD_TYPE_INTAKE, strict=False):
             form.food_label = label
             form.food_example = example
+            form.fields["selected"].label = f"{label} ({example})"
 
     def clean(self):
         super().clean()
@@ -161,12 +208,21 @@ def get_food_item_initial(donation=None):
 
 
 class FoodRequestForm(ThemedFormMixin, forms.ModelForm):
+    layout = Layout(
+        "storage_required",
+        Div(
+            "preferred_storage",
+            "storage_notes",
+            css_class="mt-5 grid gap-5 md:grid-cols-2",
+        ),
+        "notes",
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields[
             "storage_required"
         ].help_text = "Select this if you need third-party storage before receiving the food."
-        apply_form_control_classes(self.fields)
         self.fields["preferred_storage"].queryset = StorageLocation.objects.filter(
             is_active=True,
             approval_status=StorageLocation.ApprovalStatus.APPROVED,
@@ -192,13 +248,14 @@ class FoodRequestForm(ThemedFormMixin, forms.ModelForm):
 
 
 class FoodRequestAllocationForm(ThemedFormMixin, forms.Form):
+    layout = Layout("food_item_id", "quantity")
+
     food_item_id = forms.IntegerField(widget=forms.HiddenInput)
     quantity = forms.IntegerField(required=False, min_value=0, label="Quantity requested")
 
     def __init__(self, *args, **kwargs):
         self.food_item = kwargs.pop("food_item", None)
         super().__init__(*args, **kwargs)
-        apply_form_control_classes(self.fields)
 
     def clean_quantity(self):
         quantity = self.cleaned_data["quantity"] or 0
@@ -240,24 +297,3 @@ class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
 
         if not any(form.cleaned_data.get("quantity", 0) > 0 for form in self.forms):
             raise forms.ValidationError("Request at least one food item.")
-
-
-def apply_form_control_classes(fields):
-    for field in fields.values():
-        widget = field.widget
-        existing_class = widget.attrs.get("class", "")
-
-        if isinstance(widget, forms.RadioSelect):
-            continue
-        elif isinstance(widget, forms.CheckboxInput):
-            css_class = CHECKBOX_CLASS
-        elif isinstance(widget, forms.Select):
-            css_class = SELECT_CLASS
-        elif isinstance(widget, forms.Textarea):
-            css_class = TEXTAREA_CLASS
-        elif isinstance(widget, forms.HiddenInput):
-            continue
-        else:
-            css_class = INPUT_CLASS
-
-        widget.attrs["class"] = f"{existing_class} {css_class}".strip()
