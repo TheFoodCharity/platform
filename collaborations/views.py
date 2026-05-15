@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -383,8 +383,19 @@ def collaboration_file_upload(request, space_id):
 @login_required
 def collaboration_file_download(request, space_id, file_id):
     collaboration_file = _get_collaboration_file(request.user, space_id, file_id)
+
+    if collaboration_file.scan_status != CollaborationFile.ScanStatus.CLEAN:
+        raise PermissionDenied
+
+    try:
+        file_handle = collaboration_file.file.open("rb")
+    except FileNotFoundError as exc:
+        raise Http404("File is no longer available.") from exc
+    except OSError as exc:
+        raise Http404("File is no longer available.") from exc
+
     response = FileResponse(
-        collaboration_file.file.open("rb"),
+        file_handle,
         content_type="application/octet-stream",
     )
     response["Content-Disposition"] = content_disposition_header(
