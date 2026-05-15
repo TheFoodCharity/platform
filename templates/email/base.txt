@@ -1,0 +1,15 @@
+{% autoescape off %}
+{% block preheader %}{% endblock %}
+
+[Food Charity Association] ( {{ protocol }}://{{ domain }} )
+
+************
+Hi {% block name %}{{ user.get_full_name }}{% endblock %},
+************
+
+{% block content %}{% endblock %}
+
+Thanks,
+The Food Charity Association team
+
+{% endautoescape %}
