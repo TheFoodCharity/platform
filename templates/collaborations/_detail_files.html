@@ -1,5 +1,3 @@
-{% load crispy_forms_tags %}
-
 <section id="files" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
     <div>
@@ -81,31 +79,35 @@
 
   {% if can_upload_files %}
     <form
-      class="{% if not file_upload_form.errors %}hidden {% endif %}mt-6 rounded-xl border border-base-300 bg-base-100 p-4"
+      class="mt-6"
       method="post"
       action="{% url 'collaborations:file_upload' space.id %}"
       enctype="multipart/form-data"
       data-collaboration-file-form
     >
       {% csrf_token %}
-      {% crispy file_upload_form %}
-      <div class="mt-4 flex justify-end gap-2">
-        <button class="btn btn-ghost" type="button" data-collaboration-file-cancel>
-          Cancel
-        </button>
-        <button class="btn btn-primary" type="submit">
+      {{ file_upload_form.non_field_errors }}
+      {% if file_upload_form.file.errors %}
+        <div class="alert alert-error mb-4">
+          <span class="material-symbols-rounded">cancel</span>
+          <span>{{ file_upload_form.file.errors|striptags }}</span>
+        </div>
+      {% endif %}
+      <input
+        class="sr-only"
+        type="file"
+        name="{{ file_upload_form.file.html_name }}"
+        id="{{ file_upload_form.file.id_for_label }}"
+        data-collaboration-file-input
+        required
+      >
+      <div>
+        <label class="btn btn-primary" for="{{ file_upload_form.file.id_for_label }}">
           <span class="material-symbols-rounded">upload_file</span>
-          Upload File
-        </button>
+          Add File
+        </label>
       </div>
     </form>
-
-    <div class="mt-6">
-      <button class="btn btn-primary" type="button" data-collaboration-file-open>
-        <span class="material-symbols-rounded">upload_file</span>
-        Add File
-      </button>
-    </div>
   {% endif %}
 </section>
 
@@ -113,29 +115,15 @@
   <script>
     (() => {
       const form = document.querySelector("[data-collaboration-file-form]");
-      const openButton = document.querySelector("[data-collaboration-file-open]");
-      const cancelButton = document.querySelector("[data-collaboration-file-cancel]");
-      if (!form || !openButton || !cancelButton) {
+      const fileInput = document.querySelector("[data-collaboration-file-input]");
+      if (!form || !fileInput) {
         return;
       }
 
-      const fileInput = form.querySelector("input[type='file']");
-      if (!form.classList.contains("hidden")) {
-        openButton.classList.add("hidden");
-      }
-
-      openButton.addEventListener("click", () => {
-        form.classList.remove("hidden");
-        openButton.classList.add("hidden");
-        if (fileInput) {
-          fileInput.focus();
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files.length > 0) {
+          form.requestSubmit();
         }
-      });
-
-      cancelButton.addEventListener("click", () => {
-        form.classList.add("hidden");
-        openButton.classList.remove("hidden");
-        form.reset();
       });
     })();
   </script>
