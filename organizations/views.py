@@ -35,15 +35,6 @@ def _safe_next(request, source):
     return None
 
 
-class OrganizationPermissionMixin(PermissionRequiredMixin):
-    raise_exception = True
-
-    def handle_no_permission(self):
-        if not self.request.organization:
-            return redirect(reverse("organizations:dispatch"))
-        return super().handle_no_permission()
-
-
 class DispatchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         next_url = _safe_next(request, request.GET)
@@ -83,7 +74,7 @@ class ApplyView(LoginRequiredMixin, FormView):
         return data
 
 
-class ApplicationDashboardView(OrganizationRequiredMixin, SingleObjectMixin, FormView):
+class ApplicationDashboardView(OrganizationRequiredMixin, PermissionRequiredMixin, SingleObjectMixin, FormView):
     template_name = "organizations/application/dashboard.html"
     model = Organization
     form_class = ApplicationSubmitForm
@@ -130,7 +121,7 @@ class ApplicationDashboardView(OrganizationRequiredMixin, SingleObjectMixin, For
         return super().form_valid(form)
 
 
-class ApplicationFormView(OrganizationRequiredMixin, UpdateView):
+class ApplicationFormView(OrganizationRequiredMixin, PermissionRequiredMixin, UpdateView):
     template_name = "organizations/application/form.html"
     model = Organization
     section: str
