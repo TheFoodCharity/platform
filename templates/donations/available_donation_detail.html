@@ -25,50 +25,7 @@
     <div class="space-y-6">
       {% include "donations/partials/donation_detail.html" with donation=donation show_donor=True show_status=True show_pickup_location=True %}
 
-      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food allocation</p>
-            <h2 class="mt-1 text-2xl font-bold text-slate-950">Current Remaining Food</h2>
-          </div>
-          <span class="badge badge-primary badge-outline">Live request totals</span>
-        </div>
-
-        <div class="mt-6 overflow-x-auto rounded-xl border border-base-300">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Food item</th>
-                <th>Description</th>
-                <th>Original amount</th>
-                <th>Requested</th>
-                <th>Remaining</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in donation.food_items.all %}
-                <tr>
-                  <td>
-                    <div class="font-semibold text-slate-950">{{ item.get_food_category_display }}</div>
-                  </td>
-                  <td>{{ item.description|default:"No description provided." }}</td>
-                  <td>{{ item.quantity }} {{ item.get_packaging_display }}</td>
-                  <td>{{ item.allocated_quantity }} {{ item.get_packaging_display }}</td>
-                  <td>
-                    <span class="badge {% if item.remaining_quantity %}badge-success{% else %}border-slate-950 text-slate-950{% endif %} badge-outline">
-                      {{ item.remaining_quantity|default_if_none:0 }} {{ item.get_packaging_display }}
-                    </span>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="5" class="text-slate-600">No food items added.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {% include "donations/partials/food_allocation_table.html" with donation=donation %}
 
       <div class="flex justify-end">
         <a class="btn btn-outline btn-primary" href="{% url 'donations:available_list' %}">
