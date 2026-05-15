@@ -362,10 +362,15 @@ def food_request_create(request, pk):
     if organization is None:
         messages.error(request, "You need an active organization before requesting food.")
         return redirect("organizations:apply")
+    if not donation.can_accept_receiver(organization):
+        messages.error(request, "This donation has reached its maximum number of receivers.")
+        return redirect("donations:available_detail", pk=donation.pk)
+
+    force_remaining = donation.is_final_receiver_slot(organization)
 
     if request.method == "POST":
         form = FoodRequestForm(request.POST)
-        formset = FoodRequestAllocationFormSet(request.POST, donation=donation)
+        formset = FoodRequestAllocationFormSet(request.POST, donation=donation, force_remaining=force_remaining)
         if form.is_valid() and formset.is_valid():
             food_request = form.save(commit=False)
             food_request.donation = donation
@@ -376,7 +381,7 @@ def food_request_create(request, pk):
             return redirect("donations:request_thanks", pk=food_request.pk)
     else:
         form = FoodRequestForm()
-        formset = FoodRequestAllocationFormSet(donation=donation)
+        formset = FoodRequestAllocationFormSet(donation=donation, force_remaining=force_remaining)
 
     return render(
         request,

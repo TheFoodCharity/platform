@@ -1,6 +1,7 @@
 from crispy_forms.layout import Div, Fieldset, Layout
 from django import forms
 
+from organizations.models import Organization
 from storage.models import StorageLocation
 from theme.forms import ThemedFormMixin
 
@@ -36,8 +37,9 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
             ),
         ),
         Fieldset(
-            "Donation Details",
-            "people_fed_estimate",
+            "Receiver Preferences",
+            "receiver_limit",
+            "preferred_receiver_organization",
         ),
         Fieldset(
             "Logistics",
@@ -60,8 +62,6 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
         ),
         Fieldset(
             "Other Information",
-            "special_handling_notes",
-            "chain_of_custody_notes",
             "other_information",
         ),
     )
@@ -73,6 +73,10 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
         ].help_text = (
             "The food is safe for human consumption, has been stored properly, and has not been served from a buffet."
         )
+        self.fields["preferred_receiver_organization"].queryset = Organization.objects.filter(
+            is_active=True,
+        ).order_by("name")
+        self.fields["preferred_receiver_organization"].empty_label = "No preferred receiver"
 
     def clean_food_safety_agreement(self):
         agreed = self.cleaned_data["food_safety_agreement"]
@@ -90,6 +94,8 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
             "pickup_end_time",
             "pickup_notes",
             "storage_requirement",
+            "receiver_limit",
+            "preferred_receiver_organization",
             "requires_van",
             "requires_cube_van",
             "requires_refrigerated_vehicle",
@@ -97,8 +103,6 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
             "requires_forklift",
             "loading_dock_available",
             "donor_can_help_load",
-            "special_handling_notes",
-            "chain_of_custody_notes",
             "people_fed_estimate",
             "fits_in_car",
             "food_safety_agreement",
@@ -109,9 +113,11 @@ class DonationForm(ThemedFormMixin, forms.ModelForm):
             "pickup_day": forms.RadioSelect(),
             "fits_in_car": forms.RadioSelect(choices=[(True, "Yes"), (False, "No")]),
             "food_safety_agreement": forms.CheckboxInput(),
-            "special_handling_notes": forms.Textarea(attrs={"rows": 4}),
-            "chain_of_custody_notes": forms.Textarea(attrs={"rows": 4}),
             "other_information": forms.Textarea(attrs={"rows": 4}),
+        }
+        labels = {
+            "receiver_limit": "Maximum number of receivers",
+            "preferred_receiver_organization": "Preferred receiver",
         }
 
 
@@ -295,10 +301,11 @@ class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
 
     def __init__(self, *args, **kwargs):
         self.donation = kwargs.pop("donation")
+        self.force_remaining = kwargs.pop("force_remaining", False)
         initial = [
             {
                 "food_item_id": food_item.id,
-                "quantity": None,
+                "quantity": food_item.remaining_quantity if self.force_remaining else None,
             }
             for food_item in self.donation.food_items.all()
         ]
@@ -307,6 +314,9 @@ class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
         food_items = list(self.donation.food_items.all())
         for form, food_item in zip(self.forms, food_items, strict=False):
             form.food_item = food_item
+            if self.force_remaining:
+                form.fields["quantity"].disabled = True
+                form.fields["quantity"].help_text = "Please collect remaining quantity"
 
     def clean(self):
         super().clean()

@@ -52,6 +52,8 @@ class DonationAdmin(admin.ModelAdmin):
         "donor_display_name",
         "submitted_by",
         "supplier_organization",
+        "preferred_receiver_organization",
+        "receiver_limit",
         "food_type_display",
         "food_category",
         "quantity",
@@ -67,6 +69,8 @@ class DonationAdmin(admin.ModelAdmin):
         "status",
         "food_category",
         "supplier_organization",
+        "preferred_receiver_organization",
+        "receiver_limit",
         "storage_requirement",
         "requires_refrigerated_vehicle",
         "requires_forklift",
@@ -79,8 +83,8 @@ class DonationAdmin(admin.ModelAdmin):
         "submitted_by__last_name",
         "submitted_by__email",
         "supplier_organization__name",
+        "preferred_receiver_organization__name",
         "pickup_location",
-        "special_handling_notes",
     )
 
     readonly_fields = (
