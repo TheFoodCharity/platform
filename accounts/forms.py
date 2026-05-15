@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm, PasswordChangeForm
 from django.forms.models import ModelForm
 
 from theme.forms import ThemedFormMixin
@@ -43,3 +43,7 @@ class ProfileForm(ThemedFormMixin, ModelForm):
     class Meta:
         model = User
         fields = ["email", "first_name", "last_name"]
+
+
+class UpdatePasswordForm(ThemedFormMixin, PasswordChangeForm):
+    pass

@@ -1,7 +1,8 @@
 {% extends "base_standalone.html" %}
 {% load crispy_forms_tags %}
 
-{% block page_title %}Your Account{% endblock %}
+{% block page_title %}Your Profile{% endblock %}
+{% block page_subtitle %}Manage your account details{% endblock %}
 
 {% block page_content %}
     {% include "components/_messages.html" %}
@@ -12,8 +13,7 @@
 
         <div class="fieldset">
             <span class="fieldset-legend">Password</span>
-            {# TODO(alex): add link to password update form #}
-            <a href="#" class="btn btn-sm btn-outline max-w-64">Update password</a>
+            <a href="{% url 'accounts:update_password' %}" class="btn btn-sm btn-outline max-w-64">Update password</a>
         </div>
 
         <div class="flex justify-center gap-2 mt-4">

@@ -13,7 +13,7 @@ from django.views.generic.edit import FormView, UpdateView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
-from .forms import LoginForm, ProfileForm, RegistrationForm, VerificationForm
+from .forms import LoginForm, ProfileForm, RegistrationForm, UpdatePasswordForm, VerificationForm
 from .models import User, VerificationCode
 
 PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
@@ -155,4 +155,23 @@ class ProfileView(LoginRequiredMixin, UpdateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, "Account updated successfully!")
+        return response
+
+
+class UpdatePasswordView(LoginRequiredMixin, UpdateView):
+    template_name = "accounts/update_password.html"
+    form_class = UpdatePasswordForm
+    success_url = reverse_lazy("accounts:profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = kwargs.pop("instance", None)
+        return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Password updated successfully!")
         return response
