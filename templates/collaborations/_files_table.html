@@ -1,0 +1,66 @@
+<div
+  id="collaboration-files-table"
+  class="mt-6 overflow-x-auto rounded-xl border border-base-300 bg-base-100"
+  hx-get="{% url 'collaborations:files_table' space.id %}"
+  hx-trigger="collaboration-files-refresh from:body"
+  hx-swap="outerHTML"
+>
+  <table class="table">
+    <thead class="bg-white text-xs tracking-wide text-slate-500">
+      <tr>
+        <th>Name</th>
+        <th class="w-32">Size</th>
+        <th class="w-48">Uploaded By</th>
+        <th class="w-48">Uploaded At</th>
+        <th class="w-44">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for collaboration_file in files %}
+        <tr class="align-middle">
+          <td>
+            <p class="max-w-xs truncate font-medium text-slate-950" title="{{ collaboration_file.original_filename }}">
+              {{ collaboration_file.original_filename }}
+            </p>
+          </td>
+          <td class="text-sm text-slate-600">{{ collaboration_file.size|filesizeformat }}</td>
+          <td class="text-sm text-slate-600">
+            {{ collaboration_file.uploaded_by.get_full_name|default:collaboration_file.uploaded_by }}
+          </td>
+          <td class="text-sm text-slate-600">
+              {{ collaboration_file.created_at|date:"M d, Y" }}
+          </td>
+          <td>
+            <div class="flex flex-wrap gap-2">
+              <a
+                class="btn btn-sm btn-outline btn-primary"
+                href="{% url 'collaborations:file_download' space.id collaboration_file.id %}"
+                download="{{ collaboration_file.original_filename }}"
+                hx-boost="false"
+              >
+                <span class="material-symbols-rounded">download</span>
+              </a>
+              {% if can_delete_files %}
+                <form
+                  method="post"
+                  action="{% url 'collaborations:file_delete' space.id collaboration_file.id %}"
+                >
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline btn-error" type="submit">
+                    <span class="material-symbols-rounded">delete</span>
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5" class="p-8 text-center text-slate-600">
+            No files have been uploaded yet.
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

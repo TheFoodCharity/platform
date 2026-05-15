@@ -6,6 +6,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.datastructures import MultiValueDict
 from django.utils.http import content_disposition_header
 
 from donations.models import Donation, FoodRequest
@@ -20,6 +21,9 @@ from .forms import (
 )
 from .models import CollaborationFile, CollaborationSpace, CollaborationSpaceRequest
 from .tasks import scan_collaboration_file
+
+UPLOAD_WIDGET_SESSION_KEY = "collaboration_upload_widget_items"
+MAX_UPLOAD_WIDGET_ITEMS = 10
 
 
 @login_required
@@ -212,7 +216,7 @@ def collaboration_detail_files(request, space_id):
 
 
 def _render_files(request, space, form):
-    files = space.files.select_related("uploaded_by")
+    files = space.files.select_related("uploaded_by").filter(scan_status=CollaborationFile.ScanStatus.CLEAN)
     can_manage_files = space.can_post(request.user)
     return render(
         request,
@@ -224,6 +228,7 @@ def _render_files(request, space, form):
             "file_upload_form": form,
             "can_upload_files": can_manage_files,
             "can_delete_files": can_manage_files,
+            "upload_widget": _build_upload_widget_context(request, space),
         },
     )
 
@@ -235,6 +240,115 @@ def _get_collaboration_file(user, space_id, file_id):
         ),
         pk=file_id,
         space_id=space_id,
+    )
+
+
+def _build_upload_widget_context(request, space, *, trigger_table_refresh=False):
+    raw_items = request.session.get(UPLOAD_WIDGET_SESSION_KEY, [])
+    raw_items = [item for item in raw_items if item.get("space_id") == str(space.id)]
+    file_ids = [item["file_id"] for item in raw_items if item.get("file_id")]
+    files_by_id = {
+        str(collaboration_file.id): collaboration_file
+        for collaboration_file in CollaborationFile.objects.filter(id__in=file_ids, space=space)
+    }
+
+    items = []
+    for item in raw_items:
+        collaboration_file = files_by_id.get(item.get("file_id", ""))
+        if collaboration_file:
+            state = _upload_widget_state(collaboration_file)
+            items.append(
+                {
+                    "filename": collaboration_file.original_filename,
+                    "size": collaboration_file.size,
+                    "state": state,
+                }
+            )
+        else:
+            items.append(
+                {
+                    "filename": item.get("filename", "Upload"),
+                    "size": item.get("size", 0),
+                    "state": item.get("state", "failed"),
+                }
+            )
+
+    return {
+        "items": items,
+        "has_active_uploads": any(item["state"] == "uploading" for item in items),
+        "trigger_table_refresh": trigger_table_refresh,
+    }
+
+
+def _upload_widget_state(collaboration_file):
+    match collaboration_file.scan_status:
+        case CollaborationFile.ScanStatus.CLEAN:
+            return "completed"
+        case CollaborationFile.ScanStatus.INFECTED | CollaborationFile.ScanStatus.FAILED:
+            return "failed"
+        case _:
+            return "uploading"
+
+
+def _append_upload_widget_items(request, space, items):
+    existing_items = request.session.get(UPLOAD_WIDGET_SESSION_KEY, [])
+    other_space_items = [item for item in existing_items if item.get("space_id") != str(space.id)]
+    same_space_items = [item for item in existing_items if item.get("space_id") == str(space.id)]
+    updated_space_items = [*same_space_items, *items][-MAX_UPLOAD_WIDGET_ITEMS:]
+    request.session[UPLOAD_WIDGET_SESSION_KEY] = [*other_space_items, *updated_space_items]
+    request.session.modified = True
+
+
+def _clear_upload_widget_items(request, space):
+    existing_items = request.session.get(UPLOAD_WIDGET_SESSION_KEY, [])
+    request.session[UPLOAD_WIDGET_SESSION_KEY] = [
+        item for item in existing_items if item.get("space_id") != str(space.id)
+    ]
+    request.session.modified = True
+
+
+@login_required
+def collaboration_upload_widget_partial(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    upload_widget = _build_upload_widget_context(request, space)
+    upload_widget["trigger_table_refresh"] = bool(upload_widget["items"] and not upload_widget["has_active_uploads"])
+    return render(
+        request,
+        "collaborations/_upload_widget.html",
+        {
+            "space": space,
+            "upload_widget": upload_widget,
+        },
+    )
+
+
+@login_required
+def collaboration_files_table_partial(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    return render(
+        request,
+        "collaborations/_files_table.html",
+        {
+            "space": space,
+            "files": space.files.select_related("uploaded_by").filter(scan_status=CollaborationFile.ScanStatus.CLEAN),
+            "can_delete_files": space.can_post(request.user),
+        },
+    )
+
+
+@login_required
+def collaboration_upload_widget_clear(request, space_id):
+    space = _get_collaboration_space(request.user, space_id)
+    if request.method == "POST":
+        _clear_upload_widget_items(request, space)
+
+    return render(
+        request,
+        "collaborations/_upload_widget.html",
+        {
+            "space": space,
+            "upload_widget": _build_upload_widget_context(request, space),
+        },
     )
 
 
@@ -369,15 +483,52 @@ def collaboration_file_upload(request, space_id):
     if request.method != "POST":
         return redirect("collaborations:detail_files", space_id=space.id)
 
-    form = CollaborationFileUploadForm(request.POST, request.FILES, space=space, uploaded_by=request.user)
-    if form.is_valid():
-        collaboration_file = form.save()
-        transaction.on_commit(lambda: scan_collaboration_file.delay(str(collaboration_file.id)))
+    uploaded_files = request.FILES.getlist("file")
+    widget_items = []
+    uploaded_file_ids = []
+
+    for uploaded_file in uploaded_files:
+        form = CollaborationFileUploadForm(
+            request.POST,
+            MultiValueDict({"file": [uploaded_file]}),
+            space=space,
+            uploaded_by=request.user,
+        )
+        if form.is_valid():
+            collaboration_file = form.save()
+            uploaded_file_ids.append(str(collaboration_file.id))
+            widget_items.append(
+                {
+                    "space_id": str(space.id),
+                    "file_id": str(collaboration_file.id),
+                    "filename": collaboration_file.original_filename,
+                    "size": collaboration_file.size,
+                    "state": "uploading",
+                }
+            )
+        else:
+            widget_items.append(
+                {
+                    "space_id": str(space.id),
+                    "filename": uploaded_file.name,
+                    "size": uploaded_file.size,
+                    "state": "failed",
+                }
+            )
+
+    if widget_items:
+        _append_upload_widget_items(request, space, widget_items)
+        for collaboration_file_id in uploaded_file_ids:
+            transaction.on_commit(lambda file_id=collaboration_file_id: scan_collaboration_file.delay(file_id))
         space.last_activity_at = timezone.now()
         space.save(update_fields=["last_activity_at", "updated_at"])
         return redirect("collaborations:detail_files", space_id=space.id)
 
-    return _render_files(request, space, form)
+    return _render_files(
+        request,
+        space,
+        CollaborationFileUploadForm(request.POST, request.FILES, space=space, uploaded_by=request.user),
+    )
 
 
 @login_required
@@ -417,5 +568,22 @@ def collaboration_file_delete(request, space_id, file_id):
     if request.method == "POST":
         collaboration_file.file.delete(save=False)
         collaboration_file.delete()
+        # If the deleted file was recently uploaded it may still be referenced
+        # by the upload widget items stored in the session. Remove any session
+        # entries that reference this file id so the widget doesn't continue
+        # showing the file (or its previous "uploading" state) after deletion.
+        existing_items = request.session.get(UPLOAD_WIDGET_SESSION_KEY, [])
+        if existing_items:
+            filtered = [
+                item
+                for item in existing_items
+                if not (
+                    item.get("space_id") == str(collaboration_file.space_id) and item.get("file_id") == str(file_id)
+                )
+            ]
+            # Only update the session if something changed.
+            if len(filtered) != len(existing_items):
+                request.session[UPLOAD_WIDGET_SESSION_KEY] = filtered
+                request.session.modified = True
 
     return redirect("collaborations:detail_files", space_id=space_id)
