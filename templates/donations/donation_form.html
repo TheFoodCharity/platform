@@ -88,6 +88,10 @@
             </div>
           {% endfor %}
         </div>
+
+        <div class="mb-6">
+          {{ form.people_fed_estimate|as_crispy_field }}
+        </div>
       </section>
 
       {% crispy form %}

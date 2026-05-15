@@ -60,21 +60,11 @@
     {% endif %}
   </div>
 
-  {% if donation.pickup_notes or donation.special_handling_notes or donation.chain_of_custody_notes or donation.other_information %}
+  {% if donation.pickup_notes or donation.other_information %}
     <div class="mt-4 grid gap-3 md:grid-cols-2">
       {% if donation.pickup_notes %}
         <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
           <span class="font-semibold text-slate-950">Pickup notes:</span> {{ donation.pickup_notes }}
-        </p>
-      {% endif %}
-      {% if donation.special_handling_notes %}
-        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
-          <span class="font-semibold text-slate-950">Special handling:</span> {{ donation.special_handling_notes }}
-        </p>
-      {% endif %}
-      {% if donation.chain_of_custody_notes %}
-        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
-          <span class="font-semibold text-slate-950">Chain of custody:</span> {{ donation.chain_of_custody_notes }}
         </p>
       {% endif %}
       {% if donation.other_information %}
