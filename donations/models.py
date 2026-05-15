@@ -89,6 +89,11 @@ class Donation(models.Model):
         TWO_HUNDRED = 200, "200"
         THREE_HUNDRED = 300, "300"
 
+    class ReceiverLimit(models.TextChoices):
+        ONE = "one", "1 receiver only"
+        TWO = "two", "Maximum 2 receivers"
+        NO_LIMIT = "no_limit", "No limit"
+
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -98,6 +103,20 @@ class Donation(models.Model):
         "organizations.Organization",
         on_delete=models.PROTECT,
         related_name="donations",
+    )
+    preferred_receiver_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="preferred_donations",
+        verbose_name="preferred receiver",
+    )
+    receiver_limit = models.CharField(
+        "maximum number of receivers",
+        max_length=20,
+        choices=ReceiverLimit.choices,
+        default=ReceiverLimit.NO_LIMIT,
     )
 
     food_category = models.CharField(
@@ -136,8 +155,6 @@ class Donation(models.Model):
     loading_dock_available = models.BooleanField(default=False)
     donor_can_help_load = models.BooleanField(default=False)
 
-    special_handling_notes = models.TextField(blank=True)
-    chain_of_custody_notes = models.TextField(blank=True)
     people_fed_estimate = models.PositiveIntegerField(choices=PeopleFedEstimate.choices, null=True, blank=True)
     fits_in_car = models.BooleanField(default=True)
     food_safety_agreement = models.BooleanField(default=False)
@@ -245,6 +262,44 @@ class Donation(models.Model):
     @property
     def is_fully_requested(self):
         return self.food_items.exists() and self.total_remaining_quantity == 0
+
+    @property
+    def receiver_limit_count(self):
+        limits = {
+            self.ReceiverLimit.ONE: 1,
+            self.ReceiverLimit.TWO: 2,
+        }
+        return limits.get(self.receiver_limit)
+
+    def active_receiver_organization_ids(self):
+        return set(
+            self.food_requests.exclude(
+                status__in=[FoodRequest.Status.DECLINED, FoodRequest.Status.CANCELLED],
+            )
+            .values_list("receiver_organization_id", flat=True)
+            .distinct(),
+        )
+
+    def can_accept_receiver(self, organization):
+        """Return whether this organization can still request from this donation."""
+        receiver_limit_count = self.receiver_limit_count
+        if receiver_limit_count is None or organization is None:
+            return True
+
+        receiver_ids = self.active_receiver_organization_ids()
+        if organization.pk in receiver_ids:
+            return True
+
+        return len(receiver_ids) < receiver_limit_count
+
+    def is_final_receiver_slot(self, organization):
+        """When the requester is the final allowed receiver, they must claim all remaining food."""
+        receiver_limit_count = self.receiver_limit_count
+        if receiver_limit_count is None or organization is None:
+            return False
+
+        other_receiver_ids = self.active_receiver_organization_ids() - {organization.pk}
+        return len(other_receiver_ids) >= receiver_limit_count - 1
 
     @property
     def allocation_status_display(self):
