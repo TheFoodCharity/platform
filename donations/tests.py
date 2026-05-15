@@ -727,6 +727,8 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, "Pallet jack")
         self.assertContains(response, "Loading dock available")
         self.assertNotContains(response, "Forklift")
+        self.assertContains(response, 'name="allocations-0-quantity"')
+        self.assertContains(response, 'value="12"')
 
     def test_food_request_form_exposes_storage_fields_not_internal_fields(self):
         form = FoodRequestForm()

@@ -305,7 +305,7 @@ class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
         initial = [
             {
                 "food_item_id": food_item.id,
-                "quantity": food_item.remaining_quantity if self.force_remaining else None,
+                "quantity": food_item.remaining_quantity,
             }
             for food_item in self.donation.food_items.all()
         ]
