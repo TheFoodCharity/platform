@@ -1,17 +1,34 @@
+import io
 import logging
+from dataclasses import dataclass
 from enum import Enum
 from uuid import UUID
 
 import clamd
 from celery import shared_task
 from django.conf import settings
-from django.core.files.base import File
+from django.core.files.base import ContentFile, File
 from django.db import transaction
 from django.utils import timezone
+from PIL import Image, ImageFile, ImageOps, UnidentifiedImageError
 
 from .models import CollaborationFile, collaboration_clean_file_path
 
 logger = logging.getLogger(__name__)
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+Image.MAX_IMAGE_PIXELS = 89478485
+
+COMPRESSIBLE_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png"}
+IMAGE_COMPRESSION_ERRORS = (OSError, UnidentifiedImageError)
+MAX_COMPRESSED_IMAGE_SIZE = (1920, 1080)
+JPEG_COMPRESSION_QUALITY = 80
+
+
+@dataclass(frozen=True)
+class StoredFile:
+    name: str
+    size: int
 
 
 class ScanTaskResult(str, Enum):
@@ -135,10 +152,12 @@ def _parse_clamav_result(scan_result: dict) -> tuple[str, str]:
 
 def _mark_scan_clean(collaboration_file: CollaborationFile) -> None:
     old_name = collaboration_file.file.name
-    new_name = _copy_file_to_clean_storage(collaboration_file)
+
+    stored_file = _copy_file_to_clean_storage(collaboration_file)
 
     CollaborationFile.objects.filter(pk=collaboration_file.pk).update(
-        file=new_name,
+        file=stored_file.name,
+        size=stored_file.size,
         scan_status=CollaborationFile.ScanStatus.CLEAN,
         scan_result="OK",
         scan_error="",
@@ -155,7 +174,7 @@ def _mark_scan_clean(collaboration_file: CollaborationFile) -> None:
         )
 
 
-def _copy_file_to_clean_storage(collaboration_file: CollaborationFile) -> str:
+def _copy_file_to_clean_storage(collaboration_file: CollaborationFile) -> StoredFile:
     storage = collaboration_file.file.storage
     old_name = collaboration_file.file.name
     new_name = collaboration_clean_file_path(collaboration_file)
@@ -164,7 +183,55 @@ def _copy_file_to_clean_storage(collaboration_file: CollaborationFile) -> str:
         storage.delete(new_name)
 
     with storage.open(old_name, "rb") as source:
-        return storage.save(new_name, File(source))
+        content = _prepare_clean_file_content(collaboration_file, source)
+        saved_name = storage.save(new_name, content)
+
+    return StoredFile(name=saved_name, size=storage.size(saved_name))
+
+
+def _prepare_clean_file_content(collaboration_file: CollaborationFile, source) -> File:
+    if collaboration_file.content_type not in COMPRESSIBLE_IMAGE_CONTENT_TYPES:
+        return File(source)
+
+    compressed_content = _compress_image_content(source, collaboration_file.content_type)
+    if compressed_content:
+        return compressed_content
+
+    source.seek(0)
+    return File(source)
+
+
+def _compress_image_content(source, content_type: str) -> ContentFile | None:
+    try:
+        with Image.open(source) as image:
+            image = ImageOps.exif_transpose(image)
+            image.thumbnail(MAX_COMPRESSED_IMAGE_SIZE, Image.Resampling.LANCZOS)
+
+            output = io.BytesIO()
+            if content_type == "image/jpeg":
+                image = _prepare_jpeg_image(image)
+                image.save(
+                    output,
+                    format="JPEG",
+                    quality=JPEG_COMPRESSION_QUALITY,
+                    optimize=True,
+                    progressive=True,
+                )
+            elif content_type == "image/png":
+                image.save(output, format="PNG", optimize=True)
+            else:
+                return None
+    except IMAGE_COMPRESSION_ERRORS:
+        logger.exception("Could not compress image; retaining the scanned original file.")
+        return None
+
+    return ContentFile(output.getvalue())
+
+
+def _prepare_jpeg_image(image: Image.Image) -> Image.Image:
+    if image.mode in ("RGB", "L"):
+        return image
+    return image.convert("RGB")
 
 
 def _mark_scan_infected(collaboration_file: CollaborationFile, reason: str) -> None:
