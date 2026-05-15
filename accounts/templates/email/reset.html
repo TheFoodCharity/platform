@@ -16,8 +16,7 @@
                 <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
                     <tr>
                         <td align="center">
-                            <a href="{{ protocol }}://
-                                    {{ domain }}{% url 'accounts:password_reset_confirm' uidb64=uid token=token %}"
+                            <a href="{{ protocol }}://{{ domain }}{% url 'accounts:password_reset_confirm' uidb64=uid token=token %}"
                                class="f-fallback button button--green" target="_blank">
                                 Reset your password
                             </a>
