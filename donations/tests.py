@@ -120,6 +120,7 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(DonationFoodItem.objects.count(), 1)
 
         donation = Donation.objects.get()
+        self.assertRedirects(response, reverse("donations:donation_thanks", args=[donation.pk]))
         self.assertEqual(donation.submitted_by, user)
         self.assertEqual(donation.supplier_organization, organization)
         self.assertEqual(donation.food_category, Donation.FoodCategory.PRODUCE)
@@ -127,6 +128,11 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(donation.receiver_limit, Donation.ReceiverLimit.ONE)
         self.assertEqual(donation.status, Donation.Status.AVAILABLE)
         self.assertIsNotNone(donation.pickup_deadline)
+
+        thanks_response = self.client.get(reverse("donations:donation_thanks", args=[donation.pk]))
+        self.assertContains(thanks_response, "Donation Submitted")
+        self.assertContains(thanks_response, "Thank you. Your donation is now available")
+        self.assertContains(thanks_response, donation.ticket_number)
 
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
         user, organization = self.create_user_with_org()

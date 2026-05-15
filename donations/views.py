@@ -207,7 +207,7 @@ def donation_create(request):
             donation.save()
             save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
-            return redirect("donations:detail", pk=donation.pk)
+            return redirect("donations:donation_thanks", pk=donation.pk)
     else:
         form = DonationForm(initial={"pickup_location": organization_address_display(organization)})
         formset = DonationFoodItemFormSet()
@@ -399,3 +399,9 @@ def food_request_create(request, pk):
 def food_request_thanks(request, pk):
     food_request = get_object_or_404(FoodRequest, pk=pk)
     return render(request, "donations/food_request_thanks.html", {"food_request": food_request})
+
+
+@login_required
+def donation_thanks(request, pk):
+    donation = get_object_or_404(Donation, pk=pk)
+    return render(request, "donations/donation_thanks.html", {"donation": donation})
