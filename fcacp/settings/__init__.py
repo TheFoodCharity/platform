@@ -40,12 +40,14 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
+    "rules.apps.AutodiscoverRulesConfig",
     "tailwind",
     # 1st-party
     "accounts",
     "collaborations",
     "forums",
     "organizations",
+    "permissions",
     "public",
     "storage",
     "donations",
@@ -169,6 +171,11 @@ CRISPY_TEMPLATE_PACK = "fcacp"
 
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "rules.permissions.ObjectPermissionBackend",
+]
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "organizations:dispatch"

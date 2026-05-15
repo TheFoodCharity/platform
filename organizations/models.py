@@ -2,10 +2,12 @@ import uuid
 from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
+
+from permissions import Scope
 
 if TYPE_CHECKING:
     from accounts.models import User
@@ -50,7 +52,7 @@ class LegalStatus(models.Model):
 
 
 class OrganizationsManager(models.Manager):
-    def for_user(self, user: User):
+    def for_user(self, user: "User"):
         return self.filter(users=user)
 
 
@@ -72,6 +74,9 @@ class Organization(TimestampedModel):
         NEEDS_INFO = 4, "Needs more information"
         DECLINED = 5, "Declined"
         ARCHIVED = 6, "Archived"
+
+    # Class vars
+    is_anonymous = False
 
     # Core identity
     name = models.CharField(max_length=200, help_text=_("The name of the organization"))
@@ -124,6 +129,16 @@ class Organization(TimestampedModel):
 
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, through="Membership", related_name="organizations")
 
+    capabilities = models.ManyToManyField(
+        "permissions.PermissionGroup",
+        limit_choices_to={"scope": Scope.ORGANIZATION},
+        blank=True,
+        related_name="organizations",
+        verbose_name=_("capabilities"),
+        help_text=_("The capabilities this organization has been granted."),
+    )
+    permission_version = models.PositiveIntegerField(default=0)
+
     # Managers
     objects = OrganizationsManager()
     active = ActiveOrganizationsManager()
@@ -150,13 +165,11 @@ class Organization(TimestampedModel):
             self.status = self.Status.PENDING
             self.save(update_fields=["status"])
 
-    @classmethod
-    def create(cls, name: str, owner: "User") -> "Organization":
-        with transaction.atomic():
-            organization = cls.objects.create(name=name, is_active=False, owner=owner, status=cls.Status.DRAFT)
-            Membership.objects.create(organization=organization, user=owner)
-            OrganizationApplication.objects.create(organization=organization)
-        return organization
+
+class AnonymousOrganization:
+    pk = None
+    is_anonymous = True
+    is_active = False
 
 
 class OrganizationApplication(TimestampedModel):
@@ -218,7 +231,16 @@ class OrganizationApplication(TimestampedModel):
 class Membership(TimestampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="memberships", on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name="memberships", on_delete=models.CASCADE)
-    is_admin = models.BooleanField(default=False)
+    role = models.ForeignKey(
+        "permissions.PermissionGroup",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        limit_choices_to={"scope": Scope.USER},
+        related_name="memberships",
+        verbose_name=_("role"),
+    )
+    permission_version = models.PositiveIntegerField(default=0)
 
     class Meta:
         verbose_name = _("membership")

@@ -126,7 +126,7 @@ class VerifyView(EmailUnverifiedMixin, FormView):
 
         user.mark_email_verified()
         messages.success(self.request, "Your email has been verified.")
-        login(self.request, user)
+        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
         return super().form_valid(form)
 
 

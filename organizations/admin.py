@@ -1,4 +1,9 @@
+from django import forms
 from django.contrib import admin
+from django.contrib.admin.widgets import FilteredSelectMultiple
+
+from permissions import Scope
+from permissions.models import MembershipPermissionOverride, OrganizationPermissionOverride, PermissionGroup
 
 from .models import Invitation, LegalStatus, Membership, Organization, OrganizationApplication, OrganizationType
 
@@ -34,13 +39,55 @@ class OrganizationApplicationInline(admin.StackedInline):
     ]
 
 
+class OrganizationAdminForm(forms.ModelForm):
+    capabilities = forms.ModelMultipleChoiceField(
+        queryset=PermissionGroup.objects.filter(scope=Scope.ORGANIZATION),
+        required=False,
+        widget=FilteredSelectMultiple("capabilities", is_stacked=False),
+    )
+
+    class Meta:
+        model = Organization
+        fields = [
+            "name",
+            "status",
+            "is_active",
+            "owner",
+            "organization_type",
+            "legal_status",
+            "description",
+            "interest_areas",
+            "municipality",
+            "region",
+            "service_area",
+            "email",
+            "phone",
+            "website",
+            "contact_via_email",
+            "contact_via_phone",
+            "is_publicly_visible",
+            "internal_notes",
+            "capabilities",
+        ]
+
+
+class OrganizationPermissionOverrideInline(admin.TabularInline):
+    model = OrganizationPermissionOverride
+    extra = 0
+    autocomplete_fields = ["permission"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("permission")
+
+
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
+    form = OrganizationAdminForm
     list_display = ["name", "owner", "status", "is_active"]
     list_filter = ["status", "is_active"]
     search_fields = ["name"]
     raw_id_fields = ("owner",)
-    inlines = [OrganizationApplicationInline]
+    inlines = [OrganizationApplicationInline, OrganizationPermissionOverrideInline]
     fieldsets = [
         (
             "Identity",
@@ -79,6 +126,14 @@ class OrganizationAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "Capabilities",
+            {
+                "description": "The capabilities this organization has been granted. "
+                "These determine which permissions its members can be given.",
+                "fields": ["capabilities"],
+            },
+        ),
+        (
             "Internal / admin",
             {
                 "classes": ["collapse"],
@@ -88,10 +143,32 @@ class OrganizationAdmin(admin.ModelAdmin):
     ]
 
 
+class MembershipAdminForm(forms.ModelForm):
+    class Meta:
+        model = Membership
+        fields = ["user", "organization", "role"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["role"].queryset = PermissionGroup.objects.filter(scope=Scope.USER)
+
+
+class MembershipPermissionOverrideInline(admin.TabularInline):
+    model = MembershipPermissionOverride
+    extra = 0
+    autocomplete_fields = ["permission"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("permission")
+
+
 @admin.register(Membership)
 class MembershipAdmin(admin.ModelAdmin):
-    list_display = ["user", "organization", "is_admin"]
+    form = MembershipAdminForm
+    list_display = ["user", "organization", "role"]
+    list_filter = ["role"]
     raw_id_fields = ("user", "organization")
+    inlines = [MembershipPermissionOverrideInline]
 
 
 @admin.register(Invitation)

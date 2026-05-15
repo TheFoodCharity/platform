@@ -34,6 +34,37 @@ jobs:
         env:
           DATABASE_URL: postgresql://fcacp:super-secure-password@127.0.0.1:5432/fcacp
 
+  database:
+    name: Database is up-to-date
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: fcacp
+          POSTGRES_USER: fcacp
+          POSTGRES_PASSWORD: super-secure-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fcacp -d fcacp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync
+
+      - name: manage.py migrate
+        run: uv run manage.py migrate
+
+      - name: manage.py makemigrations --check
+        run: uv run manage.py makemigrations --check
+
+      - name: manage.py check --database default
+        run: uv run manage.py check --database default
+
   docker:
     name: Docker
     runs-on: ubuntu-latest
