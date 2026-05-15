@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Count
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,6 +19,7 @@ from .forms import (
     CollaborationSpaceRequestForm,
 )
 from .models import CollaborationFile, CollaborationSpace, CollaborationSpaceRequest
+from .tasks import scan_collaboration_file
 
 
 @login_required
@@ -369,7 +371,8 @@ def collaboration_file_upload(request, space_id):
 
     form = CollaborationFileUploadForm(request.POST, request.FILES, space=space, uploaded_by=request.user)
     if form.is_valid():
-        form.save()
+        collaboration_file = form.save()
+        transaction.on_commit(lambda: scan_collaboration_file.delay(str(collaboration_file.id)))
         space.last_activity_at = timezone.now()
         space.save(update_fields=["last_activity_at", "updated_at"])
         return redirect("collaborations:detail_files", space_id=space.id)
