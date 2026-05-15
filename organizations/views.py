@@ -1,10 +1,11 @@
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http.response import Http404
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
@@ -21,6 +22,7 @@ from .forms import (
     ApplicationLocationForm,
     ApplicationOperationsForm,
     ApplicationSubmitForm,
+    ProfileForm,
 )
 from .models import Organization
 from .services import organization_create, set_current_organization
@@ -207,3 +209,39 @@ class ActivateView(LoginRequiredMixin, View):
             next_url = _safe_next(request, request.POST)
             return HttpResponseClientRedirect(next_url or "/")
         return HttpResponseClientRefresh()
+
+
+class SettingsPageMixin(OrganizationRequiredMixin, PermissionRequiredMixin):
+    tab_id: str
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        data["tab_id"] = self.tab_id
+        return data
+
+
+class ProfileView(SettingsPageMixin, UpdateView):
+    template_name = "organizations/settings/profile.html"
+    form_class = ProfileForm
+    success_url = reverse_lazy("organizations:profile")
+    context_object_name = "organization"
+
+    tab_id = "profile"
+
+    permission_required = "organizations.view_profile"
+
+    def get_object(self, queryset=None):
+        return self.request.organization
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["editable"] = self.request.user.has_perm("organizations.edit_profile")
+        return kwargs
+
+    def form_valid(self, form):
+        if not self.request.user.has_perm("organizations.edit_profile"):
+            raise PermissionDenied()
+
+        response = super().form_valid(form)
+        messages.success(self.request, "Profile successfully updated")
+        return response
