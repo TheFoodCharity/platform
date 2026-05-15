@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.contrib.messages import constants as message_constants
+
 from .env import Environment
 
 environment = Environment()
@@ -168,6 +170,14 @@ CRISPY_FAIL_SILENTLY = not DEBUG
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["fcacp"]
 CRISPY_TEMPLATE_PACK = "fcacp"
+
+MESSAGE_TAGS = {
+    message_constants.DEBUG: "alert-debug",
+    message_constants.INFO: "alert-info",
+    message_constants.SUCCESS: "alert-success",
+    message_constants.WARNING: "alert-warning",
+    message_constants.ERROR: "alert-error",
+}
 
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
