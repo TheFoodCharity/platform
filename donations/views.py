@@ -1,12 +1,14 @@
 from datetime import datetime, time, timedelta
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from storage.models import StorageLocation
 
-from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestForm
-from .models import Donation
+from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestAllocationFormSet, FoodRequestForm
+from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
 PICKUP_END_HOURS = {
     Donation.PickupEndTime.BEFORE_2PM: 14,
@@ -30,15 +32,120 @@ def sync_donation_summary_from_items(donation):
     if first_item is None:
         return
 
+    # Keep legacy summary columns aligned for admin lists, storage matching, and older templates.
     donation.food_category = first_item.food_category
     donation.food_type = list(donation.food_items.values_list("food_category", flat=True).distinct())
-    donation.quantity = first_item.quantity
+    donation.quantity = sum(donation.food_items.values_list("quantity", flat=True))
     donation.unit = first_item.packaging
     donation.save(update_fields=["food_category", "food_type", "quantity", "unit"])
 
 
+def save_food_items(donation, formset):
+    donation.food_items.all().delete()
+
+    items = []
+    for form in formset:
+        if not form.cleaned_data.get("selected"):
+            continue
+
+        items.append(
+            DonationFoodItem(
+                donation=donation,
+                food_category=form.cleaned_data["food_category"],
+                packaging=form.cleaned_data["packaging"],
+                quantity=form.cleaned_data["quantity"],
+                description=form.cleaned_data["description"],
+            ),
+        )
+
+    DonationFoodItem.objects.bulk_create(items)
+
+
+def user_organization(user):
+    if not user.is_authenticated:
+        return None
+    return user.organizations.filter(is_active=True).first()
+
+
+def donor_profile(request, organization):
+    full_name = request.user.get_full_name().strip()
+    address_display = organization_address_display(organization)
+
+    return {
+        "company_name": organization.name if organization else "",
+        "address_1": organization.address_line_1 if organization else "",
+        "address_2": organization.address_line_2 if organization else "",
+        "address_display": address_display,
+        "city": organization.municipality if organization else "",
+        "province_or_state": organization.region if organization else "",
+        "postal_code": organization.postal_code if organization else "",
+        "donor_name": full_name or request.user.email,
+        "donor_contact": request.user.email,
+        "contact_email": organization.email if organization and organization.email else request.user.email,
+        "contact_phone": str(organization.phone) if organization and organization.phone else "",
+    }
+
+
+def organization_address_display(organization):
+    if organization is None:
+        return ""
+
+    region_and_postal = " ".join(part for part in [organization.region, organization.postal_code] if part)
+    address_parts = [
+        organization.address_line_1,
+        organization.address_line_2,
+        organization.municipality,
+        region_and_postal,
+    ]
+
+    return ", ".join(part for part in address_parts if part)
+
+
+def receiver_profile(request, organization):
+    full_name = request.user.get_full_name().strip()
+    return {
+        "email": request.user.email,
+        "receiver_name": full_name or request.user.email,
+        "organization": organization.name if organization else "",
+        "phone": str(organization.phone) if organization and organization.phone else "",
+    }
+
+
+def save_food_request_allocations(food_request, formset):
+    allocations = []
+    food_items = {item.id: item for item in food_request.donation.food_items.all()}
+
+    for form in formset:
+        quantity = form.cleaned_data.get("quantity") or 0
+        if quantity <= 0:
+            continue
+
+        food_item = food_items[form.cleaned_data["food_item_id"]]
+        allocations.append(
+            FoodRequestAllocation(
+                food_request=food_request,
+                donation_food_item=food_item,
+                quantity=quantity,
+            ),
+        )
+
+    FoodRequestAllocation.objects.bulk_create(allocations)
+    sync_donation_status_from_allocations(food_request.donation)
+
+
+def sync_donation_status_from_allocations(donation):
+    if donation.is_fully_requested and donation.status != Donation.Status.COMPLETED:
+        donation.status = Donation.Status.COMPLETED
+        donation.save(update_fields=["status", "updated_at"])
+
+
+@login_required
 def donation_list(request):
     donations = Donation.objects.all().order_by("-created_at")
+    organization = user_organization(request.user)
+
+    if not request.user.is_staff:
+        donations = donations.filter(supplier_organization=organization)
 
     status = request.GET.get("status")
     storage_requirement = request.GET.get("storage_requirement")
@@ -58,7 +165,13 @@ def donation_list(request):
     return render(request, "donations/donation_list.html", context)
 
 
+@login_required
 def donation_create(request):
+    organization = user_organization(request.user)
+    if organization is None:
+        messages.error(request, "You need an active organization before submitting a donation.")
+        return redirect("organizations:apply")
+
     if request.method == "POST":
         form = DonationForm(request.POST)
         formset = DonationFoodItemFormSet(request.POST)
@@ -68,50 +181,77 @@ def donation_create(request):
             donation.food_category = Donation.FoodCategory.OTHER
             donation.food_type = []
             donation.quantity = 1
-            donation.unit = Donation.QuantityUnit.ITEMS
+            donation.unit = Donation.QuantityUnit.BOXES
+            donation.submitted_by = request.user
+            donation.supplier_organization = organization
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
-            formset.instance = donation
-            formset.save()
+            save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
-        form = DonationForm()
+        form = DonationForm(initial={"pickup_location": organization_address_display(organization)})
         formset = DonationFoodItemFormSet()
 
     return render(
         request,
         "donations/donation_form.html",
-        {"form": form, "formset": formset, "title": "Create Donation"},
+        {
+            "form": form,
+            "formset": formset,
+            "donor_profile": donor_profile(request, organization),
+            "supplier_organization": organization,
+            "title": "Create Donation",
+        },
     )
 
 
+@login_required
 def donation_edit(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
 
     if request.method == "POST":
         form = DonationForm(request.POST, instance=donation)
-        formset = DonationFoodItemFormSet(request.POST, instance=donation)
+        formset = DonationFoodItemFormSet(request.POST, donation=donation)
         if form.is_valid() and formset.is_valid():
             donation = form.save(commit=False)
             set_pickup_deadline_from_pickup_fields(donation)
             donation.save()
-            formset.save()
+            save_food_items(donation, formset)
             sync_donation_summary_from_items(donation)
             return redirect("donations:detail", pk=donation.pk)
     else:
         form = DonationForm(instance=donation)
-        formset = DonationFoodItemFormSet(instance=donation)
+        formset = DonationFoodItemFormSet(donation=donation)
 
     return render(
         request,
         "donations/donation_form.html",
-        {"form": form, "formset": formset, "title": "Edit Donation"},
+        {
+            "form": form,
+            "formset": formset,
+            "donor_profile": donor_profile(request, donation.supplier_organization),
+            "supplier_organization": donation.supplier_organization,
+            "title": "Edit Donation",
+        },
     )
 
 
+@login_required
 def donation_detail(request, pk):
-    donation = get_object_or_404(Donation, pk=pk)
+    donation = get_object_or_404(
+        Donation.objects.select_related(
+            "submitted_by",
+            "supplier_organization",
+            "assigned_storage",
+        ).prefetch_related(
+            "food_items",
+            "food_requests__requested_by",
+            "food_requests__receiver_organization",
+            "food_requests__allocations__donation_food_item",
+        ),
+        pk=pk,
+    )
 
     matching_storage = StorageLocation.objects.filter(
         is_active=True,
@@ -138,6 +278,7 @@ def donation_detail(request, pk):
     )
 
 
+@login_required
 def donation_assign_storage(request, pk, storage_pk):
     donation = get_object_or_404(Donation, pk=pk)
     storage_location = get_object_or_404(StorageLocation, pk=storage_pk)
@@ -147,40 +288,103 @@ def donation_assign_storage(request, pk, storage_pk):
     return redirect("donations:detail", pk=donation.pk)
 
 
+@login_required
 def available_donation_list(request):
-    donations = Donation.objects.exclude(
-        status__in=[
-            Donation.Status.DRAFT,
-            Donation.Status.CANCELLED,
-            Donation.Status.EXPIRED,
-            Donation.Status.COMPLETED,
-        ],
-    ).order_by("-created_at")
+    donations = (
+        Donation.objects.exclude(
+            status__in=[
+                Donation.Status.CANCELLED,
+                Donation.Status.EXPIRED,
+            ],
+        )
+        .prefetch_related(
+            "food_items",
+            "food_items__request_allocations__food_request",
+        )
+        .select_related(
+            "supplier_organization",
+            "submitted_by",
+        )
+        .order_by("-created_at")
+    )
 
-    return render(request, "donations/available_donation_list.html", {"donations": donations})
+    category = request.GET.get("category")
+    availability = request.GET.get("availability")
+
+    if category:
+        donations = donations.filter(food_items__food_category=category).distinct()
+
+    donation_list = list(donations)
+    if availability == "available":
+        donation_list = [donation for donation in donation_list if not donation.is_fully_requested]
+    elif availability == "fully_requested":
+        donation_list = [donation for donation in donation_list if donation.is_fully_requested]
+
+    return render(
+        request,
+        "donations/available_donation_list.html",
+        {
+            "donations": donation_list,
+            "category_choices": Donation.FoodCategory.choices,
+            "availability": availability,
+            "category": category,
+        },
+    )
 
 
+@login_required
 def available_donation_detail(request, pk):
-    donation = get_object_or_404(Donation, pk=pk)
+    donation = get_object_or_404(
+        Donation.objects.select_related(
+            "submitted_by",
+            "supplier_organization",
+            "assigned_storage",
+        ).prefetch_related(
+            "food_items",
+            "food_items__request_allocations__food_request",
+        ),
+        pk=pk,
+    )
 
     return render(request, "donations/available_donation_detail.html", {"donation": donation})
 
 
+@login_required
 def food_request_create(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
+    organization = user_organization(request.user)
+    if organization is None:
+        messages.error(request, "You need an active organization before requesting food.")
+        return redirect("organizations:apply")
 
     if request.method == "POST":
         form = FoodRequestForm(request.POST)
-        if form.is_valid():
+        formset = FoodRequestAllocationFormSet(request.POST, donation=donation)
+        if form.is_valid() and formset.is_valid():
             food_request = form.save(commit=False)
             food_request.donation = donation
+            food_request.requested_by = request.user
+            food_request.receiver_organization = organization
             food_request.save()
+            save_food_request_allocations(food_request, formset)
             return redirect("donations:request_thanks", pk=food_request.pk)
     else:
         form = FoodRequestForm()
+        formset = FoodRequestAllocationFormSet(donation=donation)
 
-    return render(request, "donations/food_request_form.html", {"form": form, "donation": donation})
+    return render(
+        request,
+        "donations/food_request_form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "donation": donation,
+            "receiver_profile": receiver_profile(request, organization),
+        },
+    )
 
 
+@login_required
 def food_request_thanks(request, pk):
-    return render(request, "donations/food_request_thanks.html", {"request_id": pk})
+    food_request = get_object_or_404(FoodRequest, pk=pk)
+    return render(request, "donations/food_request_thanks.html", {"food_request": food_request})

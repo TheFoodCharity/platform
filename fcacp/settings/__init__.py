@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
+from django.contrib.messages import constants as message_constants
+
 from .env import Environment
 
 environment = Environment()
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "django_htmx",
     "phonenumber_field",
+    "rules.apps.AutodiscoverRulesConfig",
     "tailwind",
     "storages",
     # 1st-party
@@ -47,6 +50,7 @@ INSTALLED_APPS = [
     "collaborations",
     "forums",
     "organizations",
+    "permissions",
     "public",
     "storage",
     "donations",
@@ -72,6 +76,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "organizations.middleware.CurrentOrganizationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
@@ -94,6 +99,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "django.template.context_processors.debug",
+                "organizations.context_processors.current_organization",
             ],
         },
     },
@@ -166,17 +172,40 @@ CRISPY_FAIL_SILENTLY = not DEBUG
 CRISPY_ALLOWED_TEMPLATE_PACKS = ["fcacp"]
 CRISPY_TEMPLATE_PACK = "fcacp"
 
+MESSAGE_TAGS = {
+    message_constants.DEBUG: "alert-debug",
+    message_constants.INFO: "alert-info",
+    message_constants.SUCCESS: "alert-success",
+    message_constants.WARNING: "alert-warning",
+    message_constants.ERROR: "alert-error",
+}
+
 # Authentication
 AUTH_USER_MODEL = "accounts.User"
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "rules.permissions.ObjectPermissionBackend",
+]
 
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "organizations:dispatch"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 1 day
+
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
+
+EMAIL_HOST = environment.smtp.host
+EMAIL_PORT = environment.smtp.port
+EMAIL_HOST_USER = environment.smtp.username
+EMAIL_HOST_PASSWORD = environment.smtp.password.get_secret_value()
+EMAIL_USE_TLS = environment.smtp.use_tls
+EMAIL_USE_SSL = environment.smtp.use_ssl
+EMAIL_TIMEOUT = environment.smtp.timeout
 
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
