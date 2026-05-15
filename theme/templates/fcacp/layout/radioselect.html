@@ -3,7 +3,7 @@
 {% for group, options, index in field|optgroups %}
     {% if group %}<strong>{{ group }}</strong>{% endif %}
     {% for option in options %}
-        <label class="label cursor-pointer gap-3" for="{{ option.attrs.id }}">
+        <label class="label cursor-pointer gap-3 font-semibold text-slate-950" for="{{ option.attrs.id }}">
             <input type="radio"
                    class="radio radio-primary"
                    name="{{ option.name }}"

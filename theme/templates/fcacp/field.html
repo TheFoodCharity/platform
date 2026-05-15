@@ -8,7 +8,7 @@
         <label class="label cursor-pointer gap-3" for="{{ field.id_for_label }}">
             {% themed_field field %}
             {% if form_show_labels and field.label %}
-                <span class="grow text-base-content">
+                <span class="grow text-base font-semibold !text-slate-950">
                     {{ field.label }}
                     {% if field.field.required %}<span aria-hidden="true" class="text-error">*</span>{% endif %}
                 </span>

@@ -1,11 +1,15 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
+from django.utils import timezone
+from django.utils.formats import date_format
 
 from storage.models import StorageLocation
 
 
 class Donation(models.Model):
+    """A supplier's donation ticket, tracked with the user and organization that submitted it."""
+
     class Status(models.TextChoices):
         SUBMITTED = "submitted", "Submitted"
         AVAILABLE = "available", "Available"
@@ -87,6 +91,11 @@ class Donation(models.Model):
         TWO_HUNDRED = 200, "200"
         THREE_HUNDRED = 300, "300"
 
+    class ReceiverLimit(models.TextChoices):
+        ONE = "one", "1 receiver only"
+        TWO = "two", "Maximum 2 receivers"
+        NO_LIMIT = "no_limit", "No limit"
+
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -96,6 +105,20 @@ class Donation(models.Model):
         "organizations.Organization",
         on_delete=models.PROTECT,
         related_name="donations",
+    )
+    preferred_receiver_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="preferred_donations",
+        verbose_name="preferred receiver",
+    )
+    receiver_limit = models.CharField(
+        "maximum number of receivers",
+        max_length=20,
+        choices=ReceiverLimit.choices,
+        default=ReceiverLimit.NO_LIMIT,
     )
 
     food_category = models.CharField(
@@ -134,25 +157,15 @@ class Donation(models.Model):
     loading_dock_available = models.BooleanField(default=False)
     donor_can_help_load = models.BooleanField(default=False)
 
-    special_handling_notes = models.TextField(blank=True)
-    chain_of_custody_notes = models.TextField(blank=True)
     people_fed_estimate = models.PositiveIntegerField(choices=PeopleFedEstimate.choices, null=True, blank=True)
     fits_in_car = models.BooleanField(default=True)
     food_safety_agreement = models.BooleanField(default=False)
     other_information = models.TextField(blank=True)
 
-    assigned_storage = models.ForeignKey(
-        StorageLocation,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="donations",
-    )
-
     status = models.CharField(
         max_length=50,
         choices=Status.choices,
-        default=Status.SUBMITTED,
+        default=Status.AVAILABLE,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -169,6 +182,7 @@ class Donation(models.Model):
 
     @property
     def ticket_number(self):
+        """Human-readable identifier used in app screens and admin lists."""
         if self.pk is None:
             return "DON-unsaved"
         return f"DON-{self.pk:06d}"
@@ -191,6 +205,7 @@ class Donation(models.Model):
 
     @property
     def food_type_display(self):
+        """Render the stored category list with labels instead of raw enum values."""
         labels = dict(self.FoodCategory.choices)
         if isinstance(self.food_type, list):
             return ", ".join(labels.get(food_type, food_type) for food_type in self.food_type)
@@ -198,6 +213,7 @@ class Donation(models.Model):
 
     @property
     def category_list_display(self):
+        """Prefer current food item categories, falling back to legacy summary fields."""
         labels = dict(self.FoodCategory.choices)
         categories = []
 
@@ -215,6 +231,7 @@ class Donation(models.Model):
 
     @property
     def total_remaining_quantity(self):
+        """Total packages still available across all food items."""
         return sum(food_item.remaining_quantity for food_item in self.food_items.all())
 
     @property
@@ -237,8 +254,52 @@ class Donation(models.Model):
         )
 
     @property
+    def pickup_summary_display(self):
+        if self.pickup_deadline <= timezone.now():
+            return date_format(timezone.localtime(self.pickup_deadline), "M j, Y g:i A")
+        return f"{self.get_pickup_day_display()}, {self.get_pickup_end_time_display()}"
+
+    @property
     def is_fully_requested(self):
         return self.food_items.exists() and self.total_remaining_quantity == 0
+
+    @property
+    def receiver_limit_count(self):
+        limits = {
+            self.ReceiverLimit.ONE: 1,
+            self.ReceiverLimit.TWO: 2,
+        }
+        return limits.get(self.receiver_limit)
+
+    def active_receiver_organization_ids(self):
+        return set(
+            self.food_requests.exclude(
+                status__in=[FoodRequest.Status.DECLINED, FoodRequest.Status.CANCELLED],
+            )
+            .values_list("receiver_organization_id", flat=True)
+            .distinct(),
+        )
+
+    def can_accept_receiver(self, organization):
+        """Return whether this organization can still request from this donation."""
+        receiver_limit_count = self.receiver_limit_count
+        if receiver_limit_count is None or organization is None:
+            return True
+
+        receiver_ids = self.active_receiver_organization_ids()
+        if organization.pk in receiver_ids:
+            return True
+
+        return len(receiver_ids) < receiver_limit_count
+
+    def is_final_receiver_slot(self, organization):
+        """When the requester is the final allowed receiver, they must claim all remaining food."""
+        receiver_limit_count = self.receiver_limit_count
+        if receiver_limit_count is None or organization is None:
+            return False
+
+        other_receiver_ids = self.active_receiver_organization_ids() - {organization.pk}
+        return len(other_receiver_ids) >= receiver_limit_count - 1
 
     @property
     def allocation_status_display(self):
@@ -246,22 +307,10 @@ class Donation(models.Model):
             return "Fully requested"
         return "Available"
 
-    def assign_storage(self, storage_location):
-        self.assigned_storage = storage_location
-        self.status = self.Status.IN_TRANSIT
-
-        if storage_location.available_space is not None:
-            storage_location.available_space = max(
-                storage_location.available_space - self.quantity,
-                0,
-            )
-            storage_location.update_capacity_status()
-            storage_location.save()
-
-        self.save()
-
 
 class DonationFoodItem(models.Model):
+    """A specific food category and package count within a donation."""
+
     class Packaging(models.TextChoices):
         BAGS = "bags", "Bags"
         BOXES = "boxes", "Boxes"
@@ -285,6 +334,7 @@ class DonationFoodItem(models.Model):
 
     @property
     def allocated_quantity(self):
+        """Quantity requested from this item, excluding declined or cancelled requests."""
         allocated = self.request_allocations.exclude(
             food_request__status__in=[
                 FoodRequest.Status.DECLINED,
@@ -299,6 +349,8 @@ class DonationFoodItem(models.Model):
 
 
 class FoodRequest(models.Model):
+    """A receiver organization's request for some or all food from a donation."""
+
     class Status(models.TextChoices):
         SUBMITTED = "submitted", "Submitted"
         APPROVED = "approved", "Approved"
@@ -345,6 +397,7 @@ class FoodRequest(models.Model):
 
     @property
     def ticket_number(self):
+        """Human-readable identifier used in app screens and admin lists."""
         if self.pk is None:
             return "REQ-unsaved"
         return f"REQ-{self.pk:06d}"
@@ -371,6 +424,8 @@ class FoodRequest(models.Model):
 
 
 class FoodRequestAllocation(models.Model):
+    """The requested quantity for one donation food item within a food request."""
+
     food_request = models.ForeignKey(
         FoodRequest,
         on_delete=models.CASCADE,
