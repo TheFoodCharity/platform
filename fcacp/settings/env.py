@@ -1,4 +1,6 @@
-from pydantic import Field, model_validator
+from enum import StrEnum, auto
+
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic.networks import PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -32,7 +34,34 @@ class DatabaseUrl(PostgresDsn):
         return options
 
 
+class SmtpSecurity(StrEnum):
+    STARTTLS = auto()
+    SMTPS = auto()
+    NONE = auto()
+
+
+class SmtpSettings(BaseModel):
+    model_config = ConfigDict(validate_default=True)
+
+    host: str = Field(default="127.0.0.1")
+    port: int = Field(default=1025)
+    username: str = Field(default="fcacp")
+    password: SecretStr = Field(default="super-secure-password")
+    security: SmtpSecurity = Field(default=SmtpSecurity.NONE)
+    timeout: int | None = Field(default=None)
+
+    @property
+    def use_tls(self) -> bool:
+        return self.security == SmtpSecurity.STARTTLS
+
+    @property
+    def use_ssl(self) -> bool:
+        return self.security == SmtpSecurity.SMTPS
+
+
 class Environment(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_nested_delimiter="__")
 
     database_url: DatabaseUrl = Field(default="postgresql://fcacp:super-secure-password@127.0.0.1:5432/fcacp")
+
+    smtp: SmtpSettings = SmtpSettings()
