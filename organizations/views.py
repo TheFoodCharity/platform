@@ -22,10 +22,11 @@ from .forms import (
     ApplicationLocationForm,
     ApplicationOperationsForm,
     ApplicationSubmitForm,
+    MemberPermissionsForm,
     ProfileForm,
 )
 from .models import Membership, Organization
-from .services import organization_create, set_current_organization
+from .services import organization_create, set_current_organization, update_member_permissions
 
 
 def _safe_next(request, source):
@@ -261,7 +262,46 @@ class MembersView(SettingsPageMixin, ListView):
     def get_queryset(self):
         return Membership.objects.filter(organization=self.request.organization)
 
+
+class MemberDetailView(SettingsPageMixin, UpdateView):
+    template_name = "organizations/settings/members_detail.html"
+    model = Membership
+    context_object_name = "member"
+    form_class = MemberPermissionsForm
+
+    section_id = "members-detail"
+    tab_id = "members"
+
+    permission_required = "organizations.view_members"
+
+    def get_queryset(self):
+        return Membership.objects.filter(organization=self.request.organization).select_related("user", "role")
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, "_object_cache"):
+            self._object_cache = super().get_object(queryset)
+        return self._object_cache
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.pop("instance", None)
+        kwargs["membership"] = self.object
+        return kwargs
+
     def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        data["organization"] = self.request.organization
-        return data
+        kwargs["can_edit_permissions"] = self.request.user.has_perm("organizations.edit_member_permissions")
+        return super().get_context_data(**kwargs)
+
+    def get_success_url(self):
+        return reverse("organizations:member", kwargs={"pk": self.object.pk})
+
+    def form_valid(self, form):
+        if not self.request.user.has_perm("organizations.edit_member_permissions"):
+            raise PermissionDenied()
+        update_member_permissions(
+            membership=self.object,
+            role=form.cleaned_data["role"],
+            actions=form.actions(),
+        )
+        messages.success(self.request, "Member permissions updated")
+        return redirect(self.get_success_url())

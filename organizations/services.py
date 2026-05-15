@@ -1,11 +1,13 @@
 from contextlib import contextmanager
+from typing import Iterable
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import F
 from django.http import HttpRequest
 
 from permissions import Scope, SystemCapability, SystemRole
-from permissions.models import PermissionGroup
+from permissions.models import MembershipPermissionOverride, Permission, PermissionGroup
 
 from .models import AnonymousOrganization, Membership, Organization, OrganizationApplication, OrganizationType
 
@@ -25,6 +27,39 @@ def organization_create(*, owner: User, name: str, organization_type: Organizati
     Membership.objects.create(user=owner, organization=organization, role=manager_role)
     OrganizationApplication.objects.create(organization=organization)
     return organization
+
+
+@transaction.atomic()
+def update_member_permissions(
+    *,
+    membership: Membership,
+    role: PermissionGroup | None,
+    actions: Iterable[tuple[str, str, int | None]],
+) -> None:
+    actions = list(actions)
+
+    membership.role = role
+    membership.permission_version = F("permission_version") + 1
+    membership.save(update_fields=["role", "permission_version", "modified"])
+
+    codes = [code for _action, code, _effect in actions]
+    permissions_by_code = {p.code: p for p in Permission.objects.filter(code__in=codes)}
+
+    remove_codes = [c for a, c, _ in actions if a == "remove"]
+    if remove_codes:
+        MembershipPermissionOverride.objects.filter(membership=membership, permission__code__in=remove_codes).delete()
+
+    for action, code, effect in actions:
+        if action == "remove":
+            continue
+        permission = permissions_by_code.get(code)
+        if permission is None:
+            continue
+        MembershipPermissionOverride.objects.update_or_create(
+            membership=membership,
+            permission=permission,
+            defaults={"effect": effect},
+        )
 
 
 def set_current_organization(request: HttpRequest, organization: Organization):

@@ -27,7 +27,9 @@
                 <td>{{ member.user.email }}</td>
                 <td>{{ member.role.name }}</td>
                 <td>
-                    <a class="link link-primary link-hover">Details</a>
+                    <a class="link link-primary link-hover" href="{% url 'organizations:member' member.pk %}">
+                        Details
+                    </a>
                 </td>
             </tr>
         {% endfor %}

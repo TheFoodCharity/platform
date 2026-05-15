@@ -1,0 +1,129 @@
+{% extends "organizations/settings/base.html" %}
+{% load themed_field %}
+
+{% block card_title %}Members{% endblock %}
+{% block card_subtitle %}{{ member.user.get_full_name }} ({{ member.user.email }}){% endblock %}
+
+{% block card_header_actions %}
+    <div class="flex gap-2">
+        {% if can_edit_permissions %}
+            <button type="submit" form="member-form" class="btn btn-primary">Save</button>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block card_body %}
+    {% if can_edit_permissions %}
+        <form id="member-form" method="post" class="space-y-8">
+        {% csrf_token %}
+    {% endif %}
+
+<dl class="divide-y divide-gray-100">
+    <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+        <dt class="text-sm/6 font-medium text-gray-900">Full name</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{{ member.user.get_full_name }}</dd>
+    </div>
+    <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+        <dt class="text-sm/6 font-medium text-gray-900">Email</dt>
+        <dd class="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{{ member.user.email }}</dd>
+    </div>
+    <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+        <dt class="text-sm/6 font-medium text-gray-900">Role</dt>
+        <dd class="mt-1 sm:col-span-2 sm:mt-0">
+            {% if can_edit_permissions %}
+                {% themed_field form.role %}
+                {% for error in form.role.errors %}
+                    <span class="text-error text-sm">{{ error }}</span>
+                {% endfor %}
+            {% else %}
+                <span class="text-sm/6 text-gray-700">{{ member.role.name }}</span>
+            {% endif %}
+        </dd>
+    </div>
+</dl>
+
+{% if can_edit_permissions %}
+    <div class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-900">Permission overrides</h3>
+        <p class="mt-1 text-sm text-slate-600">
+            Override the permissions from a user's role by allowing or denying them individually.
+        </p>
+
+        {% if form.existing_rows %}
+            <table class="mt-4 table">
+                <thead>
+                <tr>
+                    <th>Permission</th>
+                    <th>Effect</th>
+                    <th><span class="sr-only">Remove</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for row in form.existing_rows %}
+                    <tr>
+                        <td>
+                            <div class="text-base">{{ row.description }}</div>
+                            <div class="font-mono text-sm text-slate-500">{{ row.code }}</div>
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                {% include "fcacp/layout/radioselect.html" with field=row.effect_field %}
+                            </div>
+                        </td>
+                        <td>
+                            <label class="label cursor-pointer gap-2 justify-start">
+                                {% themed_field row.remove_field %}
+                                <span class="label-text">Remove</span>
+                            </label>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="mt-4 text-sm text-slate-500 italic">No overrides applied.</p>
+        {% endif %}
+
+        <div class="mt-6 border-t border-base-300 pt-4">
+            <h4 class="font-medium text-slate-900 mb-3">Add override</h4>
+            <div class="grid sm:grid-cols-4 gap-4 items-end">
+                <div class="fieldset sm:col-span-2">
+                    <label class="fieldset-legend" for="{{ form.new_permission.id_for_label }}">Permission</label>
+                    <input type="text"
+                           name="{{ form.new_permission.html_name }}"
+                           id="{{ form.new_permission.id_for_label }}"
+                           list="member-available-permissions"
+                           class="input w-full aria-invalid:input-error"
+                           value="{{ form.new_permission.value|default:'' }}"
+                           placeholder="Search permissions…"
+                           autocomplete="off">
+                    <datalist id="member-available-permissions">
+                        {% for perm in form.available_permissions %}
+                            <option value="{{ perm.code }}">{{ perm.description }}</option>
+                        {% endfor %}
+                    </datalist>
+                    {% for error in form.new_permission.errors %}
+                        <span class="text-error text-sm">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="flex justify-center">
+                    <div class="fieldset">
+                        <span class="fieldset-legend">Effect</span>
+                        {% include "fcacp/layout/radioselect.html" with field=form.new_effect %}
+                        {% for error in form.new_effect.errors %}
+                            <span class="text-error text-sm">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </form>
+{% endif %}
+
+    <a href="{% url 'organizations:members' %}" class="mt-4 btn btn-outline">Back</a>
+{% endblock %}
