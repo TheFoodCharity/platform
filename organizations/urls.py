@@ -10,6 +10,7 @@ from .views import (
     ApplyView,
     DispatchView,
     MemberDetailView,
+    MemberRemoveView,
     MembersView,
     ProfileView,
     SelectView,
@@ -30,4 +31,5 @@ urlpatterns = [
     path("profile", ProfileView.as_view(), name="profile"),
     path("members", MembersView.as_view(), name="members"),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member"),
+    path("members/<int:pk>/remove", MemberRemoveView.as_view(), name="member_remove"),
 ]

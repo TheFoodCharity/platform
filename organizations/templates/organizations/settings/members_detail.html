@@ -6,6 +6,12 @@
 
 {% block card_header_actions %}
     <div class="flex gap-2">
+        {% if perms.organizations.remove_member %}
+            <button type="button" class="btn btn-error btn-soft" hx-confirm="Are you sure?"
+                    hx-post="{% url 'organizations:member_remove' member.pk %}">
+                Delete
+            </button>
+        {% endif %}
         {% if can_edit_permissions %}
             <button type="submit" form="member-form" class="btn btn-primary">Save</button>
         {% endif %}

@@ -1,7 +1,7 @@
 from urllib.parse import urlencode
 
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http.response import Http404
 from django.shortcuts import redirect
@@ -12,7 +12,6 @@ from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormView, UpdateView
 from django.views.generic.list import ListView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
-from rules.contrib.views import PermissionRequiredMixin
 
 from .decorators import OrganizationRequiredMixin
 from .forms import (
@@ -305,3 +304,12 @@ class MemberDetailView(SettingsPageMixin, UpdateView):
         )
         messages.success(self.request, "Member permissions updated")
         return redirect(self.get_success_url())
+
+
+class MemberRemoveView(OrganizationRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "organizations.remove_member"
+
+    def post(self, request, *args, pk, **kwargs):
+        Membership.objects.filter(organization=request.organization, pk=pk).delete()
+        messages.success(request, "The member was successfully removed from your organization!")
+        return HttpResponseClientRedirect(reverse("organizations:members"))
