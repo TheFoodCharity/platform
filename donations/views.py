@@ -16,6 +16,17 @@ PICKUP_END_HOURS = {
 }
 
 
+def expire_past_deadline_donations():
+    """Expire open donations once their pickup deadline has passed."""
+    Donation.objects.filter(
+        pickup_deadline__lte=timezone.now(),
+        status__in=[
+            Donation.Status.SUBMITTED,
+            Donation.Status.AVAILABLE,
+        ],
+    ).update(status=Donation.Status.EXPIRED, updated_at=timezone.now())
+
+
 def set_pickup_deadline_from_pickup_fields(donation):
     """Convert the selected pickup day/end window into a concrete deadline."""
     pickup_date = timezone.localdate()
@@ -148,6 +159,7 @@ def sync_donation_status_from_allocations(donation):
 
 @login_required
 def donation_list(request):
+    expire_past_deadline_donations()
     donations = Donation.objects.all().order_by("-created_at")
     organization = user_organization(request.user)
 
@@ -184,7 +196,7 @@ def donation_create(request):
         formset = DonationFoodItemFormSet(request.POST)
         if form.is_valid() and formset.is_valid():
             donation = form.save(commit=False)
-            donation.status = Donation.Status.SUBMITTED
+            donation.status = Donation.Status.AVAILABLE
             donation.food_category = Donation.FoodCategory.OTHER
             donation.food_type = []
             donation.quantity = 1
@@ -246,6 +258,7 @@ def donation_edit(request, pk):
 
 @login_required
 def donation_detail(request, pk):
+    expire_past_deadline_donations()
     donation = get_object_or_404(
         Donation.objects.select_related(
             "submitted_by",
@@ -269,6 +282,7 @@ def donation_detail(request, pk):
 
 
 def available_donation_list(request):
+    expire_past_deadline_donations()
     donations = (
         Donation.objects.exclude(
             status__in=[
@@ -321,6 +335,7 @@ def available_donation_list(request):
 
 
 def available_donation_detail(request, pk):
+    expire_past_deadline_donations()
     donation = get_object_or_404(
         Donation.objects.select_related(
             "submitted_by",
@@ -337,6 +352,7 @@ def available_donation_detail(request, pk):
 
 @login_required
 def food_request_create(request, pk):
+    expire_past_deadline_donations()
     donation = get_object_or_404(Donation, pk=pk)
     organization = user_organization(request.user)
     if organization is None:
@@ -344,6 +360,9 @@ def food_request_create(request, pk):
         return redirect("organizations:apply")
     if not donation.can_accept_receiver(organization):
         messages.error(request, "This donation has reached its maximum number of receivers.")
+        return redirect("donations:available_detail", pk=donation.pk)
+    if donation.status == Donation.Status.EXPIRED:
+        messages.error(request, "This donation has expired and can no longer be requested.")
         return redirect("donations:available_detail", pk=donation.pk)
 
     force_remaining = donation.is_final_receiver_slot(organization)

@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
+from django.utils import timezone
+from django.utils.formats import date_format
 
 from storage.models import StorageLocation
 
@@ -163,7 +165,7 @@ class Donation(models.Model):
     status = models.CharField(
         max_length=50,
         choices=Status.choices,
-        default=Status.SUBMITTED,
+        default=Status.AVAILABLE,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -250,6 +252,12 @@ class Donation(models.Model):
             f"{quantity} {packaging_labels.get(packaging, packaging)}"
             for packaging, quantity in totals_by_packaging.items()
         )
+
+    @property
+    def pickup_summary_display(self):
+        if self.pickup_deadline <= timezone.now():
+            return date_format(timezone.localtime(self.pickup_deadline), "M j, Y g:i A")
+        return f"{self.get_pickup_day_display()}, {self.get_pickup_end_time_display()}"
 
     @property
     def is_fully_requested(self):

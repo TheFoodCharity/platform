@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from organizations.models import Membership, Organization
 from storage.models import StorageLocation
@@ -124,6 +125,7 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(donation.food_category, Donation.FoodCategory.PRODUCE)
         self.assertEqual(donation.quantity, 12)
         self.assertEqual(donation.receiver_limit, Donation.ReceiverLimit.ONE)
+        self.assertEqual(donation.status, Donation.Status.AVAILABLE)
         self.assertIsNotNone(donation.pickup_deadline)
 
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
@@ -262,7 +264,60 @@ class DonationIntakeViewTests(TestCase):
 
         response = self.client.get(reverse("donations:list"))
 
-        self.assertContains(response, "Quantity:</span> 9 Boxes", html=False)
+        self.assertContains(response, "Total:</span> 9 Boxes", html=False)
+        self.assertContains(response, "Today, Before 5pm")
+
+    def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
+        user, organization = self.create_user_with_org()
+        deadline = timezone.now() - timezone.timedelta(minutes=1)
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=deadline,
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.AVAILABLE,
+        )
+        DonationFoodItem.objects.create(
+            donation=donation,
+            food_category=Donation.FoodCategory.PRODUCE,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=12,
+            description="Mixed produce",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:list"))
+
+        expected_deadline = date_format(timezone.localtime(deadline), "M j, Y g:i A")
+        self.assertContains(response, expected_deadline)
+        self.assertNotContains(response, "Today, Before 5pm")
+
+    def test_past_deadline_donation_is_marked_expired(self):
+        user, organization = self.create_user_with_org()
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=timezone.now() - timezone.timedelta(minutes=1),
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.AVAILABLE,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:detail", args=[donation.pk]))
+
+        self.assertContains(response, "Expired")
+        donation.refresh_from_db()
+        self.assertEqual(donation.status, Donation.Status.EXPIRED)
 
     def test_donation_detail_shows_allocation_and_request_history_sections(self):
         supplier, supplier_organization = self.create_user_with_org()

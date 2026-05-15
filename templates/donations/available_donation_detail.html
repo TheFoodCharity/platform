@@ -10,7 +10,9 @@
         <h1 class="mt-2 text-4xl font-bold text-slate-950">Donation Details</h1>
         <p class="mt-2 text-sm font-semibold uppercase tracking-wide text-primary">{{ donation.ticket_number }}</p>
       </div>
-      {% if donation.is_fully_requested %}
+      {% if donation.status == donation.Status.EXPIRED %}
+        <span class="btn btn-disabled">Expired</span>
+      {% elif donation.is_fully_requested %}
         <span class="btn btn-disabled">Fully requested</span>
       {% else %}
         <a class="btn btn-primary" href="{% url 'donations:request_create' donation.id %}">
