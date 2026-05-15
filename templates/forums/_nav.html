@@ -1,0 +1,10 @@
+<nav class="mb-6 border-b border-base-300" aria-label="Forum module sections">
+  <div class="tabs tabs-border">
+    <a class="tab {% if forum_nav_active == 'forums' %}tab-active{% endif %}" href="{% url 'forums:list' %}">
+      Forum Spaces
+    </a>
+    <a class="tab {% if forum_nav_active == 'applications' %}tab-active{% endif %}" href="{% url 'forums:request_list' %}">
+      Applications
+    </a>
+  </div>
+</nav>

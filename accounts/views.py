@@ -1,18 +1,29 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.contrib.auth.views import LogoutView as BaseLogoutView
+from django.contrib.auth.views import PasswordResetConfirmView as BasePasswordResetConfirmView
+from django.contrib.auth.views import PasswordResetView as BasePasswordResetView
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, UpdateView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
-from .forms import LoginForm, RegistrationForm, VerificationForm
+from .forms import (
+    LoginForm,
+    PasswordResetCompleteForm,
+    PasswordResetForm,
+    ProfileForm,
+    RegistrationForm,
+    UpdatePasswordForm,
+    VerificationForm,
+)
 from .models import User, VerificationCode
 
 PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
@@ -126,7 +137,7 @@ class VerifyView(EmailUnverifiedMixin, FormView):
 
         user.mark_email_verified()
         messages.success(self.request, "Your email has been verified.")
-        login(self.request, user)
+        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
         return super().form_valid(form)
 
 
@@ -140,3 +151,65 @@ class ResendVerificationView(EmailUnverifiedMixin, View):
         if request.htmx:
             return HttpResponseClientRefresh()
         return HttpResponseRedirect(reverse("accounts:verify"))
+
+
+class PasswordResetView(BasePasswordResetView):
+    template_name = "accounts/password_reset.html"
+    form_class = PasswordResetForm
+    success_url = reverse_lazy("accounts:password_reset")
+
+    subject_template_name = "email/reset_subject.txt"
+    html_email_template_name = "email/reset.html"
+    email_template_name = "email/reset.txt"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request, message="If an account exists with that email address, you'll receive a reset link shortly."
+        )
+        return response
+
+
+class PasswordResetConfirmView(BasePasswordResetConfirmView):
+    template_name = "accounts/password_reset_complete.html"
+    form_class = PasswordResetCompleteForm
+    success_url = reverse_lazy("accounts:login")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Your password was successfully reset! You can now login.")
+        return response
+
+
+class ProfileView(LoginRequiredMixin, UpdateView):
+    template_name = "accounts/profile.html"
+    model = User
+    form_class = ProfileForm
+    success_url = reverse_lazy("accounts:profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Account updated successfully!")
+        return response
+
+
+class UpdatePasswordView(LoginRequiredMixin, UpdateView):
+    template_name = "accounts/update_password.html"
+    form_class = UpdatePasswordForm
+    success_url = reverse_lazy("accounts:profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = kwargs.pop("instance", None)
+        return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Password updated successfully!")
+        return response

@@ -131,7 +131,7 @@ class DonationIntakeViewTests(TestCase):
 
         thanks_response = self.client.get(reverse("donations:donation_thanks", args=[donation.pk]))
         self.assertContains(thanks_response, "Donation Submitted")
-        self.assertContains(thanks_response, "Thank you. Your donation is now available")
+        self.assertContains(thanks_response, "Thank you for helping fight hunger")
         self.assertContains(thanks_response, donation.ticket_number)
 
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
@@ -401,6 +401,7 @@ class FoodRequestTests(TestCase):
             phone="6045550199",
         )
         Membership.objects.create(user=self.supplier, organization=self.supplier_organization)
+
         self.donation = Donation.objects.create(
             submitted_by=self.supplier,
             supplier_organization=self.supplier_organization,
@@ -433,7 +434,22 @@ class FoodRequestTests(TestCase):
             is_active=True,
         )
 
+        self.receiver = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        self.receiver_organization = Organization.objects.create(
+            name="Receiver Org",
+            owner=self.receiver,
+            is_active=True,
+        )
+        Membership.objects.create(user=self.receiver, organization=self.receiver_organization)
+
     def test_receiver_can_view_available_donation_list(self):
+        self.client.force_login(self.receiver)
         response = self.client.get(reverse("donations:available_list"))
 
         self.assertEqual(response.status_code, 200)
@@ -445,6 +461,8 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, "Request this food")
 
     def test_available_donation_list_can_filter_by_category(self):
+        self.client.force_login(self.receiver)
+
         other_donation = Donation.objects.create(
             submitted_by=self.supplier,
             supplier_organization=self.supplier_organization,
@@ -475,16 +493,7 @@ class FoodRequestTests(TestCase):
         self.assertNotContains(response, "Mixed produce")
 
     def test_available_donation_list_prioritizes_preferred_receiver(self):
-        receiver = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        receiver_organization = Organization.objects.create(name="Receiver Org", owner=receiver, is_active=True)
-        Membership.objects.create(user=receiver, organization=receiver_organization)
-        self.donation.preferred_receiver_organization = receiver_organization
+        self.donation.preferred_receiver_organization = self.receiver_organization
         self.donation.save(update_fields=["preferred_receiver_organization"])
         newer_donation = Donation.objects.create(
             submitted_by=self.supplier,
@@ -505,7 +514,7 @@ class FoodRequestTests(TestCase):
             quantity=4,
             description="Milk",
         )
-        self.client.force_login(receiver)
+        self.client.force_login(self.receiver)
 
         response = self.client.get(reverse("donations:available_list"))
 
@@ -514,19 +523,12 @@ class FoodRequestTests(TestCase):
         self.assertLess(content.index(self.donation.ticket_number), content.index(newer_donation.ticket_number))
 
     def test_available_donation_list_can_filter_by_allocation_status(self):
-        user = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
+        self.client.force_login(self.receiver)
+
         food_request = FoodRequest.objects.create(
             donation=self.donation,
-            requested_by=user,
-            receiver_organization=organization,
+            requested_by=self.receiver,
+            receiver_organization=self.receiver_organization,
             status=FoodRequest.Status.SUBMITTED,
         )
         FoodRequestAllocation.objects.create(
@@ -549,6 +551,7 @@ class FoodRequestTests(TestCase):
         self.assertContains(fully_requested_response, self.donation.ticket_number)
 
     def test_receiver_can_view_available_donation_detail(self):
+        self.client.force_login(self.receiver)
         response = self.client.get(reverse("donations:available_detail", args=[self.donation.pk]))
 
         self.assertEqual(response.status_code, 200)
@@ -562,16 +565,7 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, "Request this food")
 
     def test_receiver_can_submit_food_request(self):
-        user = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
-        self.client.force_login(user)
+        self.client.force_login(self.receiver)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -597,8 +591,8 @@ class FoodRequestTests(TestCase):
         self.assertTrue(food_request.storage_required)
         self.assertEqual(food_request.preferred_storage, self.storage)
         self.assertEqual(food_request.status, FoodRequest.Status.SUBMITTED)
-        self.assertEqual(food_request.requested_by, user)
-        self.assertEqual(food_request.receiver_organization, organization)
+        self.assertEqual(food_request.requested_by, self.receiver)
+        self.assertEqual(food_request.receiver_organization, self.receiver_organization)
         self.assertEqual(food_request.receiver_display_name, "Rae Receiver")
         self.assertEqual(food_request.receiver_organization_display, "Receiver Org")
         self.assertEqual(food_request.allocations.count(), 1)
@@ -612,16 +606,7 @@ class FoodRequestTests(TestCase):
     def test_one_receiver_limit_forces_request_to_all_remaining_food(self):
         self.donation.receiver_limit = Donation.ReceiverLimit.ONE
         self.donation.save(update_fields=["receiver_limit"])
-        user = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
-        self.client.force_login(user)
+        self.client.force_login(self.receiver)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -695,16 +680,7 @@ class FoodRequestTests(TestCase):
         self.assertEqual(self.donation.status, Donation.Status.COMPLETED)
 
     def test_requesting_all_remaining_food_marks_donation_completed(self):
-        user = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
-        self.client.force_login(user)
+        self.client.force_login(self.receiver)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -731,16 +707,8 @@ class FoodRequestTests(TestCase):
         self.donation.requires_pallet_jack = True
         self.donation.loading_dock_available = True
         self.donation.save()
-        receiver = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        receiver_organization = Organization.objects.create(name="Receiver Org", owner=receiver, is_active=True)
-        Membership.objects.create(user=receiver, organization=receiver_organization)
-        self.client.force_login(receiver)
+
+        self.client.force_login(self.receiver)
 
         response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 
@@ -794,19 +762,12 @@ class FoodRequestTests(TestCase):
         self.assertNotIn(unavailable_storage, form.fields["preferred_storage"].queryset)
 
     def test_request_allocation_tracks_remaining_quantity_per_food_item(self):
-        user = User.objects.create_user(
-            email="receiver-user@example.com",
-            password="password",
-            first_name="Rae",
-            last_name="Receiver",
-            email_verified=True,
-        )
-        organization = Organization.objects.create(name="Receiver Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
+        self.client.force_login(self.receiver)
+
         food_request = FoodRequest.objects.create(
             donation=self.donation,
-            requested_by=user,
-            receiver_organization=organization,
+            requested_by=self.receiver,
+            receiver_organization=self.receiver_organization,
             status=FoodRequest.Status.SUBMITTED,
         )
         FoodRequestAllocation.objects.create(

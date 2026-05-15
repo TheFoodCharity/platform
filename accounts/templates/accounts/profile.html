@@ -1,0 +1,30 @@
+{% extends "base_standalone.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_title %}Your Profile{% endblock %}
+{% block page_subtitle %}Manage your account details{% endblock %}
+
+{% block page_content %}
+    {% include "components/_messages.html" %}
+
+    <form method="post">
+        {% csrf_token %}
+        {% crispy form %}
+
+        <div class="fieldset">
+            <span class="fieldset-legend">Password</span>
+            <a href="{% url 'accounts:update_password' %}" class="btn btn-sm btn-outline max-w-64">Update password</a>
+        </div>
+
+        <div class="flex justify-center gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </form>
+{% endblock %}
+
+{% block page_actions %}
+    <a href="/" class="btn btn-outline btn-sm">
+        <span class="material-symbols-rounded">arrow_back</span>
+        Back
+    </a>
+{% endblock %}

@@ -335,6 +335,7 @@ def available_donation_list(request):
     )
 
 
+@login_required
 def available_donation_detail(request, pk):
     expire_past_deadline_donations()
     donation = get_object_or_404(
@@ -396,6 +397,7 @@ def food_request_create(request, pk):
     )
 
 
+@login_required
 def food_request_thanks(request, pk):
     food_request = get_object_or_404(FoodRequest, pk=pk)
     return render(request, "donations/food_request_thanks.html", {"food_request": food_request})

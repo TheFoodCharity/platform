@@ -1,5 +1,12 @@
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
+from django.contrib.auth.forms import (
+    AuthenticationForm,
+    BaseUserCreationForm,
+    PasswordChangeForm,
+    SetPasswordForm,
+)
+from django.contrib.auth.forms import PasswordResetForm as BasePasswordResetForm
+from django.forms.models import ModelForm
 
 from theme.forms import ThemedFormMixin
 
@@ -36,3 +43,21 @@ class VerificationForm(ThemedFormMixin, forms.Form):
         if not all(c in VERIFICATION_CODE_ALPHABET for c in code):
             raise forms.ValidationError("Enter a valid verification code.")
         return code
+
+
+class PasswordResetForm(ThemedFormMixin, BasePasswordResetForm):
+    pass
+
+
+class PasswordResetCompleteForm(ThemedFormMixin, SetPasswordForm):
+    pass
+
+
+class ProfileForm(ThemedFormMixin, ModelForm):
+    class Meta:
+        model = User
+        fields = ["email", "first_name", "last_name"]
+
+
+class UpdatePasswordForm(ThemedFormMixin, PasswordChangeForm):
+    pass
