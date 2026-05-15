@@ -272,7 +272,7 @@ class FoodRequestAllocationForm(ThemedFormMixin, forms.Form):
     layout = Layout("food_item_id", "quantity")
 
     food_item_id = forms.IntegerField(widget=forms.HiddenInput)
-    quantity = forms.IntegerField(required=False, min_value=0, label="Quantity requested")
+    quantity = forms.IntegerField(required=False, min_value=0, label="")
 
     def __init__(self, *args, **kwargs):
         self.food_item = kwargs.pop("food_item", None)
@@ -316,7 +316,6 @@ class FoodRequestAllocationFormSet(BaseFoodRequestAllocationFormSet):
             form.food_item = food_item
             if self.force_remaining:
                 form.fields["quantity"].disabled = True
-                form.fields["quantity"].help_text = "Please collect remaining quantity"
 
     def clean(self):
         super().clean()

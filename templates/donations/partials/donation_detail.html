@@ -9,7 +9,7 @@
     {% endif %}
   </div>
 
-  <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+  <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
     {% if show_donor %}
       <div class="rounded-xl border border-base-300 bg-base-100 p-4">
         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Donor</p>
@@ -44,11 +44,14 @@
       <p class="mt-1 text-sm text-slate-600">Fits in car: {{ donation.fits_in_car|yesno:"Yes,No" }}</p>
       {% if donation.requires_van %}<p class="text-sm text-slate-600">Requires van</p>{% endif %}
       {% if donation.requires_cube_van %}<p class="text-sm text-slate-600">Requires cube van</p>{% endif %}
-      {% if donation.requires_refrigerated_vehicle %}<p class="text-sm text-slate-600">Requires refrigerated vehicle</p>{% endif %}
-      {% if donation.requires_pallet_jack %}<p class="text-sm text-slate-600">Requires pallet jack</p>{% endif %}
-      {% if donation.requires_forklift %}<p class="text-sm text-slate-600">Requires forklift</p>{% endif %}
+      {% if donation.requires_refrigerated_vehicle %}<p class="text-sm text-slate-600">Requires Refrigerated vehicle</p>{% endif %}
+      {% if donation.requires_pallet_jack %}<p class="text-sm text-slate-600">Requires Pallet jack</p>{% endif %}
+      {% if donation.requires_forklift %}<p class="text-sm text-slate-600">Requires Forklift</p>{% endif %}
       {% if donation.loading_dock_available %}<p class="text-sm text-slate-600">Loading dock available</p>{% endif %}
       {% if donation.donor_can_help_load %}<p class="text-sm text-slate-600">Donor can help load</p>{% endif %}
+      {% if not donation.requires_van and not donation.requires_cube_van and not donation.requires_refrigerated_vehicle and not donation.requires_pallet_jack and not donation.requires_forklift and not donation.loading_dock_available and not donation.donor_can_help_load %}
+        <p class="mt-1 text-sm text-slate-600">No extra logistics requirements</p>
+      {% endif %}
     </div>
 
     <div class="rounded-xl border border-base-300 bg-base-100 p-4">
@@ -58,32 +61,22 @@
         Preferred: {{ donation.preferred_receiver_organization.name|default:"No preference" }}
       </p>
     </div>
+
+    <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Other information</p>
+      <p class="mt-1 text-sm text-slate-600">{{ donation.other_information|default:"Not provided" }}</p>
+    </div>
   </div>
 
   <div class="mt-4 flex flex-wrap gap-2">
     {% if donation.food_safety_agreement %}<span class="badge badge-success badge-outline">Food safety confirmed</span>{% endif %}
-    {% if donation.requires_van %}<span class="badge badge-primary badge-outline">Requires van</span>{% endif %}
-    {% if donation.requires_cube_van %}<span class="badge badge-primary badge-outline">Requires cube van</span>{% endif %}
-    {% if donation.requires_refrigerated_vehicle %}<span class="badge badge-primary badge-outline">Requires Refrigerated vehicle</span>{% endif %}
-    {% if donation.requires_pallet_jack %}<span class="badge badge-primary badge-outline">Requires Pallet jack</span>{% endif %}
-    {% if donation.requires_forklift %}<span class="badge badge-primary badge-outline">Requires Forklift</span>{% endif %}
-    {% if donation.loading_dock_available %}<span class="badge badge-primary badge-outline">Loading dock available</span>{% endif %}
-    {% if donation.donor_can_help_load %}<span class="badge badge-primary badge-outline">Donor can help load</span>{% endif %}
-    {% if not donation.requires_van and not donation.requires_cube_van and not donation.requires_refrigerated_vehicle and not donation.requires_pallet_jack and not donation.requires_forklift and not donation.loading_dock_available and not donation.donor_can_help_load %}
-      <span class="badge badge-ghost">No extra logistics requirements</span>
-    {% endif %}
   </div>
 
-  {% if donation.pickup_notes or donation.other_information %}
+  {% if donation.pickup_notes %}
     <div class="mt-4 grid gap-3 md:grid-cols-2">
       {% if donation.pickup_notes %}
         <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
           <span class="font-semibold text-slate-950">Pickup notes:</span> {{ donation.pickup_notes }}
-        </p>
-      {% endif %}
-      {% if donation.other_information %}
-        <p class="rounded-lg border border-base-300 bg-base-100 p-3 text-sm text-slate-700">
-          <span class="font-semibold text-slate-950">Other information:</span> {{ donation.other_information }}
         </p>
       {% endif %}
     </div>
