@@ -283,6 +283,7 @@ def available_donation_list(request):
         .select_related(
             "supplier_organization",
             "submitted_by",
+            "preferred_receiver_organization",
         )
         .order_by("-created_at")
     )
@@ -298,6 +299,14 @@ def available_donation_list(request):
         donation_list = [donation for donation in donation_list if not donation.is_fully_requested]
     elif availability == "fully_requested":
         donation_list = [donation for donation in donation_list if donation.is_fully_requested]
+
+    receiver_organization = user_organization(request.user)
+    for donation in donation_list:
+        donation.is_preferred_receiver_match = (
+            receiver_organization is not None
+            and donation.preferred_receiver_organization_id == receiver_organization.id
+        )
+    donation_list.sort(key=lambda donation: not donation.is_preferred_receiver_match)
 
     return render(
         request,

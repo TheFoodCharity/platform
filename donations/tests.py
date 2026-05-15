@@ -413,6 +413,45 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, other_donation.ticket_number)
         self.assertNotContains(response, "Mixed produce")
 
+    def test_available_donation_list_prioritizes_preferred_receiver(self):
+        receiver = User.objects.create_user(
+            email="receiver-user@example.com",
+            password="password",
+            first_name="Rae",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        receiver_organization = Organization.objects.create(name="Receiver Org", owner=receiver, is_active=True)
+        Membership.objects.create(user=receiver, organization=receiver_organization)
+        self.donation.preferred_receiver_organization = receiver_organization
+        self.donation.save(update_fields=["preferred_receiver_organization"])
+        newer_donation = Donation.objects.create(
+            submitted_by=self.supplier,
+            supplier_organization=self.supplier_organization,
+            food_category=Donation.FoodCategory.DAIRY,
+            food_type=[Donation.FoodCategory.DAIRY],
+            quantity=4,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="456 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.REFRIGERATED,
+            status=Donation.Status.SUBMITTED,
+        )
+        DonationFoodItem.objects.create(
+            donation=newer_donation,
+            food_category=Donation.FoodCategory.DAIRY,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=4,
+            description="Milk",
+        )
+        self.client.force_login(receiver)
+
+        response = self.client.get(reverse("donations:available_list"))
+
+        content = response.content.decode()
+        self.assertContains(response, "Preferred for your organization")
+        self.assertLess(content.index(self.donation.ticket_number), content.index(newer_donation.ticket_number))
+
     def test_available_donation_list_can_filter_by_allocation_status(self):
         user = User.objects.create_user(
             email="receiver-user@example.com",
