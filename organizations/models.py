@@ -256,7 +256,7 @@ class Membership(TimestampedModel):
 
 class Invitation(TimestampedModel):
     guid = models.UUIDField(editable=False)
-    invitee_identifier = models.CharField(
+    email = models.CharField(
         max_length=1000,
         help_text=_("The contact identifier for the invitee, email, phone number, social media handle, etc."),
     )
@@ -271,7 +271,7 @@ class Invitation(TimestampedModel):
     organization = models.ForeignKey(Organization, related_name="invitations", on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.organization}: {self.invitee_identifier}"
+        return f"{self.organization}: {self.email}"
 
     def save(self, **kwargs):
         if not self.guid:
