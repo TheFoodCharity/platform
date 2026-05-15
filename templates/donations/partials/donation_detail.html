@@ -9,7 +9,7 @@
     {% endif %}
   </div>
 
-  <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+  <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
     {% if show_donor %}
       <div class="rounded-xl border border-base-300 bg-base-100 p-4">
         <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Donor</p>
@@ -39,10 +39,24 @@
     </div>
 
     <div class="rounded-xl border border-base-300 bg-base-100 p-4">
-      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Storage</p>
-      <p class="mt-1 font-semibold text-slate-950">{{ donation.get_storage_requirement_display }}</p>
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Logistics</p>
+      <p class="mt-1 font-semibold text-slate-950">Storage: {{ donation.get_storage_requirement_display }}</p>
       <p class="mt-1 text-sm text-slate-600">Fits in car: {{ donation.fits_in_car|yesno:"Yes,No" }}</p>
-      <p class="text-sm text-slate-600">Assigned: {{ donation.assigned_storage.name|default:"Not assigned" }}</p>
+      {% if donation.requires_van %}<p class="text-sm text-slate-600">Requires van</p>{% endif %}
+      {% if donation.requires_cube_van %}<p class="text-sm text-slate-600">Requires cube van</p>{% endif %}
+      {% if donation.requires_refrigerated_vehicle %}<p class="text-sm text-slate-600">Requires refrigerated vehicle</p>{% endif %}
+      {% if donation.requires_pallet_jack %}<p class="text-sm text-slate-600">Requires pallet jack</p>{% endif %}
+      {% if donation.requires_forklift %}<p class="text-sm text-slate-600">Requires forklift</p>{% endif %}
+      {% if donation.loading_dock_available %}<p class="text-sm text-slate-600">Loading dock available</p>{% endif %}
+      {% if donation.donor_can_help_load %}<p class="text-sm text-slate-600">Donor can help load</p>{% endif %}
+    </div>
+
+    <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+      <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Receiver preference</p>
+      <p class="mt-1 font-semibold text-slate-950">{{ donation.get_receiver_limit_display }}</p>
+      <p class="mt-1 text-sm text-slate-600">
+        Preferred: {{ donation.preferred_receiver_organization.name|default:"No preference" }}
+      </p>
     </div>
   </div>
 

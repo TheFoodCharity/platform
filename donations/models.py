@@ -160,14 +160,6 @@ class Donation(models.Model):
     food_safety_agreement = models.BooleanField(default=False)
     other_information = models.TextField(blank=True)
 
-    assigned_storage = models.ForeignKey(
-        StorageLocation,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="donations",
-    )
-
     status = models.CharField(
         max_length=50,
         choices=Status.choices,
@@ -306,21 +298,6 @@ class Donation(models.Model):
         if self.is_fully_requested:
             return "Fully requested"
         return "Available"
-
-    def assign_storage(self, storage_location):
-        """Assign storage and reserve the donation's summarized package count from capacity."""
-        self.assigned_storage = storage_location
-        self.status = self.Status.IN_TRANSIT
-
-        if storage_location.available_space is not None:
-            storage_location.available_space = max(
-                storage_location.available_space - self.quantity,
-                0,
-            )
-            storage_location.update_capacity_status()
-            storage_location.save()
-
-        self.save()
 
 
 class DonationFoodItem(models.Model):

@@ -5,8 +5,6 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from storage.models import StorageLocation
-
 from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestAllocationFormSet, FoodRequestForm
 from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
@@ -34,7 +32,7 @@ def sync_donation_summary_from_items(donation):
     if first_item is None:
         return
 
-    # Keep legacy summary columns aligned for admin lists, storage matching, and older templates.
+    # Keep legacy summary columns aligned for admin lists and older templates.
     donation.food_category = first_item.food_category
     donation.food_type = list(donation.food_items.values_list("food_category", flat=True).distinct())
     donation.quantity = sum(donation.food_items.values_list("quantity", flat=True))
@@ -252,7 +250,6 @@ def donation_detail(request, pk):
         Donation.objects.select_related(
             "submitted_by",
             "supplier_organization",
-            "assigned_storage",
         ).prefetch_related(
             "food_items",
             "food_requests__requested_by",
@@ -262,38 +259,13 @@ def donation_detail(request, pk):
         pk=pk,
     )
 
-    matching_storage = StorageLocation.objects.filter(
-        is_active=True,
-        approval_status=StorageLocation.ApprovalStatus.APPROVED,
-        capacity_status=StorageLocation.CapacityStatus.AVAILABLE,
-    )
-
-    if donation.storage_requirement != Donation.StorageRequirement.NONE:
-        matching_storage = matching_storage.filter(
-            storage_type=donation.storage_requirement,
-        )
-
-    matching_storage = matching_storage.filter(
-        available_space__gte=donation.quantity,
-    )
-
     return render(
         request,
         "donations/donation_detail.html",
         {
             "donation": donation,
-            "matching_storage": matching_storage,
         },
     )
-
-
-def donation_assign_storage(request, pk, storage_pk):
-    donation = get_object_or_404(Donation, pk=pk)
-    storage_location = get_object_or_404(StorageLocation, pk=storage_pk)
-
-    donation.assign_storage(storage_location)
-
-    return redirect("donations:detail", pk=donation.pk)
 
 
 def available_donation_list(request):
@@ -344,7 +316,6 @@ def available_donation_detail(request, pk):
         Donation.objects.select_related(
             "submitted_by",
             "supplier_organization",
-            "assigned_storage",
         ).prefetch_related(
             "food_items",
             "food_items__request_allocations__food_request",

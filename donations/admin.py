@@ -59,7 +59,6 @@ class DonationAdmin(admin.ModelAdmin):
         "quantity",
         "unit",
         "storage_requirement",
-        "assigned_storage",
         "status",
         "pickup_deadline",
         "created_at",

@@ -320,6 +320,8 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "4 Boxes")
         self.assertContains(response, "8 Boxes")
         self.assertContains(response, "Receiver Org")
+        self.assertContains(response, "Receiver preference")
+        self.assertContains(response, "No limit")
 
 
 class FoodRequestTests(TestCase):
@@ -642,16 +644,16 @@ class FoodRequestTests(TestCase):
 
         response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 
-        self.assertContains(response, "Donor and pickup information")
+        self.assertContains(response, "Donation information")
         self.assertContains(response, "Description")
         self.assertContains(response, self.donation.ticket_number)
         self.assertContains(response, "Mixed produce")
         self.assertContains(response, "Supplier Org")
-        self.assertContains(response, "Public phone")
         self.assertContains(response, "6045550199")
         self.assertContains(response, "123 Main Street")
         self.assertContains(response, "Today")
-        self.assertContains(response, "Donor logistics")
+        self.assertContains(response, "Pickup")
+        self.assertContains(response, "Logistics")
         self.assertContains(response, "Dry Storage")
         self.assertContains(response, "Requires van")
         self.assertContains(response, "Pallet jack")
