@@ -191,6 +191,8 @@ LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "organizations:dispatch"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 1 day
+
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

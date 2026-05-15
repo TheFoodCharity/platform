@@ -4,6 +4,8 @@ from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.contrib.auth.views import LogoutView as BaseLogoutView
+from django.contrib.auth.views import PasswordResetConfirmView as BasePasswordResetConfirmView
+from django.contrib.auth.views import PasswordResetView as BasePasswordResetView
 from django.http.request import HttpRequest
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect
@@ -13,7 +15,15 @@ from django.views.generic.edit import FormView, UpdateView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
-from .forms import LoginForm, ProfileForm, RegistrationForm, UpdatePasswordForm, VerificationForm
+from .forms import (
+    LoginForm,
+    PasswordResetCompleteForm,
+    PasswordResetForm,
+    ProfileForm,
+    RegistrationForm,
+    UpdatePasswordForm,
+    VerificationForm,
+)
 from .models import User, VerificationCode
 
 PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
@@ -141,6 +151,34 @@ class ResendVerificationView(EmailUnverifiedMixin, View):
         if request.htmx:
             return HttpResponseClientRefresh()
         return HttpResponseRedirect(reverse("accounts:verify"))
+
+
+class PasswordResetView(BasePasswordResetView):
+    template_name = "accounts/password_reset.html"
+    form_class = PasswordResetForm
+    success_url = reverse_lazy("accounts:password_reset")
+
+    subject_template_name = "email/reset_subject.txt"
+    html_email_template_name = "email/reset.html"
+    email_template_name = "email/reset.txt"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(
+            self.request, message="If an account exists with that email address, you'll receive a reset link shortly."
+        )
+        return response
+
+
+class PasswordResetConfirmView(BasePasswordResetConfirmView):
+    template_name = "accounts/password_reset_complete.html"
+    form_class = PasswordResetCompleteForm
+    success_url = reverse_lazy("accounts:login")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Your password was successfully reset! You can now login.")
+        return response
 
 
 class ProfileView(LoginRequiredMixin, UpdateView):
