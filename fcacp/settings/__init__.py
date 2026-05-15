@@ -195,8 +195,16 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 1 day
 
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
+
+EMAIL_HOST = environment.smtp.host
+EMAIL_PORT = environment.smtp.port
+EMAIL_HOST_USER = environment.smtp.username
+EMAIL_HOST_PASSWORD = environment.smtp.password.get_secret_value()
+EMAIL_USE_TLS = environment.smtp.use_tls
+EMAIL_USE_SSL = environment.smtp.use_ssl
+EMAIL_TIMEOUT = environment.smtp.timeout
 
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
