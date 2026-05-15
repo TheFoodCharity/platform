@@ -107,23 +107,6 @@
             {% endif %}
           </div>
         {% endif %}
-
-        {% if donation.special_handling_notes or donation.chain_of_custody_notes %}
-          <dl class="mt-5 grid gap-4 md:grid-cols-2">
-            {% if donation.special_handling_notes %}
-              <div>
-                <dt class="text-sm font-semibold text-slate-500">Special handling</dt>
-                <dd class="mt-1 text-slate-950">{{ donation.special_handling_notes }}</dd>
-              </div>
-            {% endif %}
-            {% if donation.chain_of_custody_notes %}
-              <div>
-                <dt class="text-sm font-semibold text-slate-500">Chain of custody</dt>
-                <dd class="mt-1 text-slate-950">{{ donation.chain_of_custody_notes }}</dd>
-              </div>
-            {% endif %}
-          </dl>
-        {% endif %}
       </section>
 
       <section class="mt-6 rounded-xl border border-base-300 bg-base-100 p-5">
