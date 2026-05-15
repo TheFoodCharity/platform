@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.contrib.auth.views import LogoutView as BaseLogoutView
 from django.http.request import HttpRequest
@@ -8,11 +9,11 @@ from django.http.response import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic.edit import FormView
+from django.views.generic.edit import FormView, UpdateView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
-from .forms import LoginForm, RegistrationForm, VerificationForm
+from .forms import LoginForm, ProfileForm, RegistrationForm, VerificationForm
 from .models import User, VerificationCode
 
 PENDING_VERIFY_USER_KEY = "accounts:pending_verify_user_id"
@@ -140,3 +141,18 @@ class ResendVerificationView(EmailUnverifiedMixin, View):
         if request.htmx:
             return HttpResponseClientRefresh()
         return HttpResponseRedirect(reverse("accounts:verify"))
+
+
+class ProfileView(LoginRequiredMixin, UpdateView):
+    template_name = "accounts/profile.html"
+    model = User
+    form_class = ProfileForm
+    success_url = reverse_lazy("accounts:profile")
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Account updated successfully!")
+        return response

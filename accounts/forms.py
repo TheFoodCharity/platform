@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, BaseUserCreationForm
+from django.forms.models import ModelForm
 
 from theme.forms import ThemedFormMixin
 
@@ -36,3 +37,9 @@ class VerificationForm(ThemedFormMixin, forms.Form):
         if not all(c in VERIFICATION_CODE_ALPHABET for c in code):
             raise forms.ValidationError("Enter a valid verification code.")
         return code
+
+
+class ProfileForm(ThemedFormMixin, ModelForm):
+    class Meta:
+        model = User
+        fields = ["email", "first_name", "last_name"]
