@@ -288,6 +288,7 @@ def available_donation_list(request):
             status__in=[
                 Donation.Status.CANCELLED,
                 Donation.Status.EXPIRED,
+                # Donation.Status.COMPLETED,
             ],
         )
         .prefetch_related(

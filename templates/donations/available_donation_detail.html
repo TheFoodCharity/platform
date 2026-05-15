@@ -55,8 +55,8 @@
                   <td>{{ item.quantity }} {{ item.get_packaging_display }}</td>
                   <td>{{ item.allocated_quantity }} {{ item.get_packaging_display }}</td>
                   <td>
-                    <span class="badge {% if item.remaining_quantity %}badge-success{% else %}badge-neutral{% endif %} badge-outline">
-                      {{ item.remaining_quantity }} {{ item.get_packaging_display }}
+                    <span class="badge {% if item.remaining_quantity %}badge-success{% else %}border-slate-950 text-slate-950{% endif %} badge-outline">
+                      {{ item.remaining_quantity|default_if_none:0 }} {{ item.get_packaging_display }}
                     </span>
                   </td>
                 </tr>
