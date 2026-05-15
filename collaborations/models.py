@@ -400,3 +400,16 @@ class CollaborationFile(models.Model):
 
     def __str__(self):
         return self.original_filename
+
+    def get_scan_status_class(self):
+        match self.scan_status:
+            case self.ScanStatus.CLEAN:
+                return "badge-success"
+            case self.ScanStatus.INFECTED:
+                return "badge-error"
+            case self.ScanStatus.FAILED:
+                return "badge-warning"
+            case self.ScanStatus.SCANNING:
+                return "badge-info"
+            case _:
+                return "badge-ghost"
