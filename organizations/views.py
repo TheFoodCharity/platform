@@ -24,7 +24,7 @@ from .forms import (
     ApplicationSubmitForm,
     ProfileForm,
 )
-from .models import Organization
+from .models import Membership, Organization
 from .services import organization_create, set_current_organization
 
 
@@ -245,3 +245,21 @@ class ProfileView(SettingsPageMixin, UpdateView):
         response = super().form_valid(form)
         messages.success(self.request, "Profile successfully updated")
         return response
+
+
+class MembersView(SettingsPageMixin, ListView):
+    template_name = "organizations/settings/members_list.html"
+    model = Membership
+    context_object_name = "members"
+
+    tab_id = "members"
+
+    permission_required = "organizations.view_members"
+
+    def get_queryset(self):
+        return Membership.objects.filter(organization=self.request.organization)
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        data["organization"] = self.request.organization
+        return data

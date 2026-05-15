@@ -9,6 +9,7 @@ from .views import (
     ApplicationOperationsView,
     ApplyView,
     DispatchView,
+    MembersView,
     ProfileView,
     SelectView,
 )
@@ -26,4 +27,5 @@ urlpatterns = [
     path("application/contact", ApplicationContactView.as_view(), name="application_contact"),
     path("application/operations", ApplicationOperationsView.as_view(), name="application_operations"),
     path("profile", ProfileView.as_view(), name="profile"),
+    path("members", MembersView.as_view(), name="members"),
 ]

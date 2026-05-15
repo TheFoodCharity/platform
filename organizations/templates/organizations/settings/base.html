@@ -15,7 +15,9 @@
             <a class="tab {% if tab_id == "profile" %}tab-active{% endif %}" href="{% url 'organizations:profile' %}">
                 Profile
             </a>
-            <a class="tab {% if tab_id == "members" %}tab-active{% endif %}" href="#">Members</a>
+            <a class="tab {% if tab_id == "members" %}tab-active{% endif %}" href="{% url 'organizations:members' %}">
+                Members
+            </a>
         </div>
     </div>
 
