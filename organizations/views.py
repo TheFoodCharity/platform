@@ -212,11 +212,13 @@ class ActivateView(LoginRequiredMixin, View):
 
 
 class SettingsPageMixin(OrganizationRequiredMixin, PermissionRequiredMixin):
-    tab_id: str
+    section_id: str
+    tab_id: str | None = None
 
     def get_context_data(self, **kwargs):
         data = super().get_context_data(**kwargs)
-        data["tab_id"] = self.tab_id
+        data["section_id"] = self.section_id
+        data["tab_id"] = self.tab_id or self.section_id
         return data
 
 
@@ -226,7 +228,7 @@ class ProfileView(SettingsPageMixin, UpdateView):
     success_url = reverse_lazy("organizations:profile")
     context_object_name = "organization"
 
-    tab_id = "profile"
+    section_id = "profile"
 
     permission_required = "organizations.view_profile"
 
@@ -252,7 +254,7 @@ class MembersView(SettingsPageMixin, ListView):
     model = Membership
     context_object_name = "members"
 
-    tab_id = "members"
+    section_id = "members"
 
     permission_required = "organizations.view_members"
 
