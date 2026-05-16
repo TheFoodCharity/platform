@@ -1,17 +1,19 @@
+from django.conf import settings
 from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
+from django.utils.formats import date_format
 
 from storage.models import StorageLocation
 
 
 class Donation(models.Model):
+    """A supplier's donation ticket, tracked with the user and organization that submitted it."""
+
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
         SUBMITTED = "submitted", "Submitted"
         AVAILABLE = "available", "Available"
-        PENDING = "pending", "Pending"
-        MATCHED = "matched", "Matched"
         IN_TRANSIT = "in_transit", "In Transit"
-        STORED = "stored", "Stored"
         DELIVERED = "delivered", "Delivered"
         COMPLETED = "completed", "Completed"
         EXPIRED = "expired", "Expired"
@@ -43,26 +45,11 @@ class Donation(models.Model):
         OTHER = "other", "Other"
 
     class QuantityUnit(models.TextChoices):
-        ITEMS = "items", "Items"
-        SMALL_BAGS = "small_bags", "Small bags"
-        LARGE_BAGS = "large_bags", "Large bags"
+        BAGS = "bags", "Bags"
         BOXES = "boxes", "Boxes"
         CASES = "cases", "Cases"
-        BAGS = "bags", "Bags"
-        CRATES = "crates", "Crates"
-        FLATS = "flats", "Flats"
-        GALLONS = "gallons", "Gallons"
-        GAYLORDS = "gaylords", "Gaylords"
         PALLETS = "pallets", "Pallets"
-        TRAYS = "trays", "Trays"
-        KILOGRAMS = "kg", "Kilograms"
-        POUNDS = "lb", "Pounds"
-        LITRES = "litres", "Litres"
         OTHER = "other", "Other"
-
-    class WeightUnit(models.TextChoices):
-        KILOGRAMS = "kg", "Kilograms"
-        POUNDS = "lb", "Pounds"
 
     class PickupDay(models.TextChoices):
         TODAY = "today", "Today"
@@ -70,12 +57,20 @@ class Donation(models.Model):
 
     class PickupReadyTime(models.TextChoices):
         READY_NOW = "ready_now", "It is packaged and ready to go"
+        FROM_8AM = "8am", "From 8am"
+        FROM_9AM = "9am", "From 9am"
+        FROM_10AM = "10am", "From 10am"
+        FROM_11AM = "11am", "From 11am"
         FROM_12PM = "12pm", "From 12pm"
         FROM_1PM = "1pm", "From 1pm"
         FROM_2PM = "2pm", "From 2pm"
         FROM_3PM = "3pm", "From 3pm"
+        FROM_4PM = "4pm", "From 4pm"
+        FROM_5PM = "5pm", "From 5pm"
 
     class PickupEndTime(models.TextChoices):
+        BEFORE_noon = "before_noon", "Before noon"
+        BEFORE_1PM = "before_1pm", "Before 1pm"
         BEFORE_2PM = "before_2pm", "Before 2pm"
         BEFORE_3PM = "before_3pm", "Before 3pm"
         BEFORE_4PM = "before_4pm", "Before 4pm"
@@ -96,17 +91,35 @@ class Donation(models.Model):
         TWO_HUNDRED = 200, "200"
         THREE_HUNDRED = 300, "300"
 
-    company_name = models.CharField(max_length=255, blank=True)
-    address_1 = models.CharField(max_length=255, blank=True)
-    address_2 = models.CharField(max_length=255, blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    province_or_state = models.CharField(max_length=100, blank=True)
-    postal_code = models.CharField(max_length=20, blank=True)
-    contact_email = models.EmailField(blank=True)
-    contact_phone = models.CharField(max_length=50, blank=True)
+    class ReceiverLimit(models.TextChoices):
+        ONE = "one", "1 receiver only"
+        TWO = "two", "Maximum 2 receivers"
+        NO_LIMIT = "no_limit", "No limit"
 
-    donor_name = models.CharField(max_length=255)
-    donor_contact = models.CharField(max_length=255, blank=True)
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="submitted_donations",
+    )
+    supplier_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="donations",
+    )
+    preferred_receiver_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="preferred_donations",
+        verbose_name="preferred receiver",
+    )
+    receiver_limit = models.CharField(
+        "maximum number of receivers",
+        max_length=20,
+        choices=ReceiverLimit.choices,
+        default=ReceiverLimit.NO_LIMIT,
+    )
 
     food_category = models.CharField(
         max_length=50,
@@ -115,12 +128,10 @@ class Donation(models.Model):
     )
     food_type = models.JSONField(default=list)
     quantity = models.PositiveIntegerField()
-    unit = models.CharField(max_length=50, choices=QuantityUnit.choices, default=QuantityUnit.ITEMS)
-    estimated_weight = models.PositiveIntegerField(null=True, blank=True)
-    estimated_weight_unit = models.CharField(max_length=20, choices=WeightUnit.choices, default=WeightUnit.POUNDS)
+    unit = models.CharField(max_length=50, choices=QuantityUnit.choices)
 
     pickup_location = models.CharField(max_length=255)
-    pickup_window = models.CharField(max_length=255, blank=True)
+    pickup_notes = models.CharField(max_length=255, blank=True)
     pickup_day = models.CharField(max_length=20, choices=PickupDay.choices, default=PickupDay.TODAY)
     pickup_ready_time = models.CharField(
         max_length=30,
@@ -146,25 +157,15 @@ class Donation(models.Model):
     loading_dock_available = models.BooleanField(default=False)
     donor_can_help_load = models.BooleanField(default=False)
 
-    special_handling_notes = models.TextField(blank=True)
-    chain_of_custody_notes = models.TextField(blank=True)
     people_fed_estimate = models.PositiveIntegerField(choices=PeopleFedEstimate.choices, null=True, blank=True)
     fits_in_car = models.BooleanField(default=True)
     food_safety_agreement = models.BooleanField(default=False)
     other_information = models.TextField(blank=True)
 
-    assigned_storage = models.ForeignKey(
-        StorageLocation,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="donations",
-    )
-
     status = models.CharField(
         max_length=50,
         choices=Status.choices,
-        default=Status.DRAFT,
+        default=Status.AVAILABLE,
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -177,48 +178,144 @@ class Donation(models.Model):
         verbose_name_plural = "Donations"
 
     def __str__(self):
-        return f"{self.food_type_display} - {self.donor_name}"
+        return f"{self.food_type_display} - {self.donor_display_name}"
+
+    @property
+    def ticket_number(self):
+        """Human-readable identifier used in app screens and admin lists."""
+        if self.pk is None:
+            return "DON-unsaved"
+        return f"DON-{self.pk:06d}"
+
+    @property
+    def donor_display_name(self):
+        return self.supplier_organization.name
+
+    @property
+    def donor_contact_display(self):
+        if self.supplier_organization.email:
+            return self.supplier_organization.email
+        return self.submitted_by.email
+
+    @property
+    def donor_public_phone_display(self):
+        if self.supplier_organization.phone:
+            return str(self.supplier_organization.phone)
+        return ""
 
     @property
     def food_type_display(self):
+        """Render the stored category list with labels instead of raw enum values."""
         labels = dict(self.FoodCategory.choices)
         if isinstance(self.food_type, list):
             return ", ".join(labels.get(food_type, food_type) for food_type in self.food_type)
         return labels.get(self.food_type, self.food_type)
 
     @property
-    def estimated_weight_display(self):
-        if self.estimated_weight is None:
-            return ""
-        return f"{self.estimated_weight} {self.get_estimated_weight_unit_display()}"
+    def category_list_display(self):
+        """Prefer current food item categories, falling back to legacy summary fields."""
+        labels = dict(self.FoodCategory.choices)
+        categories = []
 
-    def assign_storage(self, storage_location):
-        self.assigned_storage = storage_location
-        self.status = self.Status.MATCHED
+        for food_item in self.food_items.all():
+            if food_item.food_category not in categories:
+                categories.append(food_item.food_category)
 
-        if storage_location.available_space is not None:
-            storage_location.available_space = max(
-                storage_location.available_space - self.quantity,
-                0,
+        if not categories and isinstance(self.food_type, list):
+            categories = self.food_type
+
+        if not categories:
+            categories = [self.food_category]
+
+        return ", ".join(labels.get(category, category) for category in categories)
+
+    @property
+    def total_remaining_quantity(self):
+        """Total packages still available across all food items."""
+        return sum(food_item.remaining_quantity for food_item in self.food_items.all())
+
+    @property
+    def quantity_summary_display(self):
+        totals_by_packaging = {}
+        packaging_labels = dict(DonationFoodItem.Packaging.choices)
+
+        # Only combine quantities that share the same packaging unit.
+        for food_item in self.food_items.all():
+            totals_by_packaging[food_item.packaging] = (
+                totals_by_packaging.get(food_item.packaging, 0) + food_item.quantity
             )
-            storage_location.update_capacity_status()
-            storage_location.save()
 
-        self.save()
+        if not totals_by_packaging:
+            return f"{self.quantity} {self.get_unit_display()}"
+
+        return ", ".join(
+            f"{quantity} {packaging_labels.get(packaging, packaging)}"
+            for packaging, quantity in totals_by_packaging.items()
+        )
+
+    @property
+    def pickup_summary_display(self):
+        if self.pickup_deadline <= timezone.now():
+            return date_format(timezone.localtime(self.pickup_deadline), "M j, Y g:i A")
+        return f"{self.get_pickup_day_display()}, {self.get_pickup_end_time_display()}"
+
+    @property
+    def is_fully_requested(self):
+        return self.food_items.exists() and self.total_remaining_quantity == 0
+
+    @property
+    def receiver_limit_count(self):
+        limits = {
+            self.ReceiverLimit.ONE: 1,
+            self.ReceiverLimit.TWO: 2,
+        }
+        return limits.get(self.receiver_limit)
+
+    def active_receiver_organization_ids(self):
+        return set(
+            self.food_requests.exclude(
+                status__in=[FoodRequest.Status.DECLINED, FoodRequest.Status.CANCELLED],
+            )
+            .values_list("receiver_organization_id", flat=True)
+            .distinct(),
+        )
+
+    def can_accept_receiver(self, organization):
+        """Return whether this organization can still request from this donation."""
+        receiver_limit_count = self.receiver_limit_count
+        if receiver_limit_count is None or organization is None:
+            return True
+
+        receiver_ids = self.active_receiver_organization_ids()
+        if organization.pk in receiver_ids:
+            return True
+
+        return len(receiver_ids) < receiver_limit_count
+
+    def is_final_receiver_slot(self, organization):
+        """When the requester is the final allowed receiver, they must claim all remaining food."""
+        receiver_limit_count = self.receiver_limit_count
+        if receiver_limit_count is None or organization is None:
+            return False
+
+        other_receiver_ids = self.active_receiver_organization_ids() - {organization.pk}
+        return len(other_receiver_ids) >= receiver_limit_count - 1
+
+    @property
+    def allocation_status_display(self):
+        if self.is_fully_requested:
+            return "Fully requested"
+        return "Available"
 
 
 class DonationFoodItem(models.Model):
+    """A specific food category and package count within a donation."""
+
     class Packaging(models.TextChoices):
-        SMALL_BAGS = "small_bags", "Small bags"
-        LARGE_BAGS = "large_bags", "Large bags"
+        BAGS = "bags", "Bags"
         BOXES = "boxes", "Boxes"
         CASES = "cases", "Cases"
-        CRATES = "crates", "Crates"
-        FLATS = "flats", "Flats"
-        GALLONS = "gallons", "Gallons"
-        GAYLORDS = "gaylords", "Gaylords"
         PALLETS = "pallets", "Pallets"
-        TRAYS = "trays", "Trays"
         OTHER = "other", "Other"
 
     donation = models.ForeignKey(Donation, on_delete=models.CASCADE, related_name="food_items")
@@ -235,8 +332,25 @@ class DonationFoodItem(models.Model):
     def __str__(self):
         return f"{self.quantity} {self.get_packaging_display()} of {self.get_food_category_display()}"
 
+    @property
+    def allocated_quantity(self):
+        """Quantity requested from this item, excluding declined or cancelled requests."""
+        allocated = self.request_allocations.exclude(
+            food_request__status__in=[
+                FoodRequest.Status.DECLINED,
+                FoodRequest.Status.CANCELLED,
+            ],
+        ).aggregate(total=Sum("quantity"))["total"]
+        return allocated or 0
+
+    @property
+    def remaining_quantity(self):
+        return max(self.quantity - self.allocated_quantity, 0)
+
 
 class FoodRequest(models.Model):
+    """A receiver organization's request for some or all food from a donation."""
+
     class Status(models.TextChoices):
         SUBMITTED = "submitted", "Submitted"
         APPROVED = "approved", "Approved"
@@ -249,15 +363,15 @@ class FoodRequest(models.Model):
         on_delete=models.CASCADE,
         related_name="food_requests",
     )
-    receiver_name = models.CharField(max_length=255)
-    organization = models.CharField(max_length=255, blank=True)
-    email = models.EmailField()
-    phone = models.CharField(max_length=50, blank=True)
-    requested_quantity = models.PositiveIntegerField()
-    requested_unit = models.CharField(
-        max_length=50,
-        choices=Donation.QuantityUnit.choices,
-        default=Donation.QuantityUnit.ITEMS,
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="food_requests",
+    )
+    receiver_organization = models.ForeignKey(
+        "organizations.Organization",
+        on_delete=models.PROTECT,
+        related_name="food_requests",
     )
     storage_required = models.BooleanField(default=False)
     preferred_storage = models.ForeignKey(
@@ -279,4 +393,55 @@ class FoodRequest(models.Model):
         verbose_name_plural = "Food Requests"
 
     def __str__(self):
-        return f"{self.receiver_name} request for {self.donation}"
+        return f"{self.receiver_display_name} request for {self.donation}"
+
+    @property
+    def ticket_number(self):
+        """Human-readable identifier used in app screens and admin lists."""
+        if self.pk is None:
+            return "REQ-unsaved"
+        return f"REQ-{self.pk:06d}"
+
+    @property
+    def receiver_display_name(self):
+        return self.requested_by.get_full_name().strip() or self.requested_by.email
+
+    @property
+    def receiver_organization_display(self):
+        return self.receiver_organization.name
+
+    @property
+    def receiver_email_display(self):
+        if self.receiver_organization.email:
+            return self.receiver_organization.email
+        return self.requested_by.email
+
+    @property
+    def receiver_phone_display(self):
+        if self.receiver_organization.phone:
+            return str(self.receiver_organization.phone)
+        return ""
+
+
+class FoodRequestAllocation(models.Model):
+    """The requested quantity for one donation food item within a food request."""
+
+    food_request = models.ForeignKey(
+        FoodRequest,
+        on_delete=models.CASCADE,
+        related_name="allocations",
+    )
+    donation_food_item = models.ForeignKey(
+        DonationFoodItem,
+        on_delete=models.CASCADE,
+        related_name="request_allocations",
+    )
+    quantity = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "Food Request Allocation"
+        verbose_name_plural = "Food Request Allocations"
+
+    def __str__(self):
+        return f"{self.quantity} from {self.donation_food_item}"

@@ -7,6 +7,9 @@
     <form method="post" class="flex flex-col gap-2">
         {% csrf_token %}
         {% crispy form %}
+        <a href="{% url 'accounts:password_reset' %}" class="text-end link link-primary link-hover text-sm">
+            Forgot your password?
+        </a>
         <button type="submit" class="btn btn-primary w-full mt-2">Sign in</button>
     </form>
     <p class="mt-4 text-center text-sm text-base-content/60">

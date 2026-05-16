@@ -1,66 +1,84 @@
 {% extends "base_app.html" %}
 
+{% block page_title %}Donation Details{% endblock %}
+
 {% block page_body %}
-    <div class="mx-auto max-w-5xl">
-        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-wide text-primary">Donation management</p>
-                <h1 class="mt-2 text-4xl font-bold text-slate-950">Donation Details</h1>
-            </div>
-            <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
-        </div>
-
-        <div class="space-y-6">
-            {% include "donations/partials/donation_detail.html" with donation=donation show_donor=True show_status=True show_pickup_location=True %}
-
-            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-slate-950">Assigned Storage</h2>
-                {% if donation.assigned_storage %}
-                    <dl class="mt-6 grid gap-4 md:grid-cols-3">
-                        <div>
-                            <dt class="text-sm font-semibold text-slate-500">Storage Location</dt>
-                            <dd class="mt-1 text-slate-950">{{ donation.assigned_storage.name }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-slate-500">Municipality</dt>
-                            <dd class="mt-1 text-slate-950">{{ donation.assigned_storage.municipality }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-sm font-semibold text-slate-500">Available Space</dt>
-                            <dd class="mt-1 text-slate-950">{{ donation.assigned_storage.available_space }}</dd>
-                        </div>
-                    </dl>
-                {% else %}
-                    <p class="mt-4 text-slate-600">No storage assigned yet.</p>
-                {% endif %}
-            </section>
-
-            <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
-                <h2 class="text-2xl font-bold text-slate-950">Matching Storage Locations</h2>
-                <div class="mt-6 grid gap-4">
-                    {% for storage in matching_storage %}
-                        <article class="rounded-xl border border-base-300 bg-base-100 p-4">
-                            <div class="grid gap-3 md:grid-cols-4 md:items-center">
-                                <p><span class="font-semibold text-slate-900">Name:</span> {{ storage.name }}</p>
-                                <p><span
-                                        class="font-semibold text-slate-900">Type:</span> {{ storage.get_storage_type_display }}
-                                </p>
-                                <p><span
-                                        class="font-semibold text-slate-900">Municipality:</span> {{ storage.municipality }}
-                                </p>
-                                <div class="md:text-right">
-                                    <a class="btn btn-sm btn-primary"
-                                       href="{% url 'donations:assign_storage' donation.id storage.id %}">
-                                        Assign Storage
-                                    </a>
-                                </div>
-                            </div>
-                        </article>
-                    {% empty %}
-                        <p class="text-slate-600">No matching storage locations found.</p>
-                    {% endfor %}
-                </div>
-            </section>
-        </div>
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Donation management</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">Donation Details</h1>
+        <p class="mt-2 text-sm font-semibold uppercase tracking-wide text-primary">{{ donation.ticket_number }}</p>
+      </div>
+      <a class="btn btn-outline btn-primary" href="{% url 'donations:list' %}">Back to Donations</a>
     </div>
+
+    <div class="space-y-6">
+      {% include "donations/partials/donation_detail.html" with donation=donation show_donor=True show_status=True show_pickup_location=True %}
+
+      {% include "donations/partials/food_allocation_table.html" with donation=donation %}
+
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-primary">Request history</p>
+          <h2 class="mt-1 text-2xl font-bold text-slate-950">Receiver Requests</h2>
+        </div>
+
+        <div class="mt-6 overflow-x-auto rounded-xl border border-base-300">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Request ticket</th>
+                <th>Receiver organization</th>
+                <th>Requested by</th>
+                <th>Food item</th>
+                <th>Quantity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for food_request in donation.food_requests.all %}
+                {% for allocation in food_request.allocations.all %}
+                  <tr>
+                    <td>{{ food_request.created_at|date:"M j, Y" }}</td>
+                    <td class="font-semibold text-primary">{{ food_request.ticket_number }}</td>
+                    <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
+                    <td>{{ food_request.receiver_display_name }}</td>
+                    <td>
+                      <div class="font-semibold text-slate-950">
+                        {{ allocation.donation_food_item.get_food_category_display }}
+                      </div>
+                      {% if allocation.donation_food_item.description %}
+                        <div class="text-sm text-slate-500">{{ allocation.donation_food_item.description }}</div>
+                      {% endif %}
+                    </td>
+                    <td>{{ allocation.quantity }} {{ allocation.donation_food_item.get_packaging_display }}</td>
+                    <td>
+                      <span class="badge badge-primary badge-outline">{{ food_request.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td>{{ food_request.created_at|date:"M j, Y" }}</td>
+                    <td class="font-semibold text-primary">{{ food_request.ticket_number }}</td>
+                    <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
+                    <td>{{ food_request.receiver_display_name }}</td>
+                    <td colspan="2" class="text-slate-600">No food quantities recorded.</td>
+                    <td>
+                      <span class="badge badge-primary badge-outline">{{ food_request.get_status_display }}</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% empty %}
+                <tr>
+                  <td colspan="7" class="text-slate-600">No requests have been submitted for this donation yet.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
 {% endblock %}

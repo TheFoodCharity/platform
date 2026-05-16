@@ -11,7 +11,7 @@
         </section>
     {% endif %}
 
-    {% with section_action=organization.is_editable|yesno:"Edit,View" %}
+    {% with section_action=show_edit|yesno:"Edit,View" %}
         <table class="table">
             <caption>Application sections</caption>
             <thead>
@@ -26,35 +26,35 @@
                 <td>Basic information</td>
                 <td>{% if application.basics_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_basic' organization.pk %}">{{ section_action }}</a></td>
+                       href="{% url 'organizations:application_basic' %}">{{ section_action }}</a></td>
             </tr>
             <tr>
                 <td>Location &amp; service area</td>
                 <td>{% if application.location_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_location' organization.pk %}">{{ section_action }}</a>
+                       href="{% url 'organizations:application_location' %}">{{ section_action }}</a>
                 </td>
             </tr>
             <tr>
                 <td>Contact details</td>
                 <td>{% if application.contact_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_contact' organization.pk %}">{{ section_action }}</a>
+                       href="{% url 'organizations:application_contact' %}">{{ section_action }}</a>
                 </td>
             </tr>
             <tr>
                 <td>Interests &amp; preferences</td>
                 <td>{% if application.operations_last_updated %}Complete{% else %}Not started{% endif %}</td>
                 <td><a class="link link-hover link-primary"
-                       href="{% url 'organizations:application_operations' organization.pk %}">{{ section_action }}</a>
+                       href="{% url 'organizations:application_operations' %}">{{ section_action }}</a>
                 </td>
             </tr>
             </tbody>
         </table>
     {% endwith %}
 
-    {% if organization.is_editable %}
-        {% if organization.status == organization.Status.DRAFT or organization.status == organization.Status.NEEDS_INFO %}
+    {% if organization.status == organization.Status.DRAFT or organization.status == organization.Status.NEEDS_INFO %}
+        {% if perms.organizations.submit_application %}
             <form method="post">
                 {% csrf_token %}
                 {% if organization.status == organization.Status.DRAFT %}
@@ -72,9 +72,11 @@
                 {% endif %}
                 <button type="submit" class="btn btn-primary">Submit application</button>
             </form>
-        {% elif organization.status == organization.Status.PENDING %}
-            <p>Your application has been submitted and is under review. You can still edit your information above while
-                you wait.</p>
+        {% else %}
+            <p>You don't have permission to submit the application.</p>
         {% endif %}
+    {% elif organization.status == organization.Status.PENDING %}
+        <p>Your application has been submitted and is under review. You can still edit your information above while
+            you wait.</p>
     {% endif %}
 {% endblock %}

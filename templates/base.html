@@ -8,9 +8,16 @@
     {% block extra_head %}{% endblock %}
     {% tailwind_css %}
     {% htmx_script %}
+
+    <script type="module">
+      const CSRF_COOKIE_RE = /csrftoken=([^;]+)/;
+      document.addEventListener('htmx:configRequest', (event) => {
+        const token = document.cookie.match(CSRF_COOKIE_RE)?.[1];
+        if (token) event.detail.headers['X-CSRFToken'] = token;
+      });
+    </script>
 </head>
-<body class="h-full bg-white text-slate-900 antialiased" hx-boost="true"
-      hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
+<body class="h-full bg-white text-slate-900 antialiased" hx-boost="true">
 {% block content %}{% endblock %}
 </body>
 </html>
