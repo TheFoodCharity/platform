@@ -184,5 +184,5 @@ class MembershipAdmin(admin.ModelAdmin):
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ("email", "invited_by", "organization", "created")
-    readonly_fields = ("guid", "created")
+    list_display = ("email", "invited_by", "organization", "role", "expires_at", "accepted_at", "created")
+    readonly_fields = ("created", "accepted_at")

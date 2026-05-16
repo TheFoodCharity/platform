@@ -1,8 +1,8 @@
-import uuid
 from typing import TYPE_CHECKING, Literal
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
@@ -255,18 +255,35 @@ class Membership(TimestampedModel):
 
 
 class Invitation(TimestampedModel):
-    guid = models.UUIDField(editable=False)
-    email = models.CharField(
-        max_length=1000,
-        help_text=_("The contact identifier for the invitee, email, phone number, social media handle, etc."),
-    )
+    email = models.EmailField()
     invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="sent_invitations", on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, related_name="invitations", on_delete=models.CASCADE)
+    role = models.ForeignKey(
+        "permissions.PermissionGroup",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        limit_choices_to={"scope": Scope.USER},
+        related_name="invitations",
+        verbose_name=_("role"),
+    )
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        verbose_name = _("invitation")
+        verbose_name_plural = _("invitations")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "email"],
+                condition=Q(accepted_at__isnull=True),
+                name="unique_pending_invitation_per_org_email",
+            )
+        ]
 
     def __str__(self):
         return f"{self.organization}: {self.email}"
 
-    def save(self, **kwargs):
-        if not self.guid:
-            self.guid = uuid.uuid4()
-        super().save(**kwargs)
+    @property
+    def accepted(self) -> bool:
+        return self.accepted_at is not None

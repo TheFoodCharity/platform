@@ -9,7 +9,7 @@
         <form class="flex flex-row items-center justify-start gap-x-4"
               method="post" action="{% url 'organizations:invitations_create' %}">
             {% crispy form %}
-            <button type="submit" class="btn btn-primary -mt-2 sm:mt-2.5">Send</button>
+            <button type="submit" class="btn btn-primary mt-8">Send</button>
         </form>
     {% endpartialdef %}
 {% endblock %}

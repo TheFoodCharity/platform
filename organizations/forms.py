@@ -1,14 +1,16 @@
 from crispy_forms.layout import Fieldset, Layout, Row
+from django.conf import settings
 from django.db import models
 from django.forms import BooleanField, CharField, ChoiceField, ModelChoiceField, RadioSelect, fields, forms
 from django.forms.models import ModelForm
+from django.utils import timezone
 
 from permissions import Scope
 from permissions.models import MembershipPermissionOverride, PermissionGroup
 from permissions.registry import registered_permissions
 from theme.forms import ThemedFormMixin
 
-from .models import Invitation, Organization
+from .models import Invitation, Membership, Organization
 
 
 class ApplicationCreateForm(ThemedFormMixin, ModelForm):
@@ -203,14 +205,32 @@ class ProfileForm(ThemedFormMixin, ModelForm):
 class InvitationSendForm(ThemedFormMixin, ModelForm):
     class Meta:
         model = Invitation
-        fields = ["email"]
+        fields = ["email", "role"]
 
     def __init__(self, *args, invited_by, organization, **kwargs):
         super().__init__(*args, **kwargs)
         self.invited_by = invited_by
         self.organization = organization
+        # Exclude platform-level admin role from org invitations.
+        from permissions import SystemRole
+
+        self.fields["role"].queryset = PermissionGroup.objects.filter(scope=Scope.USER).exclude(
+            name=SystemRole.FOOD_CHARITY_ADMIN
+        )
+        self.fields["role"].required = True
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+        if Membership.objects.filter(organization=self.organization, user__email__iexact=email).exists():
+            raise forms.ValidationError("This person is already a member of your organization.")
+        if Invitation.objects.filter(
+            organization=self.organization, email__iexact=email, accepted_at__isnull=True
+        ).exists():
+            raise forms.ValidationError("An invitation has already been sent to this email address.")
+        return email
 
     def save(self, commit=True):
         self.instance.organization = self.organization
         self.instance.invited_by = self.invited_by
+        self.instance.expires_at = timezone.now() + settings.INVITATION_TTL
         return super().save(commit)

@@ -1,19 +1,23 @@
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.http.response import Http404
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
+from django.views.generic.base import TemplateResponseMixin
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import CreateView, FormView, UpdateView
 from django.views.generic.list import ListView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 from .decorators import OrganizationRequiredMixin
+from .exceptions import InvitationAlreadyAccepted, InvitationEmailMismatch, InvitationError, InvitationExpired
 from .forms import (
     ApplicationBasicDetailsForm,
     ApplicationContactForm,
@@ -26,7 +30,20 @@ from .forms import (
     ProfileForm,
 )
 from .models import Invitation, Membership, Organization
-from .services import organization_create, set_current_organization, update_member_permissions
+from .services import (
+    accept_invitation,
+    decode_invitation_pk,
+    invitation_accept_path,
+    invitation_token_generator,
+    organization_create,
+    send_invitation_email,
+    set_current_organization,
+    update_member_permissions,
+)
+
+User = get_user_model()
+
+PENDING_INVITATION_KEY = "organizations:pending_invitation"
 
 
 def _safe_next(request, source):
@@ -40,6 +57,22 @@ def _safe_next(request, source):
 
 class DispatchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+        # Finalize a pending invitation carried via session (register→verify→dispatch path).
+        if pending_pk := request.session.pop(PENDING_INVITATION_KEY, None):
+            try:
+                invitation = Invitation.objects.select_related("organization").get(pk=pending_pk)
+                accept_invitation(invitation=invitation, user=request.user)
+                set_current_organization(request, invitation.organization)
+                messages.success(request, f"Welcome! You've joined {invitation.organization}.")
+                return redirect("/")
+            except Invitation.DoesNotExist, InvitationExpired, InvitationAlreadyAccepted:
+                pass
+            except InvitationEmailMismatch:
+                messages.warning(
+                    request,
+                    "The invitation could not be applied: your account email does not match the invited address.",
+                )
+
         next_url = _safe_next(request, request.GET)
         match list(request.user.organizations.all()[:2]):
             case []:
@@ -317,7 +350,7 @@ class MemberRemoveView(OrganizationRequiredMixin, PermissionRequiredMixin, View)
 
 
 class InvitationsView(SettingsPageMixin, ListView):
-    template_name = "organizations/settings/invitations.html"
+    template_name = "organizations/settings/invitations_list.html"
     model = Invitation
     context_object_name = "invitations"
 
@@ -326,7 +359,7 @@ class InvitationsView(SettingsPageMixin, ListView):
     permission_required = "organizations.invite_member"
 
     def get_queryset(self):
-        return Invitation.objects.filter(organization=self.request.organization)
+        return Invitation.objects.filter(organization=self.request.organization, accepted_at__isnull=True)
 
 
 class InvitationsSendView(SettingsPageMixin, CreateView):
@@ -359,7 +392,79 @@ class InvitationsSendView(SettingsPageMixin, CreateView):
 
     def form_valid(self, form):
         super().form_valid(form)
+        send_invitation_email(self.object, self.request)
         return HttpResponseClientRedirect(self.get_success_url())
+
+
+class InvitationAcceptView(SingleObjectMixin, TemplateResponseMixin, View):
+    template_name = "organizations/invitation_accept.html"
+    context_object_name = "invitation"
+
+    def get_queryset(self):
+        return Invitation.objects.select_related("organization", "invited_by")
+
+    def get_object(self, queryset=None):
+        if hasattr(self, "_object_cache"):
+            return self._object_cache
+        pk = decode_invitation_pk(self.kwargs["invb64"])
+        try:
+            inv = (queryset or self.get_queryset()).get(pk=pk) if pk is not None else None
+        except Invitation.DoesNotExist:
+            inv = None
+        if inv is not None and not (
+            invitation_token_generator.check_token(inv, self.kwargs["token"])
+            and inv.accepted_at is None
+            and timezone.now() <= inv.expires_at
+        ):
+            inv = None
+        self._object_cache = inv
+        return self._object_cache
+
+    def get_context_data(self, **kwargs):
+        invitation = self.object
+        if invitation is None:
+            return {"state": "invalid"}
+        if self.request.user.email.lower() != invitation.email.lower():
+            accept_url = self.request.build_absolute_uri(invitation_accept_path(invitation))
+            return {
+                "state": "mismatch",
+                "invitation": invitation,
+                "logout_url": f"{reverse('accounts:logout')}?{urlencode({'next': accept_url})}",
+            }
+        return {"state": "confirm", "invitation": invitation}
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.object = self.get_object()
+
+    def get(self, request, *args, **kwargs):
+        if self.object is not None and not request.user.is_authenticated:
+            request.session[PENDING_INVITATION_KEY] = self.object.pk
+            accept_url = request.build_absolute_uri(invitation_accept_path(self.object))
+            if User.objects.filter(email__iexact=self.object.email).exists():
+                return redirect(f"{reverse('accounts:login')}?{urlencode({'next': accept_url})}")
+            return redirect(reverse("accounts:register"))
+
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(reverse("accounts:login"))
+
+        invitation = self.object
+
+        if invitation is None or request.user.email.lower() != invitation.email.lower():
+            return self.render_to_response(self.get_context_data())
+
+        try:
+            accept_invitation(invitation=invitation, user=request.user)
+        except InvitationError:
+            self.object = None  # render "invalid" for any race/error
+            return self.render_to_response(self.get_context_data())
+
+        set_current_organization(request, invitation.organization)
+        messages.success(request, f"Welcome! You've joined {invitation.organization}.")
+        return redirect("/")
 
 
 class InvitationRemoveView(OrganizationRequiredMixin, PermissionRequiredMixin, View):

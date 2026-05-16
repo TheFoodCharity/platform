@@ -38,6 +38,12 @@
                     </button>
                 </td>
             </tr>
+        {% empty %}
+            <tr>
+                <td colspan="4">
+                    {% include "components/_empty_state.html" with message="No pending invitations." icon="inbox" %}
+                </td>
+            </tr>
         {% endfor %}
         </tbody>
     </table>

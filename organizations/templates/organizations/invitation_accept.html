@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <main class="min-h-screen bg-base-200 px-4 py-10">
+        <div class="card card-border bg-base-100 mx-auto max-w-lg">
+            <div class="card-body gap-6">
+
+                {% if state == "invalid" %}
+                    <div>
+                        <h2 class="card-title text-2xl">Invitation not found</h2>
+                        <p class="text-base-content/60 text-sm mt-1">
+                            This invitation link is invalid, has expired, or has already been used.
+                        </p>
+                    </div>
+                    <p class="text-sm">
+                        If you believe this is an error, ask the person who invited you to send a new invitation.
+                    </p>
+
+                {% elif state == "mismatch" %}
+                    <div>
+                        <h2 class="card-title text-2xl">Wrong account</h2>
+                        <p class="text-base-content/60 text-sm mt-1">
+                            This invitation was sent to <strong>{{ invitation.email }}</strong>, but you are signed in
+                            with a different email address.
+                        </p>
+                    </div>
+                    <p class="text-sm">
+                        Sign out and then sign in (or create an account) with <strong>{{ invitation.email }}</strong>
+                        to accept this invitation.
+                    </p>
+                    <div class="card-actions justify-end">
+                        <a href="{{ logout_url }}" class="btn btn-outline">Sign out</a>
+                    </div>
+
+                {% elif state == "confirm" %}
+                    <div>
+                        <h2 class="card-title text-2xl">Join {{ invitation.organization }}</h2>
+                        <p class="text-base-content/60 text-sm mt-1">
+                            {{ invitation.invited_by.get_full_name }} has invited you to join
+                            <strong>{{ invitation.organization }}</strong>.
+                        </p>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="flex justify-end gap-2">
+                            <button type="submit" class="btn btn-primary">Accept invitation</button>
+                        </div>
+                    </form>
+
+                {% endif %}
+
+            </div>
+        </div>
+    </main>
+{% endblock %}

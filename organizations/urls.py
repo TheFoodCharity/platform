@@ -9,6 +9,7 @@ from .views import (
     ApplicationOperationsView,
     ApplyView,
     DispatchView,
+    InvitationAcceptView,
     InvitationRemoveView,
     InvitationsSendView,
     InvitationsView,
@@ -38,4 +39,5 @@ urlpatterns = [
     path("invitations", InvitationsView.as_view(), name="invitations"),
     path("invitations/send", InvitationsSendView.as_view(), name="invitations_create"),
     path("invitations/<int:pk>/remove", InvitationRemoveView.as_view(), name="invitations_remove"),
+    path("invitations/accept/<str:invb64>/<str:token>", InvitationAcceptView.as_view(), name="invitation_accept"),
 ]
