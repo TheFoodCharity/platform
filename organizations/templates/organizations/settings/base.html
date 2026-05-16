@@ -18,6 +18,10 @@
             <a class="tab {% if tab_id == "members" %}tab-active{% endif %}" href="{% url 'organizations:members' %}">
                 Members
             </a>
+            <a class="tab {% if tab_id == "invitations" %}tab-active{% endif %}"
+               href="{% url 'organizations:invitations' %}">
+                Pending Invitations
+            </a>
         </div>
     </div>
 

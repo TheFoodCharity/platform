@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic.detail import SingleObjectMixin
-from django.views.generic.edit import FormView, UpdateView
+from django.views.generic.edit import CreateView, FormView, UpdateView
 from django.views.generic.list import ListView
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
@@ -21,10 +21,11 @@ from .forms import (
     ApplicationLocationForm,
     ApplicationOperationsForm,
     ApplicationSubmitForm,
+    InvitationSendForm,
     MemberPermissionsForm,
     ProfileForm,
 )
-from .models import Membership, Organization
+from .models import Invitation, Membership, Organization
 from .services import organization_create, set_current_organization, update_member_permissions
 
 
@@ -313,3 +314,58 @@ class MemberRemoveView(OrganizationRequiredMixin, PermissionRequiredMixin, View)
         Membership.objects.filter(organization=request.organization, pk=pk).delete()
         messages.success(request, "The member was successfully removed from your organization!")
         return HttpResponseClientRedirect(reverse("organizations:members"))
+
+
+class InvitationsView(SettingsPageMixin, ListView):
+    template_name = "organizations/settings/invitations.html"
+    model = Invitation
+    context_object_name = "invitations"
+
+    section_id = "invitations"
+
+    permission_required = "organizations.invite_member"
+
+    def get_queryset(self):
+        return Invitation.objects.filter(organization=self.request.organization)
+
+
+class InvitationsSendView(SettingsPageMixin, CreateView):
+    template_name = "organizations/settings/invitations_create.html"
+    model = Invitation
+    context_object_name = "invitation"
+    form_class = InvitationSendForm
+    success_url = reverse_lazy("organizations:invitations")
+
+    section_id = "invitations-create"
+    tab_id = "invitations"
+
+    permission_required = "organizations.invite_member"
+
+    def get_template_names(self):
+        names = super().get_template_names()
+        if self.request.htmx and not self.request.htmx.boosted:
+            return [f"{name}#form" for name in names]
+
+        return names
+
+    def get_success_url(self):
+        return self.success_url
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["invited_by"] = self.request.user
+        kwargs["organization"] = self.request.organization
+        return kwargs
+
+    def form_valid(self, form):
+        super().form_valid(form)
+        return HttpResponseClientRedirect(self.get_success_url())
+
+
+class InvitationRemoveView(OrganizationRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "organizations.invite_member"
+
+    def post(self, request, *args, pk, **kwargs):
+        Invitation.objects.filter(organization=request.organization, pk=pk).delete()
+        messages.success(request, "The invitation was successfully rescinded!")
+        return HttpResponseClientRefresh()

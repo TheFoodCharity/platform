@@ -261,13 +261,6 @@ class Invitation(TimestampedModel):
         help_text=_("The contact identifier for the invitee, email, phone number, social media handle, etc."),
     )
     invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="sent_invitations", on_delete=models.CASCADE)
-    invitee = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        related_name="received_invitations",
-        on_delete=models.CASCADE,
-    )
     organization = models.ForeignKey(Organization, related_name="invitations", on_delete=models.CASCADE)
 
     def __str__(self):

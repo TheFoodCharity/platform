@@ -9,6 +9,9 @@ from .views import (
     ApplicationOperationsView,
     ApplyView,
     DispatchView,
+    InvitationRemoveView,
+    InvitationsSendView,
+    InvitationsView,
     MemberDetailView,
     MemberRemoveView,
     MembersView,
@@ -32,4 +35,7 @@ urlpatterns = [
     path("members", MembersView.as_view(), name="members"),
     path("members/<int:pk>", MemberDetailView.as_view(), name="member"),
     path("members/<int:pk>/remove", MemberRemoveView.as_view(), name="member_remove"),
+    path("invitations", InvitationsView.as_view(), name="invitations"),
+    path("invitations/send", InvitationsSendView.as_view(), name="invitations_create"),
+    path("invitations/<int:pk>/remove", InvitationRemoveView.as_view(), name="invitations_remove"),
 ]

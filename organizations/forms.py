@@ -3,11 +3,12 @@ from django.db import models
 from django.forms import BooleanField, CharField, ChoiceField, ModelChoiceField, RadioSelect, fields, forms
 from django.forms.models import ModelForm
 
-from organizations.models import Organization
 from permissions import Scope
 from permissions.models import MembershipPermissionOverride, PermissionGroup
 from permissions.registry import registered_permissions
 from theme.forms import ThemedFormMixin
+
+from .models import Invitation, Organization
 
 
 class ApplicationCreateForm(ThemedFormMixin, ModelForm):
@@ -197,3 +198,19 @@ class ProfileForm(ThemedFormMixin, ModelForm):
             "contact_via_phone",
             "contact_via_email",
         ]
+
+
+class InvitationSendForm(ThemedFormMixin, ModelForm):
+    class Meta:
+        model = Invitation
+        fields = ["email"]
+
+    def __init__(self, *args, invited_by, organization, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.invited_by = invited_by
+        self.organization = organization
+
+    def save(self, commit=True):
+        self.instance.organization = self.organization
+        self.instance.invited_by = self.invited_by
+        return super().save(commit)
