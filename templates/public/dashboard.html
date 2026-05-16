@@ -1,271 +1,120 @@
 {% extends "base_app.html" %}
 
-{% block page_title %}
-Dashboard
-{% endblock %}
+{% block page_title %}{% endblock %}
 
-{% block page_actions %}
-<a href="{% url 'donations:create' %}" class="btn btn-primary btn-sm">
-    New Donation
-</a>
-{% endblock %}
+{% block page_actions %}{% endblock %}
 
 {% block page_body %}
-<div class="space-y-6">
-
-    <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <a href="{% url 'organizations:list' %}"
-           class="card bg-base-100 border border-base-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div class="card-body gap-3">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-base-content/60">
-                        Organizations
-                    </span>
-                    <span class="material-symbols-rounded rounded-xl bg-primary/10 p-2 text-primary">
-                        apartment
-                    </span>
-                </div>
-
-                <div>
-                    <p class="text-4xl font-bold">
-                        {{ active_organizations_count }}
-                    </p>
-                    <p class="mt-1 text-sm text-base-content/60">
-                        Active organization profiles
-                    </p>
-                </div>
+    <div class="mx-auto max-w-5xl">
+        <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-wide text-primary">Operations overview</p>
+                <h1 class="mt-2 text-4xl font-bold text-slate-950">Dashboard</h1>
             </div>
-        </a>
+            <a class="btn btn-primary" href="{% url 'donations:create' %}">
+                <span class="material-symbols-rounded">add</span>
+                New Donation
+            </a>
+        </div>
 
-        <a href="{% url 'donations:list' %}"
-           class="card bg-base-100 border border-base-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div class="card-body gap-3">
+        <section class="grid gap-4 md:grid-cols-2">
+            <a href="{% url 'organizations:list' %}"
+               class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-base-content/60">
-                        Donation tickets
-                    </span>
-                    <span class="material-symbols-rounded rounded-xl bg-warning/10 p-2 text-warning">
-                        receipt_long
-                    </span>
+                    <span class="text-sm font-medium text-slate-600">Organizations</span>
+                    <span class="material-symbols-rounded rounded-xl bg-primary/10 p-2 text-primary">apartment</span>
                 </div>
+                <p class="mt-6 text-4xl font-bold text-slate-950">{{ active_organizations_count }}</p>
+                <p class="mt-1 text-sm text-slate-600">Active organization profiles</p>
+            </a>
 
-                <div>
-                    <p class="text-4xl font-bold">
-                        {{ pending_donations_count }}
-                    </p>
-                    <p class="mt-1 text-sm text-base-content/60">
-                        Submitted, pending, or available
-                    </p>
-                </div>
-            </div>
-        </a>
-
-        <a href="{% url 'storage:list' %}"
-           class="card bg-base-100 border border-base-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div class="card-body gap-3">
+            <a href="{% url 'donations:list' %}"
+               class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-base-content/60">
-                        Storage available
-                    </span>
-                    <span class="material-symbols-rounded rounded-xl bg-info/10 p-2 text-info">
-                        warehouse
-                    </span>
+                    <span class="text-sm font-medium text-slate-600">Donation tickets</span>
+                    <span class="material-symbols-rounded rounded-xl bg-warning/10 p-2 text-warning">receipt_long</span>
                 </div>
+                <p class="mt-6 text-4xl font-bold text-slate-950">{{ pending_donations_count }}</p>
+                <p class="mt-1 text-sm text-slate-600">Submitted, pending, or available</p>
+            </a>
 
-                <div>
-                    <p class="text-4xl font-bold">
-                        {{ available_storage_count }}
-                    </p>
-                    <p class="mt-1 text-sm text-base-content/60">
-                        Locations marked available
-                    </p>
-                </div>
-            </div>
-        </a>
-
-        <a href="{% url 'collaborations:list' %}"
-           class="card bg-base-100 border border-base-200 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-            <div class="card-body gap-3">
+            <a href="{% url 'storage:list' %}"
+               class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm font-medium text-base-content/60">
-                        Collaborations
-                    </span>
-                    <span class="material-symbols-rounded rounded-xl bg-success/10 p-2 text-success">
-                        groups
-                    </span>
+                    <span class="text-sm font-medium text-slate-600">Storage available</span>
+                    <span class="material-symbols-rounded rounded-xl bg-info/10 p-2 text-info">warehouse</span>
                 </div>
+                <p class="mt-6 text-4xl font-bold text-slate-950">{{ available_storage_count }}</p>
+                <p class="mt-1 text-sm text-slate-600">Locations marked available</p>
+            </a>
 
+            <a href="{% url 'collaborations:list' %}"
+               class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-slate-600">Collaborations</span>
+                    <span class="material-symbols-rounded rounded-xl bg-success/10 p-2 text-success">groups</span>
+                </div>
+                <p class="mt-6 text-4xl font-bold text-slate-950">{{ active_collaborations_count }}</p>
+                <p class="mt-1 text-sm text-slate-600">Active coordination spaces</p>
+            </a>
+        </section>
+
+        <section class="mt-6 rounded-2xl border border-base-300 bg-white p-5 shadow-sm">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <p class="text-4xl font-bold">
-                        {{ active_collaborations_count }}
-                    </p>
-                    <p class="mt-1 text-sm text-base-content/60">
-                        Active coordination spaces
+                    <h2 class="text-2xl font-bold text-slate-950">Recent donation activity</h2>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Latest food supply records needing review, storage, or delivery.
                     </p>
                 </div>
+
+                <a href="{% url 'donations:list' %}" class="btn btn-sm btn-outline btn-primary">
+                    View all
+                </a>
             </div>
-        </a>
-    </section>
 
-    <section class="grid gap-6 xl:grid-cols-3">
-        <div class="card bg-base-100 border border-base-200 shadow-sm xl:col-span-2">
-            <div class="card-body">
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 class="card-title">
-                            Recent donation activity
-                        </h2>
-                        <p class="text-sm text-base-content/60">
-                            Latest food supply records needing review, storage, or delivery.
-                        </p>
-                    </div>
+            <div class="mt-6 overflow-x-auto">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Donor</th>
+                        <th>Food</th>
+                        <th>Storage</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
 
-                    <a href="{% url 'donations:list' %}" class="btn btn-ghost btn-sm">
-                        View all
-                    </a>
-                </div>
-
-                <div class="mt-4 overflow-x-auto">
-                    <table class="table table-zebra">
-                        <thead>
+                    <tbody>
+                    {% for donation in recent_donations %}
                         <tr>
-                            <th>Donor</th>
-                            <th>Food</th>
-                            <th>Storage</th>
-                            <th>Status</th>
+                            <td>
+                                <div class="font-semibold text-slate-950">
+                                    {{ donation.donor_name }}
+                                </div>
+                                <div class="text-xs text-slate-500">
+                                    {{ donation.created_at|date:"M j, Y" }}
+                                </div>
+                            </td>
+
+                            <td>{{ donation.food_type_display|default:donation.get_food_category_display }}</td>
+                            <td>{{ donation.get_storage_requirement_display }}</td>
+
+                            <td>
+                                <span class="badge badge-outline">
+                                    {{ donation.get_status_display }}
+                                </span>
+                            </td>
                         </tr>
-                        </thead>
-
-                        <tbody>
-                        {% for donation in recent_donations %}
-                            <tr>
-                                <td>
-                                    <div class="font-medium">
-                                        {{ donation.donor_name }}
-                                    </div>
-                                    <div class="text-xs text-base-content/50">
-                                        {{ donation.created_at|date:"M j, Y" }}
-                                    </div>
-                                </td>
-
-                                <td>
-                                    {{ donation.food_type_display|default:donation.get_food_category_display }}
-                                </td>
-
-                                <td>
-                                    {{ donation.get_storage_requirement_display }}
-                                </td>
-
-                                <td>
-                                    <span class="badge badge-outline">
-                                        {{ donation.get_status_display }}
-                                    </span>
-                                </td>
-                            </tr>
-                        {% empty %}
-                            <tr>
-                                <td colspan="4" class="py-8 text-center text-base-content/60">
-                                    No donation tickets found.
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="py-8 text-center text-slate-600">
+                                No donation tickets found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
-
-        <div class="space-y-6">
-            <div class="card bg-base-100 border border-base-200 shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title">
-                        Quick actions
-                    </h2>
-
-                    <div class="mt-3 grid gap-3">
-                        <a href="{% url 'donations:create' %}" class="btn btn-primary justify-start">
-                            <span class="material-symbols-rounded">add_circle</span>
-                            Create donation ticket
-                        </a>
-
-                        <a href="{% url 'storage:list' %}" class="btn btn-outline justify-start">
-                            <span class="material-symbols-rounded">warehouse</span>
-                            Check storage capacity
-                        </a>
-
-                        <a href="{% url 'organizations:list' %}" class="btn btn-outline justify-start">
-                            <span class="material-symbols-rounded">apartment</span>
-                            View organizations
-                        </a>
-
-                        <a href="{% url 'collaborations:list' %}" class="btn btn-outline justify-start">
-                            <span class="material-symbols-rounded">groups</span>
-                            Open collaborations
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card bg-base-100 border border-base-200 shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title">
-                        Operational focus
-                    </h2>
-
-                    <div class="mt-3 space-y-3">
-                        <div class="rounded-box bg-base-200/60 p-4">
-                            <div class="flex items-start gap-3">
-                                <span class="material-symbols-rounded text-warning">
-                                    priority_high
-                                </span>
-                                <div>
-                                    <p class="font-medium">
-                                        Review open donations
-                                    </p>
-                                    <p class="text-sm text-base-content/60">
-                                        Prioritize tickets with storage or pickup needs.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="rounded-box bg-base-200/60 p-4">
-                            <div class="flex items-start gap-3">
-                                <span class="material-symbols-rounded text-info">
-                                    inventory_2
-                                </span>
-                                <div>
-                                    <p class="font-medium">
-                                        Confirm storage availability
-                                    </p>
-                                    <p class="text-sm text-base-content/60">
-                                        Keep dry, refrigerated, and frozen capacity updated.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="rounded-box bg-base-200/60 p-4">
-                            <div class="flex items-start gap-3">
-                                <span class="material-symbols-rounded text-success">
-                                    handshake
-                                </span>
-                                <div>
-                                    <p class="font-medium">
-                                        Coordinate partners
-                                    </p>
-                                    <p class="text-sm text-base-content/60">
-                                        Use collaboration spaces for shared work.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </section>
-
-</div>
+        </section>
+    </div>
 {% endblock %}
