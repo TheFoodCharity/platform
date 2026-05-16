@@ -4,7 +4,7 @@
 {% block page_title %}Request Food{% endblock %}
 
 {% block page_body %}
-  <div class="mx-auto max-w-3xl">
+  <div class="mx-auto max-w-5xl">
     <div class="mb-8">
       <p class="text-sm font-semibold uppercase tracking-wide text-primary">Receiver request</p>
       <h1 class="mt-2 text-4xl font-bold text-slate-950">Request Food</h1>
@@ -14,7 +14,7 @@
       </p>
     </div>
 
-    <form method="post" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+    <form method="post" class="space-y-6">
       {% csrf_token %}
       {{ formset.management_form }}
 
@@ -30,103 +30,9 @@
         </div>
       {% endif %}
 
-      <section class="rounded-xl border border-primary/20 bg-primary/5 p-5">
-        <h2 class="text-xl font-bold text-slate-950">Donor and pickup information</h2>
-        <dl class="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Donation ticket</dt>
-            <dd class="mt-1 font-semibold text-primary">{{ donation.ticket_number }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Donor organization</dt>
-            <dd class="mt-1 text-slate-950">{{ donation.donor_display_name }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Donor contact</dt>
-            <dd class="mt-1 text-slate-950">{{ donation.donor_contact_display|default:"Not provided" }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Public phone</dt>
-            <dd class="mt-1 text-slate-950">{{ donation.donor_public_phone_display|default:"Not provided" }}</dd>
-          </div>
-          <div class="md:col-span-2">
-            <dt class="text-sm font-semibold text-slate-500">Pickup location</dt>
-            <dd class="mt-1 text-slate-950">{{ donation.pickup_location }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Pickup timing</dt>
-            <dd class="mt-1 text-slate-950">
-              {{ donation.get_pickup_day_display }},
-              {{ donation.get_pickup_ready_time_display }} to {{ donation.get_pickup_end_time_display }}
-            </dd>
-          </div>
-          {% if donation.pickup_notes %}
-            <div>
-              <dt class="text-sm font-semibold text-slate-500">Pickup notes</dt>
-              <dd class="mt-1 text-slate-950">{{ donation.pickup_notes }}</dd>
-            </div>
-          {% endif %}
-        </dl>
-      </section>
+      {% include "donations/partials/donation_detail.html" with donation=donation show_donor=True show_status=True show_pickup_location=True %}
 
-      <section class="mt-6 rounded-xl border border-base-300 bg-base-100 p-5">
-        <h2 class="text-xl font-bold text-slate-950">Donor logistics</h2>
-        <dl class="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Storage requirement</dt>
-            <dd class="mt-1 text-slate-950">{{ donation.get_storage_requirement_display }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm font-semibold text-slate-500">Fits in car</dt>
-            <dd class="mt-1 text-slate-950">{{ donation.fits_in_car|yesno:"Yes,No" }}</dd>
-          </div>
-        </dl>
-
-        {% if donation.requires_van or donation.requires_cube_van or donation.requires_refrigerated_vehicle or donation.requires_pallet_jack or donation.requires_forklift or donation.loading_dock_available or donation.donor_can_help_load %}
-          <div class="mt-5 flex flex-wrap gap-2">
-            {% if donation.requires_van %}
-              <span class="badge badge-primary badge-outline">Requires van</span>
-            {% endif %}
-            {% if donation.requires_cube_van %}
-              <span class="badge badge-primary badge-outline">Requires cube van</span>
-            {% endif %}
-            {% if donation.requires_refrigerated_vehicle %}
-              <span class="badge badge-primary badge-outline">Requires Refrigerated vehicle</span>
-            {% endif %}
-            {% if donation.requires_pallet_jack %}
-              <span class="badge badge-primary badge-outline">Requires Pallet jack</span>
-            {% endif %}
-            {% if donation.requires_forklift %}
-              <span class="badge badge-primary badge-outline">Requires Forklift</span>
-            {% endif %}
-            {% if donation.loading_dock_available %}
-              <span class="badge badge-primary badge-outline">Loading dock available</span>
-            {% endif %}
-            {% if donation.donor_can_help_load %}
-              <span class="badge badge-primary badge-outline">Donor can help load</span>
-            {% endif %}
-          </div>
-        {% endif %}
-
-        {% if donation.special_handling_notes or donation.chain_of_custody_notes %}
-          <dl class="mt-5 grid gap-4 md:grid-cols-2">
-            {% if donation.special_handling_notes %}
-              <div>
-                <dt class="text-sm font-semibold text-slate-500">Special handling</dt>
-                <dd class="mt-1 text-slate-950">{{ donation.special_handling_notes }}</dd>
-              </div>
-            {% endif %}
-            {% if donation.chain_of_custody_notes %}
-              <div>
-                <dt class="text-sm font-semibold text-slate-500">Chain of custody</dt>
-                <dd class="mt-1 text-slate-950">{{ donation.chain_of_custody_notes }}</dd>
-              </div>
-            {% endif %}
-          </dl>
-        {% endif %}
-      </section>
-
-      <section class="mt-6 rounded-xl border border-base-300 bg-base-100 p-5">
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-bold text-slate-950">Receiver information</h2>
         <dl class="mt-4 grid gap-4 md:grid-cols-2">
           <div>
@@ -148,7 +54,7 @@
         </dl>
       </section>
 
-      <section class="mt-6 rounded-xl border border-base-300 bg-base-100 p-5">
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-bold text-slate-950">Food requested</h2>
         <p class="mt-1 text-sm text-slate-600">Enter the amount you want from each available food item.</p>
 
@@ -158,7 +64,7 @@
               <tr>
                 <th>Food</th>
                 <th>Description</th>
-                <th>Available</th>
+                <th>Donated</th>
                 <th>Already requested</th>
                 <th>Remaining</th>
                 <th>Request</th>
@@ -185,13 +91,18 @@
             </tbody>
           </table>
         </div>
+        {% if force_remaining %}
+          <p class="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm font-semibold text-slate-700">
+            The last receiver has to take all remaining food.
+          </p>
+        {% endif %}
       </section>
 
-      <div class="mt-6 rounded-xl border border-primary/20 bg-primary/5 p-5">
+      <div class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
         {% crispy form %}
       </div>
 
-      <div class="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <a class="btn btn-outline btn-primary" href="{% url 'donations:available_detail' donation.id %}">
           Back to Donation
         </a>

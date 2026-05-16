@@ -16,9 +16,12 @@
     <form method="post" class="space-y-6">
       {% csrf_token %}
 
-      {% if form.non_field_errors or formset.non_form_errors %}
+      {% if form.errors or formset.errors or form.non_field_errors or formset.non_form_errors %}
         <div class="alert alert-error">
           <div>
+            {% if form.errors or formset.errors %}
+              <p class="font-semibold">Please fix the highlighted fields before submitting.</p>
+            {% endif %}
             {{ form.non_field_errors }}
             {{ formset.non_form_errors }}
           </div>
@@ -87,6 +90,10 @@
               {% crispy item_form %}
             </div>
           {% endfor %}
+        </div>
+
+        <div class="mb-6">
+          {{ form.people_fed_estimate|as_crispy_field }}
         </div>
       </section>
 

@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from organizations.models import Membership, Organization
 from storage.models import StorageLocation
@@ -29,6 +30,8 @@ class DonationFormTests(SimpleTestCase):
         self.assertIn("pickup_ready_time", form.fields)
         self.assertIn("pickup_end_time", form.fields)
         self.assertNotIn("pickup_deadline", form.fields)
+        self.assertIn("receiver_limit", form.fields)
+        self.assertIn("preferred_receiver_organization", form.fields)
         self.assertIn("people_fed_estimate", form.fields)
         self.assertIn("fits_in_car", form.fields)
         self.assertIn("food_safety_agreement", form.fields)
@@ -77,11 +80,11 @@ class DonationIntakeViewTests(TestCase):
             "pickup_end_time": Donation.PickupEndTime.BEFORE_5PM,
             "pickup_notes": "Today before 5pm",
             "storage_requirement": Donation.StorageRequirement.DRY,
+            "receiver_limit": Donation.ReceiverLimit.ONE,
+            "preferred_receiver_organization": "",
             "people_fed_estimate": Donation.PeopleFedEstimate.FIFTY,
             "fits_in_car": "True",
             "food_safety_agreement": "on",
-            "special_handling_notes": "",
-            "chain_of_custody_notes": "",
             "other_information": "Use the loading door.",
             "food_items-TOTAL_FORMS": str(len(FOOD_TYPE_INTAKE)),
             "food_items-INITIAL_FORMS": "0",
@@ -117,11 +120,19 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(DonationFoodItem.objects.count(), 1)
 
         donation = Donation.objects.get()
+        self.assertRedirects(response, reverse("donations:donation_thanks", args=[donation.pk]))
         self.assertEqual(donation.submitted_by, user)
         self.assertEqual(donation.supplier_organization, organization)
         self.assertEqual(donation.food_category, Donation.FoodCategory.PRODUCE)
         self.assertEqual(donation.quantity, 12)
+        self.assertEqual(donation.receiver_limit, Donation.ReceiverLimit.ONE)
+        self.assertEqual(donation.status, Donation.Status.AVAILABLE)
         self.assertIsNotNone(donation.pickup_deadline)
+
+        thanks_response = self.client.get(reverse("donations:donation_thanks", args=[donation.pk]))
+        self.assertContains(thanks_response, "Donation Submitted")
+        self.assertContains(thanks_response, "Thank you for helping fight hunger")
+        self.assertContains(thanks_response, donation.ticket_number)
 
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
         user, organization = self.create_user_with_org()
@@ -205,6 +216,7 @@ class DonationIntakeViewTests(TestCase):
             pickup_location="123 Main Street",
             pickup_deadline=timezone.now() + timezone.timedelta(days=1),
             storage_requirement=Donation.StorageRequirement.DRY,
+            receiver_limit=Donation.ReceiverLimit.NO_LIMIT,
             status=Donation.Status.SUBMITTED,
         )
         Donation.objects.create(
@@ -258,7 +270,60 @@ class DonationIntakeViewTests(TestCase):
 
         response = self.client.get(reverse("donations:list"))
 
-        self.assertContains(response, "Quantity:</span> 9 Boxes", html=False)
+        self.assertContains(response, "Total:</span> 9 Boxes", html=False)
+        self.assertContains(response, "Today, Before 5pm")
+
+    def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
+        user, organization = self.create_user_with_org()
+        deadline = timezone.now() - timezone.timedelta(minutes=1)
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=deadline,
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.AVAILABLE,
+        )
+        DonationFoodItem.objects.create(
+            donation=donation,
+            food_category=Donation.FoodCategory.PRODUCE,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=12,
+            description="Mixed produce",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:list"))
+
+        expected_deadline = date_format(timezone.localtime(deadline), "M j, Y g:i A")
+        self.assertContains(response, expected_deadline)
+        self.assertNotContains(response, "Today, Before 5pm")
+
+    def test_past_deadline_donation_is_marked_expired(self):
+        user, organization = self.create_user_with_org()
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=timezone.now() - timezone.timedelta(minutes=1),
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.AVAILABLE,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:detail", args=[donation.pk]))
+
+        self.assertContains(response, "Expired")
+        donation.refresh_from_db()
+        self.assertEqual(donation.status, Donation.Status.EXPIRED)
 
     def test_donation_detail_shows_allocation_and_request_history_sections(self):
         supplier, supplier_organization = self.create_user_with_org()
@@ -281,6 +346,7 @@ class DonationIntakeViewTests(TestCase):
             pickup_location="123 Main Street",
             pickup_deadline=timezone.now() + timezone.timedelta(days=1),
             storage_requirement=Donation.StorageRequirement.DRY,
+            receiver_limit=Donation.ReceiverLimit.NO_LIMIT,
             status=Donation.Status.SUBMITTED,
         )
         food_item = DonationFoodItem.objects.create(
@@ -315,6 +381,8 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "4 Boxes")
         self.assertContains(response, "8 Boxes")
         self.assertContains(response, "Receiver Org")
+        self.assertContains(response, "Receiver preference")
+        self.assertContains(response, "No limit")
 
 
 class FoodRequestTests(TestCase):
@@ -344,6 +412,7 @@ class FoodRequestTests(TestCase):
             pickup_location="123 Main Street",
             pickup_deadline=timezone.now() + timezone.timedelta(days=1),
             storage_requirement=Donation.StorageRequirement.DRY,
+            receiver_limit=Donation.ReceiverLimit.NO_LIMIT,
             status=Donation.Status.SUBMITTED,
         )
         self.food_item = DonationFoodItem.objects.create(
@@ -422,6 +491,36 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, "Dairy")
         self.assertContains(response, other_donation.ticket_number)
         self.assertNotContains(response, "Mixed produce")
+
+    def test_available_donation_list_prioritizes_preferred_receiver(self):
+        self.donation.preferred_receiver_organization = self.receiver_organization
+        self.donation.save(update_fields=["preferred_receiver_organization"])
+        newer_donation = Donation.objects.create(
+            submitted_by=self.supplier,
+            supplier_organization=self.supplier_organization,
+            food_category=Donation.FoodCategory.DAIRY,
+            food_type=[Donation.FoodCategory.DAIRY],
+            quantity=4,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="456 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.REFRIGERATED,
+            status=Donation.Status.SUBMITTED,
+        )
+        DonationFoodItem.objects.create(
+            donation=newer_donation,
+            food_category=Donation.FoodCategory.DAIRY,
+            packaging=DonationFoodItem.Packaging.BOXES,
+            quantity=4,
+            description="Milk",
+        )
+        self.client.force_login(self.receiver)
+
+        response = self.client.get(reverse("donations:available_list"))
+
+        content = response.content.decode()
+        self.assertContains(response, "Preferred for your organization")
+        self.assertLess(content.index(self.donation.ticket_number), content.index(newer_donation.ticket_number))
 
     def test_available_donation_list_can_filter_by_allocation_status(self):
         self.client.force_login(self.receiver)
@@ -504,6 +603,82 @@ class FoodRequestTests(TestCase):
         self.assertContains(thanks_response, food_request.ticket_number)
         self.assertContains(thanks_response, self.donation.ticket_number)
 
+    def test_one_receiver_limit_forces_request_to_all_remaining_food(self):
+        self.donation.receiver_limit = Donation.ReceiverLimit.ONE
+        self.donation.save(update_fields=["receiver_limit"])
+        self.client.force_login(self.receiver)
+
+        response = self.client.post(
+            reverse("donations:request_create", args=[self.donation.pk]),
+            {
+                "allocations-TOTAL_FORMS": "1",
+                "allocations-INITIAL_FORMS": "0",
+                "allocations-MIN_NUM_FORMS": "1",
+                "allocations-MAX_NUM_FORMS": "1000",
+                "allocations-0-food_item_id": self.food_item.id,
+                "allocations-0-quantity": 4,
+                "storage_required": "",
+                "preferred_storage": "",
+                "storage_notes": "",
+                "notes": "",
+            },
+        )
+
+        food_request = FoodRequest.objects.get()
+        self.assertRedirects(response, reverse("donations:request_thanks", args=[food_request.pk]))
+        self.assertEqual(food_request.allocations.get().quantity, 12)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, Donation.Status.COMPLETED)
+
+    def test_second_receiver_gets_all_remaining_food_for_two_receiver_limit(self):
+        self.donation.receiver_limit = Donation.ReceiverLimit.TWO
+        self.donation.save(update_fields=["receiver_limit"])
+        first_receiver = User.objects.create_user(
+            email="first-receiver@example.com",
+            password="password",
+            email_verified=True,
+        )
+        first_organization = Organization.objects.create(name="First Receiver", owner=first_receiver, is_active=True)
+        FoodRequestAllocation.objects.create(
+            food_request=FoodRequest.objects.create(
+                donation=self.donation,
+                requested_by=first_receiver,
+                receiver_organization=first_organization,
+            ),
+            donation_food_item=self.food_item,
+            quantity=5,
+        )
+        second_receiver = User.objects.create_user(
+            email="second-receiver@example.com",
+            password="password",
+            email_verified=True,
+        )
+        second_organization = Organization.objects.create(name="Second Receiver", owner=second_receiver, is_active=True)
+        Membership.objects.create(user=second_receiver, organization=second_organization)
+        self.client.force_login(second_receiver)
+
+        response = self.client.post(
+            reverse("donations:request_create", args=[self.donation.pk]),
+            {
+                "allocations-TOTAL_FORMS": "1",
+                "allocations-INITIAL_FORMS": "0",
+                "allocations-MIN_NUM_FORMS": "1",
+                "allocations-MAX_NUM_FORMS": "1000",
+                "allocations-0-food_item_id": self.food_item.id,
+                "allocations-0-quantity": 1,
+                "storage_required": "",
+                "preferred_storage": "",
+                "storage_notes": "",
+                "notes": "",
+            },
+        )
+
+        food_request = FoodRequest.objects.latest("created_at")
+        self.assertRedirects(response, reverse("donations:request_thanks", args=[food_request.pk]))
+        self.assertEqual(food_request.allocations.get().quantity, 7)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.status, Donation.Status.COMPLETED)
+
     def test_requesting_all_remaining_food_marks_donation_completed(self):
         self.client.force_login(self.receiver)
 
@@ -531,29 +706,29 @@ class FoodRequestTests(TestCase):
         self.donation.requires_van = True
         self.donation.requires_pallet_jack = True
         self.donation.loading_dock_available = True
-        self.donation.special_handling_notes = "Use loading bay door."
         self.donation.save()
 
         self.client.force_login(self.receiver)
 
         response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 
-        self.assertContains(response, "Donor and pickup information")
+        self.assertContains(response, "Donation information")
         self.assertContains(response, "Description")
         self.assertContains(response, self.donation.ticket_number)
         self.assertContains(response, "Mixed produce")
         self.assertContains(response, "Supplier Org")
-        self.assertContains(response, "Public phone")
         self.assertContains(response, "6045550199")
         self.assertContains(response, "123 Main Street")
         self.assertContains(response, "Today")
-        self.assertContains(response, "Donor logistics")
+        self.assertContains(response, "Pickup")
+        self.assertContains(response, "Logistics")
         self.assertContains(response, "Dry Storage")
         self.assertContains(response, "Requires van")
         self.assertContains(response, "Pallet jack")
         self.assertContains(response, "Loading dock available")
-        self.assertContains(response, "Use loading bay door.")
         self.assertNotContains(response, "Forklift")
+        self.assertContains(response, 'name="allocations-0-quantity"')
+        self.assertContains(response, 'value="12"')
 
     def test_food_request_form_exposes_storage_fields_not_internal_fields(self):
         form = FoodRequestForm()
