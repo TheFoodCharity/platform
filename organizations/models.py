@@ -112,6 +112,8 @@ class Organization(TimestampedModel):
     region = models.CharField(max_length=200, blank=True)
     postal_code = models.CharField(max_length=20, blank=True)
     service_area = models.TextField(blank=True, help_text=_("Geographic or community area the organization serves"))
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
 
     # Public-facing contact (shown to the public for organizations that provide direct public support)
     email = models.EmailField(blank=True, help_text=_("Public-facing contact email"))
