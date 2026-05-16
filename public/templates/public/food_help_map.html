@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="{% static 'public/css/public.css' %}">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{% static 'public/js/public-header.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -109,11 +110,7 @@
             </div>
 
             {% if location.website %}
-              <a
-                href="{{ location.website }}"
-                target="_blank"
-                class="btn btn-primary mt-6 rounded-full"
-              >
+              <a href="{{ location.website }}" target="_blank" class="btn btn-primary mt-6 rounded-full">
                 Visit Website
               </a>
             {% endif %}
@@ -130,14 +127,28 @@
   {% include "public/components/_public_footer.html" %}
 </div>
 
+{{ locations|json_script:"food-help-locations" }}
+
 <script>
   const map = L.map("food-help-map").setView([49.1913, -122.8490], 10);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
-    attribution: "&copy; OpenStreetMap contributors"
+    attribution: "&copy; OpenStreetMap contributors",
   }).addTo(map);
-</script>
 
-<script src="{% static 'public/js/public-header.js' %}" defer></script>
+  const locations = JSON.parse(
+    document.getElementById("food-help-locations").textContent
+  );
+
+  locations.forEach((location) => {
+    if (!location.latitude || !location.longitude) {
+      return;
+    }
+
+    L.marker([location.latitude, location.longitude])
+      .addTo(map)
+      .bindPopup(`<strong>${location.name}</strong><br>${location.municipality || ""}`);
+  });
+</script>
 {% endblock %}
