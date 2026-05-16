@@ -35,8 +35,6 @@ class ApplicationLocationForm(ThemedFormMixin, ModelForm):
             "region",
             "postal_code",
             "service_area",
-            "latitude",
-            "longitude",
         ]
 
 
