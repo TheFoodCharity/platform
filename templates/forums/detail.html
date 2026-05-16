@@ -1,0 +1,51 @@
+{% extends "base_app.html" %}
+
+{% block page_title %}{{ space.title }}{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-ghost btn-sm" href="{% url 'forums:list' %}">Back</a>
+{% endblock %}
+
+{% block page_body %}
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Forum space</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ space.title }}</h1>
+        <p class="mt-2 text-slate-600">{{ space.description }}</p>
+        <p class="mt-2 text-sm text-slate-500">
+          Created by {{ space.created_by.get_full_name|default:space.created_by }}
+          at {{ space.created_at|date:"M j, Y g:i A" }}.
+        </p>
+      </div>
+      <a class="btn btn-outline btn-primary" href="{% url 'forums:list' %}">Back to Forum Spaces</a>
+    </div>
+
+    <div class="mb-6 border-b border-base-300">
+      <div class="tabs tabs-border">
+        <a
+          class="tab {% if forum_detail_section == 'posts' %}tab-active{% endif %}"
+          href="{% url 'forums:detail_posts' space.id %}"
+        >
+          Posts
+        </a>
+        <a
+          class="tab {% if forum_detail_section == 'members' %}tab-active{% endif %}"
+          href="{% url 'forums:detail_members' space.id %}"
+        >
+          Members
+        </a>
+        {% if request.user.is_staff %}
+          <a
+            class="tab {% if forum_detail_section == 'admin' %}tab-active{% endif %}"
+            href="{% url 'forums:detail_admin' space.id %}"
+          >
+            Admin
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% include forum_detail_template %}
+  </div>
+{% endblock %}

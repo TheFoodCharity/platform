@@ -1,19 +1,21 @@
-<article class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm">
+<article class="rounded-2xl border p-5 shadow-sm {% if donation.is_preferred_receiver_match %}border-primary bg-primary/5 ring-1 ring-primary/20{% else %}border-base-300 bg-white{% endif %}">
   <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
     <div>
       <h2 class="text-2xl font-bold text-slate-950">
         <a class="hover:text-primary" href="{{ detail_url }}">{{ donation.food_type_display }}</a>
       </h2>
+      <p class="mt-1 text-sm font-semibold uppercase tracking-wide text-primary">{{ donation.ticket_number }}</p>
+      {% if donation.is_preferred_receiver_match %}
+        <span class="mt-3 inline-flex rounded-full border border-primary px-4 py-1.5 text-xs font-semibold uppercase leading-relaxed tracking-wide text-primary">
+          Preferred for your organization
+        </span>
+      {% endif %}
 
       <div class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
         {% if show_donor %}
-          <p><span class="font-semibold text-slate-900">Donor:</span> {{ donation.donor_name }}</p>
+          <p><span class="font-semibold text-slate-900">Donor:</span> {{ donation.donor_display_name }}</p>
         {% endif %}
-        <p><span class="font-semibold text-slate-900">Category:</span> {{ donation.get_food_category_display }}</p>
-        <p><span class="font-semibold text-slate-900">Quantity:</span> {{ donation.quantity }} {{ donation.get_unit_display }}</p>
-        {% if donation.estimated_weight %}
-          <p><span class="font-semibold text-slate-900">Estimated Weight:</span> {{ donation.estimated_weight_display }}</p>
-        {% endif %}
+        <p><span class="font-semibold text-slate-900">Total:</span> {{ donation.quantity_summary_display }}</p>
         <p>
           <span class="font-semibold text-slate-900">Storage:</span>
           {{ donation.get_storage_requirement_display }}
@@ -21,12 +23,24 @@
         {% if show_status %}
           <p>
             <span class="font-semibold text-slate-900">Status:</span>
-            <span class="badge badge-primary badge-outline">{{ donation.get_status_display }}</span>
+            {% if use_allocation_status %}
+              <span class="badge {% if donation.is_fully_requested %}border-slate-950 text-slate-950{% else %}badge-success badge-outline{% endif %}">
+                {{ donation.allocation_status_display }}
+              </span>
+            {% else %}
+              <span class="badge badge-primary badge-outline">{{ donation.get_status_display }}</span>
+            {% endif %}
+          </p>
+        {% endif %}
+        {% if show_remaining %}
+          <p>
+            <span class="font-semibold text-slate-900">Remaining:</span>
+            {{ donation.total_remaining_quantity }} package{{ donation.total_remaining_quantity|pluralize }}
           </p>
         {% endif %}
         <p class="sm:col-span-2">
           <span class="font-semibold text-slate-900">Pickup:</span>
-          {{ donation.get_pickup_day_display }}, {{ donation.get_pickup_end_time_display }}
+          {{ donation.pickup_summary_display }}
         </p>
       </div>
     </div>

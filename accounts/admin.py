@@ -1,7 +1,6 @@
 from typing import Any
 
 from django.contrib import admin
-from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
@@ -10,7 +9,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-from .models import Group, User
+from .models import User
 
 
 def _redirect_admin_login(request: HttpRequest, extra_context: dict[str, Any] | None = None):
@@ -40,8 +39,6 @@ class UserAdmin(BaseUserAdmin):
                     "is_active",
                     "is_staff",
                     "is_superuser",
-                    "groups",
-                    "user_permissions",
                 )
             },
         ),
@@ -59,8 +56,3 @@ class UserAdmin(BaseUserAdmin):
     list_display = ("email", "first_name", "last_name", "is_staff")
     search_fields = ("email", "first_name", "last_name")
     ordering = ("email",)
-
-
-@admin.register(Group)
-class GroupAdmin(BaseGroupAdmin):
-    pass

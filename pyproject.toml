@@ -12,6 +12,7 @@ requires-python = ">=3.14"
 dependencies = [
     "django>=6.0.4",
     "django-crispy-forms>=2.6",
+    "rules>=3.5",
     "django-debug-toolbar>=6.3.0",
     "django-htmx>=1.27.0",
     "django-phonenumber-field[phonenumberslite]>=8.4.0",
@@ -48,6 +49,10 @@ ignore = ["RUF012", "TD003", "TRY003"]
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "django.contrib.auth.models.User".msg = "Import User from accounts.models instead."
 "django.contrib.auth.models.Group".msg = "Import Group from accounts.models instead."
+"permissions.registry.register_permission".msg = "Use permissions.register_permission instead."
+"permissions.constants.Scope".msg = "Use permissions.Scope instead."
+"permissions.constants.SystemCapability".msg = "Use permissions.SystemCapability instead."
+"permissions.constants.SystemRole".msg = "Use permissions.SystemRole instead."
 
 [tool.ruff.lint.per-file-ignores]
 "**/migrations/*.py" = ["E501"]

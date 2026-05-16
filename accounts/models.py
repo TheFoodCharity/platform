@@ -4,7 +4,6 @@ from datetime import timedelta
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import Group as AuthGroup  # noqa: TID251
 from django.core.signing import BadSignature, TimestampSigner
 from django.db import models, transaction
 from django.template.loader import get_template
@@ -89,11 +88,6 @@ class User(AbstractUser):
             return cls.objects.get(pk=pk)
         except BadSignature, cls.DoesNotExist:
             return None
-
-
-class Group(AuthGroup):
-    class Meta:
-        proxy = True
 
 
 class VerificationCode(models.Model):
