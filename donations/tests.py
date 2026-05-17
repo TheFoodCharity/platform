@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.formats import date_format
 
 from organizations.models import Membership, Organization
+from organizations.services import SESSION_KEY
 from storage.models import StorageLocation
 
 from .forms import (
@@ -76,6 +77,11 @@ class DonationIntakeViewTests(TestCase):
         organization = Organization.objects.create(name=organization_name, owner=user, is_active=True)
         Membership.objects.create(user=user, organization=organization)
         return user, organization
+
+    def select_organization(self, organization):
+        session = self.client.session
+        session[SESSION_KEY] = organization.pk
+        session.save()
 
     def donation_post_data(self):
         data = {
@@ -183,6 +189,41 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Sam Supplier")
         self.assertContains(response, 'name="pickup_location"')
         self.assertContains(response, 'value="1081 Burrard St, Suite 200, Vancouver, BC V6Z 1Y6"')
+
+    def test_donation_form_uses_current_switched_organization(self):
+        user, _first_organization = self.create_user_with_org(organization_name="First Org")
+        second_organization = Organization.objects.create(
+            name="Second Org",
+            owner=user,
+            is_active=True,
+            address_line_1="222 Switch Street",
+            municipality="Burnaby",
+            region="BC",
+            postal_code="V5A 1A1",
+            email="second@example.com",
+        )
+        Membership.objects.create(user=user, organization=second_organization)
+        self.client.force_login(user)
+        self.select_organization(second_organization)
+
+        response = self.client.get(reverse("donations:create"))
+
+        self.assertContains(response, "Second Org")
+        self.assertContains(response, "second@example.com")
+
+    def test_created_donation_uses_current_switched_organization(self):
+        user, first_organization = self.create_user_with_org(organization_name="First Org")
+        second_organization = Organization.objects.create(name="Second Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=second_organization)
+        self.client.force_login(user)
+        self.select_organization(second_organization)
+
+        response = self.client.post(reverse("donations:create"), self.donation_post_data())
+
+        donation = Donation.objects.get()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(donation.supplier_organization, second_organization)
+        self.assertNotEqual(donation.supplier_organization, first_organization)
 
     def test_org_members_share_supplier_donation_list(self):
         owner = User.objects.create_user(
