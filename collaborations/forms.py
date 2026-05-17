@@ -154,17 +154,14 @@ class CollaborationFileUploadForm(ThemedFormMixin, forms.ModelForm):
         if self.uploaded_by is None:
             raise ValueError("CollaborationFileUploadForm requires uploaded_by before saving.")
 
-        collaboration_file = super().save(commit=False)
         uploaded_file = self.cleaned_data["file"]
-        collaboration_file.space = self.space
-        collaboration_file.original_filename = Path(uploaded_file.name).name
-        collaboration_file.content_type = uploaded_file.content_type
-        collaboration_file.size = uploaded_file.size
-        collaboration_file.uploaded_by = self.uploaded_by
+        self.instance.space = self.space
+        self.instance.original_filename = Path(uploaded_file.name).name
+        self.instance.content_type = uploaded_file.content_type
+        self.instance.size = uploaded_file.size
+        self.instance.uploaded_by = self.uploaded_by
 
-        if commit:
-            collaboration_file.save()
-        return collaboration_file
+        return super().save(commit)
 
 
 class CollaborationLinkedRecordForm(ThemedFormMixin, forms.Form):
