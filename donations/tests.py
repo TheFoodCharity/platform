@@ -51,6 +51,11 @@ class DonationFormTests(SimpleTestCase):
 
         self.assertNotIn("status", form.fields)
 
+    def test_receiver_limit_defaults_to_one_receiver(self):
+        form = DonationForm()
+
+        self.assertEqual(form["receiver_limit"].value(), Donation.ReceiverLimit.ONE)
+
     def test_unit_fields_use_dropdown_choices(self):
         form = DonationForm()
 
@@ -275,7 +280,7 @@ class DonationIntakeViewTests(TestCase):
 
     def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
         user, organization = self.create_user_with_org()
-        deadline = timezone.now() - timezone.timedelta(minutes=1)
+        deadline = timezone.now() - timezone.timedelta(days=1)
         donation = Donation.objects.create(
             submitted_by=user,
             supplier_organization=organization,
@@ -303,6 +308,29 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, expected_deadline)
         self.assertNotContains(response, "Today, Before 5pm")
 
+    def test_same_day_pickup_deadline_is_not_marked_expired(self):
+        user, organization = self.create_user_with_org()
+        deadline = timezone.localtime(timezone.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=deadline,
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.AVAILABLE,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:detail", args=[donation.pk]))
+
+        self.assertContains(response, "Available")
+        donation.refresh_from_db()
+        self.assertEqual(donation.status, Donation.Status.AVAILABLE)
+
     def test_past_deadline_donation_is_marked_expired(self):
         user, organization = self.create_user_with_org()
         donation = Donation.objects.create(
@@ -313,7 +341,7 @@ class DonationIntakeViewTests(TestCase):
             quantity=12,
             unit=Donation.QuantityUnit.BOXES,
             pickup_location="123 Main Street",
-            pickup_deadline=timezone.now() - timezone.timedelta(minutes=1),
+            pickup_deadline=timezone.now() - timezone.timedelta(days=1),
             storage_requirement=Donation.StorageRequirement.DRY,
             status=Donation.Status.AVAILABLE,
         )

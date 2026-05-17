@@ -18,8 +18,9 @@ PICKUP_END_HOURS = {
 
 def expire_past_deadline_donations():
     """Expire open donations once their pickup deadline has passed."""
+    start_of_today = timezone.make_aware(datetime.combine(timezone.localdate(), time.min))
     Donation.objects.filter(
-        pickup_deadline__lte=timezone.now(),
+        pickup_deadline__lt=start_of_today,
         status__in=[
             Donation.Status.SUBMITTED,
             Donation.Status.AVAILABLE,
