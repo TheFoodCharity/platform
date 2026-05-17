@@ -404,6 +404,29 @@ def food_request_create(request, pk):
 
 
 @login_required
+def food_request_detail(request, pk):
+    food_request = get_object_or_404(
+        FoodRequest.objects.select_related(
+            "donation",
+            "donation__supplier_organization",
+            "requested_by",
+            "receiver_organization",
+        ).prefetch_related(
+            "allocations__donation_food_item",
+        ),
+        pk=pk,
+    )
+    return render(
+        request,
+        "donations/food_request_detail.html",
+        {
+            "food_request": food_request,
+            "receiver_address_display": organization_address_display(food_request.receiver_organization),
+        },
+    )
+
+
+@login_required
 def food_request_thanks(request, pk):
     food_request = get_object_or_404(FoodRequest, pk=pk)
     return render(request, "donations/food_request_thanks.html", {"food_request": food_request})

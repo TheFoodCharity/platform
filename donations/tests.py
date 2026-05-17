@@ -452,6 +452,7 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Receiver Org")
         self.assertContains(response, "Receiver preference")
         self.assertContains(response, "No limit")
+        self.assertContains(response, reverse("donations:request_detail", args=[food_request.pk]))
 
 
 class FoodRequestTests(TestCase):
@@ -671,6 +672,49 @@ class FoodRequestTests(TestCase):
         thanks_response = self.client.get(reverse("donations:request_thanks", args=[food_request.pk]))
         self.assertContains(thanks_response, food_request.ticket_number)
         self.assertContains(thanks_response, self.donation.ticket_number)
+
+    def test_receiver_can_view_food_request_detail(self):
+        self.client.force_login(self.receiver)
+        self.receiver_organization.address_line_1 = "555 Receiver Road"
+        self.receiver_organization.municipality = "Vancouver"
+        self.receiver_organization.region = "BC"
+        self.receiver_organization.postal_code = "V6B 1A1"
+        self.receiver_organization.save(
+            update_fields=[
+                "address_line_1",
+                "municipality",
+                "region",
+                "postal_code",
+            ],
+        )
+        food_request = FoodRequest.objects.create(
+            donation=self.donation,
+            requested_by=self.receiver,
+            receiver_organization=self.receiver_organization,
+            storage_required=True,
+            preferred_storage=self.storage,
+            storage_notes="Keep cold until pickup.",
+            notes="Can arrive after lunch.",
+            status=FoodRequest.Status.SUBMITTED,
+        )
+        FoodRequestAllocation.objects.create(
+            food_request=food_request,
+            donation_food_item=self.food_item,
+            quantity=5,
+        )
+
+        response = self.client.get(reverse("donations:request_detail", args=[food_request.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Request Details")
+        self.assertContains(response, food_request.ticket_number)
+        self.assertContains(response, self.donation.ticket_number)
+        self.assertContains(response, "Receiver Org")
+        self.assertContains(response, "555 Receiver Road, Vancouver, BC V6B 1A1")
+        self.assertContains(response, "Mixed produce")
+        self.assertContains(response, "5 Boxes")
+        self.assertContains(response, "Keep cold until pickup.")
+        self.assertContains(response, "Can arrive after lunch.")
 
     def test_one_receiver_limit_forces_request_to_all_remaining_food(self):
         self.donation.receiver_limit = Donation.ReceiverLimit.ONE
