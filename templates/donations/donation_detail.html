@@ -42,7 +42,11 @@
                 {% for allocation in food_request.allocations.all %}
                   <tr>
                     <td>{{ food_request.created_at|date:"M j, Y" }}</td>
-                    <td class="font-semibold text-primary">{{ food_request.ticket_number }}</td>
+                    <td>
+                      <a class="font-semibold text-primary hover:underline" href="{% url 'donations:request_detail' food_request.pk %}">
+                        {{ food_request.ticket_number }}
+                      </a>
+                    </td>
                     <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
                     <td>{{ food_request.receiver_display_name }}</td>
                     <td>
@@ -61,7 +65,11 @@
                 {% empty %}
                   <tr>
                     <td>{{ food_request.created_at|date:"M j, Y" }}</td>
-                    <td class="font-semibold text-primary">{{ food_request.ticket_number }}</td>
+                    <td>
+                      <a class="font-semibold text-primary hover:underline" href="{% url 'donations:request_detail' food_request.pk %}">
+                        {{ food_request.ticket_number }}
+                      </a>
+                    </td>
                     <td>{{ food_request.receiver_organization_display|default:"No organization" }}</td>
                     <td>{{ food_request.receiver_display_name }}</td>
                     <td colspan="2" class="text-slate-600">No food quantities recorded.</td>

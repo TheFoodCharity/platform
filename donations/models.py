@@ -118,7 +118,7 @@ class Donation(models.Model):
         "maximum number of receivers",
         max_length=20,
         choices=ReceiverLimit.choices,
-        default=ReceiverLimit.NO_LIMIT,
+        default=ReceiverLimit.ONE,
     )
 
     food_category = models.CharField(
@@ -255,7 +255,7 @@ class Donation(models.Model):
 
     @property
     def pickup_summary_display(self):
-        if self.pickup_deadline <= timezone.now():
+        if timezone.localtime(self.pickup_deadline).date() < timezone.localdate():
             return date_format(timezone.localtime(self.pickup_deadline), "M j, Y g:i A")
         return f"{self.get_pickup_day_display()}, {self.get_pickup_end_time_display()}"
 
