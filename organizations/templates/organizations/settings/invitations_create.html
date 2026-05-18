@@ -1,0 +1,15 @@
+{% extends "organizations/settings/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block card_title %}Send an Invitation{% endblock %}
+{% block card_subtitle %}Invite a new member to your organization{% endblock %}
+
+{% block card_body %}
+    {% partialdef form inline %}
+        <form class="flex flex-row items-center justify-start gap-x-4"
+              method="post" action="{% url 'organizations:invitations_create' %}">
+            {% crispy form %}
+            <button type="submit" class="btn btn-primary mt-8">Send</button>
+        </form>
+    {% endpartialdef %}
+{% endblock %}

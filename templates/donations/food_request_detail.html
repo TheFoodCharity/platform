@@ -1,0 +1,119 @@
+{% extends "base_app.html" %}
+
+{% block page_title %}Request Details{% endblock %}
+
+{% block page_body %}
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Request history</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">Request Details</h1>
+        <p class="mt-2 text-sm font-semibold uppercase tracking-wide text-primary">{{ food_request.ticket_number }}</p>
+      </div>
+      <a class="btn btn-outline btn-primary" href="{% url 'donations:detail' food_request.donation.pk %}">
+        Back to Donation
+      </a>
+    </div>
+
+    <div class="space-y-6">
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-sm font-semibold uppercase tracking-wide text-primary">Request information</p>
+            <h2 class="mt-1 text-2xl font-bold text-slate-950">{{ food_request.ticket_number }}</h2>
+          </div>
+          <span class="badge badge-primary badge-outline">{{ food_request.get_status_display }}</span>
+        </div>
+
+        <dl class="mt-6 grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Donation ticket</dt>
+            <dd class="mt-1">
+              <a class="font-semibold text-primary hover:underline" href="{% url 'donations:detail' food_request.donation.pk %}">
+                {{ food_request.donation.ticket_number }}
+              </a>
+            </dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Submitted</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.created_at|date:"M j, Y g:i A" }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Receiver organization</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.receiver_organization_display|default:"No organization" }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Receiver address</dt>
+            <dd class="mt-1 text-slate-950">{{ receiver_address_display|default:"Not provided" }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Requested by</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.receiver_display_name }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Email</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.receiver_email_display }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Phone</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.receiver_phone_display|default:"Not provided" }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-wide text-primary">Food requested</p>
+          <h2 class="mt-1 text-2xl font-bold text-slate-950">Requested Quantities</h2>
+        </div>
+
+        <div class="mt-6 overflow-x-auto rounded-xl border border-base-300">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Food item</th>
+                <th>Description</th>
+                <th>Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for allocation in food_request.allocations.all %}
+                <tr>
+                  <td class="font-semibold text-slate-950">{{ allocation.donation_food_item.get_food_category_display }}</td>
+                  <td>{{ allocation.donation_food_item.description|default:"No description provided." }}</td>
+                  <td>{{ allocation.quantity }} {{ allocation.donation_food_item.get_packaging_display }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="3" class="text-slate-600">No food quantities recorded.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="text-2xl font-bold text-slate-950">Notes</h2>
+        <dl class="mt-4 grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Storage required</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.storage_required|yesno:"Yes,No" }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4">
+            <dt class="text-sm font-semibold text-slate-500">Preferred storage</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.preferred_storage|default:"Not selected" }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4 md:col-span-2">
+            <dt class="text-sm font-semibold text-slate-500">Storage notes</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.storage_notes|default:"No storage notes." }}</dd>
+          </div>
+          <div class="rounded-xl border border-base-300 bg-base-100 p-4 md:col-span-2">
+            <dt class="text-sm font-semibold text-slate-500">Request notes</dt>
+            <dd class="mt-1 text-slate-950">{{ food_request.notes|default:"No request notes." }}</dd>
+          </div>
+        </dl>
+      </section>
+    </div>
+  </div>
+{% endblock %}

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
@@ -193,6 +194,8 @@ LOGIN_REDIRECT_URL = "organizations:dispatch"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 1 day
+
+INVITATION_TTL = timedelta(hours=72)
 
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/

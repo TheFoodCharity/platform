@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.utils.formats import date_format
 
 from organizations.models import Membership, Organization
+from organizations.services import SESSION_KEY
 from storage.models import StorageLocation
 
 from .forms import (
@@ -17,6 +18,12 @@ from .forms import (
 from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
 User = get_user_model()
+
+
+def select_client_organization(client, organization):
+    session = client.session
+    session[SESSION_KEY] = organization.pk
+    session.save()
 
 
 class DonationFormTests(SimpleTestCase):
@@ -51,6 +58,11 @@ class DonationFormTests(SimpleTestCase):
 
         self.assertNotIn("status", form.fields)
 
+    def test_receiver_limit_defaults_to_one_receiver(self):
+        form = DonationForm()
+
+        self.assertEqual(form["receiver_limit"].value(), Donation.ReceiverLimit.ONE)
+
     def test_unit_fields_use_dropdown_choices(self):
         form = DonationForm()
 
@@ -71,6 +83,9 @@ class DonationIntakeViewTests(TestCase):
         organization = Organization.objects.create(name=organization_name, owner=user, is_active=True)
         Membership.objects.create(user=user, organization=organization)
         return user, organization
+
+    def select_organization(self, organization):
+        select_client_organization(self.client, organization)
 
     def donation_post_data(self):
         data = {
@@ -112,6 +127,7 @@ class DonationIntakeViewTests(TestCase):
     def test_create_donation_saves_food_items(self):
         user, organization = self.create_user_with_org()
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.post(reverse("donations:create"), self.donation_post_data())
 
@@ -137,6 +153,7 @@ class DonationIntakeViewTests(TestCase):
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
         user, organization = self.create_user_with_org()
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.post(reverse("donations:create"), self.donation_post_data())
 
@@ -168,6 +185,7 @@ class DonationIntakeViewTests(TestCase):
         )
         Membership.objects.create(user=user, organization=organization)
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:create"))
 
@@ -178,6 +196,41 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Sam Supplier")
         self.assertContains(response, 'name="pickup_location"')
         self.assertContains(response, 'value="1081 Burrard St, Suite 200, Vancouver, BC V6Z 1Y6"')
+
+    def test_donation_form_uses_current_switched_organization(self):
+        user, _first_organization = self.create_user_with_org(organization_name="First Org")
+        second_organization = Organization.objects.create(
+            name="Second Org",
+            owner=user,
+            is_active=True,
+            address_line_1="222 Switch Street",
+            municipality="Burnaby",
+            region="BC",
+            postal_code="V5A 1A1",
+            email="second@example.com",
+        )
+        Membership.objects.create(user=user, organization=second_organization)
+        self.client.force_login(user)
+        self.select_organization(second_organization)
+
+        response = self.client.get(reverse("donations:create"))
+
+        self.assertContains(response, "Second Org")
+        self.assertContains(response, "second@example.com")
+
+    def test_created_donation_uses_current_switched_organization(self):
+        user, first_organization = self.create_user_with_org(organization_name="First Org")
+        second_organization = Organization.objects.create(name="Second Org", owner=user, is_active=True)
+        Membership.objects.create(user=user, organization=second_organization)
+        self.client.force_login(user)
+        self.select_organization(second_organization)
+
+        response = self.client.post(reverse("donations:create"), self.donation_post_data())
+
+        donation = Donation.objects.get()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(donation.supplier_organization, second_organization)
+        self.assertNotEqual(donation.supplier_organization, first_organization)
 
     def test_org_members_share_supplier_donation_list(self):
         owner = User.objects.create_user(
@@ -232,6 +285,7 @@ class DonationIntakeViewTests(TestCase):
             status=Donation.Status.SUBMITTED,
         )
         self.client.force_login(member)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:list"))
 
@@ -267,6 +321,7 @@ class DonationIntakeViewTests(TestCase):
             description="Other food",
         )
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:list"))
 
@@ -275,7 +330,7 @@ class DonationIntakeViewTests(TestCase):
 
     def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
         user, organization = self.create_user_with_org()
-        deadline = timezone.now() - timezone.timedelta(minutes=1)
+        deadline = timezone.now() - timezone.timedelta(days=1)
         donation = Donation.objects.create(
             submitted_by=user,
             supplier_organization=organization,
@@ -296,12 +351,36 @@ class DonationIntakeViewTests(TestCase):
             description="Mixed produce",
         )
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:list"))
 
         expected_deadline = date_format(timezone.localtime(deadline), "M j, Y g:i A")
         self.assertContains(response, expected_deadline)
         self.assertNotContains(response, "Today, Before 5pm")
+
+    def test_same_day_pickup_deadline_is_not_marked_expired(self):
+        user, organization = self.create_user_with_org()
+        deadline = timezone.localtime(timezone.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=deadline,
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.AVAILABLE,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("donations:detail", args=[donation.pk]))
+
+        self.assertContains(response, "Available")
+        donation.refresh_from_db()
+        self.assertEqual(donation.status, Donation.Status.AVAILABLE)
 
     def test_past_deadline_donation_is_marked_expired(self):
         user, organization = self.create_user_with_org()
@@ -313,7 +392,7 @@ class DonationIntakeViewTests(TestCase):
             quantity=12,
             unit=Donation.QuantityUnit.BOXES,
             pickup_location="123 Main Street",
-            pickup_deadline=timezone.now() - timezone.timedelta(minutes=1),
+            pickup_deadline=timezone.now() - timezone.timedelta(days=1),
             storage_requirement=Donation.StorageRequirement.DRY,
             status=Donation.Status.AVAILABLE,
         )
@@ -383,9 +462,13 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Receiver Org")
         self.assertContains(response, "Receiver preference")
         self.assertContains(response, "No limit")
+        self.assertContains(response, reverse("donations:request_detail", args=[food_request.pk]))
 
 
 class FoodRequestTests(TestCase):
+    def select_organization(self, organization):
+        select_client_organization(self.client, organization)
+
     def setUp(self):
         self.supplier = User.objects.create_user(
             email="supplier@example.com",
@@ -450,6 +533,7 @@ class FoodRequestTests(TestCase):
 
     def test_receiver_can_view_available_donation_list(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
         response = self.client.get(reverse("donations:available_list"))
 
         self.assertEqual(response.status_code, 200)
@@ -462,6 +546,7 @@ class FoodRequestTests(TestCase):
 
     def test_available_donation_list_can_filter_by_category(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         other_donation = Donation.objects.create(
             submitted_by=self.supplier,
@@ -515,6 +600,7 @@ class FoodRequestTests(TestCase):
             description="Milk",
         )
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.get(reverse("donations:available_list"))
 
@@ -524,6 +610,7 @@ class FoodRequestTests(TestCase):
 
     def test_available_donation_list_can_filter_by_allocation_status(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         food_request = FoodRequest.objects.create(
             donation=self.donation,
@@ -566,6 +653,7 @@ class FoodRequestTests(TestCase):
 
     def test_receiver_can_submit_food_request(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -603,10 +691,54 @@ class FoodRequestTests(TestCase):
         self.assertContains(thanks_response, food_request.ticket_number)
         self.assertContains(thanks_response, self.donation.ticket_number)
 
+    def test_receiver_can_view_food_request_detail(self):
+        self.client.force_login(self.receiver)
+        self.receiver_organization.address_line_1 = "555 Receiver Road"
+        self.receiver_organization.municipality = "Vancouver"
+        self.receiver_organization.region = "BC"
+        self.receiver_organization.postal_code = "V6B 1A1"
+        self.receiver_organization.save(
+            update_fields=[
+                "address_line_1",
+                "municipality",
+                "region",
+                "postal_code",
+            ],
+        )
+        food_request = FoodRequest.objects.create(
+            donation=self.donation,
+            requested_by=self.receiver,
+            receiver_organization=self.receiver_organization,
+            storage_required=True,
+            preferred_storage=self.storage,
+            storage_notes="Keep cold until pickup.",
+            notes="Can arrive after lunch.",
+            status=FoodRequest.Status.SUBMITTED,
+        )
+        FoodRequestAllocation.objects.create(
+            food_request=food_request,
+            donation_food_item=self.food_item,
+            quantity=5,
+        )
+
+        response = self.client.get(reverse("donations:request_detail", args=[food_request.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Request Details")
+        self.assertContains(response, food_request.ticket_number)
+        self.assertContains(response, self.donation.ticket_number)
+        self.assertContains(response, "Receiver Org")
+        self.assertContains(response, "555 Receiver Road, Vancouver, BC V6B 1A1")
+        self.assertContains(response, "Mixed produce")
+        self.assertContains(response, "5 Boxes")
+        self.assertContains(response, "Keep cold until pickup.")
+        self.assertContains(response, "Can arrive after lunch.")
+
     def test_one_receiver_limit_forces_request_to_all_remaining_food(self):
         self.donation.receiver_limit = Donation.ReceiverLimit.ONE
         self.donation.save(update_fields=["receiver_limit"])
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -656,6 +788,7 @@ class FoodRequestTests(TestCase):
         second_organization = Organization.objects.create(name="Second Receiver", owner=second_receiver, is_active=True)
         Membership.objects.create(user=second_receiver, organization=second_organization)
         self.client.force_login(second_receiver)
+        self.select_organization(second_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -681,6 +814,7 @@ class FoodRequestTests(TestCase):
 
     def test_requesting_all_remaining_food_marks_donation_completed(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -709,6 +843,7 @@ class FoodRequestTests(TestCase):
         self.donation.save()
 
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 
