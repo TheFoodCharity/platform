@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from organizations.decorators import organization_required
+
 from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestAllocationFormSet, FoodRequestForm
 from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
 
@@ -72,18 +74,6 @@ def save_food_items(donation, formset):
         )
 
     DonationFoodItem.objects.bulk_create(items)
-
-
-def user_organization(request):
-    """Return the currently selected organization for donation activity."""
-    if not request.user.is_authenticated:
-        return None
-
-    organization = getattr(request, "organization", None)
-    if organization is not None and not organization.is_anonymous:
-        return organization
-
-    return request.user.organizations.filter(is_active=True).first()
 
 
 def donor_profile(request, organization):
@@ -163,11 +153,11 @@ def sync_donation_status_from_allocations(donation):
         donation.save(update_fields=["status", "updated_at"])
 
 
-@login_required
+@organization_required
 def donation_list(request):
     expire_past_deadline_donations()
     donations = Donation.objects.all().order_by("-created_at")
-    organization = user_organization(request)
+    organization = request.organization
 
     if not request.user.is_staff:
         donations = donations.filter(supplier_organization=organization)
@@ -190,12 +180,9 @@ def donation_list(request):
     return render(request, "donations/donation_list.html", context)
 
 
-@login_required
+@organization_required
 def donation_create(request):
-    organization = user_organization(request)
-    if organization is None:
-        messages.error(request, "You need an active organization before submitting a donation.")
-        return redirect("organizations:apply")
+    organization = request.organization
 
     if request.method == "POST":
         form = DonationForm(request.POST)
@@ -287,6 +274,7 @@ def donation_detail(request, pk):
     )
 
 
+@organization_required
 def available_donation_list(request):
     expire_past_deadline_donations()
     donations = (
@@ -321,12 +309,9 @@ def available_donation_list(request):
     elif availability == "fully_requested":
         donation_list = [donation for donation in donation_list if donation.is_fully_requested]
 
-    receiver_organization = user_organization(request)
+    receiver_organization = request.organization
     for donation in donation_list:
-        donation.is_preferred_receiver_match = (
-            receiver_organization is not None
-            and donation.preferred_receiver_organization_id == receiver_organization.id
-        )
+        donation.is_preferred_receiver_match = donation.preferred_receiver_organization_id == receiver_organization.id
     donation_list.sort(key=lambda donation: not donation.is_preferred_receiver_match)
 
     return render(
@@ -358,14 +343,11 @@ def available_donation_detail(request, pk):
     return render(request, "donations/available_donation_detail.html", {"donation": donation})
 
 
-@login_required
+@organization_required
 def food_request_create(request, pk):
     expire_past_deadline_donations()
     donation = get_object_or_404(Donation, pk=pk)
-    organization = user_organization(request)
-    if organization is None:
-        messages.error(request, "You need an active organization before requesting food.")
-        return redirect("organizations:apply")
+    organization = request.organization
     if not donation.can_accept_receiver(organization):
         messages.error(request, "This donation has reached its maximum number of receivers.")
         return redirect("donations:available_detail", pk=donation.pk)

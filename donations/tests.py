@@ -20,6 +20,12 @@ from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocati
 User = get_user_model()
 
 
+def select_client_organization(client, organization):
+    session = client.session
+    session[SESSION_KEY] = organization.pk
+    session.save()
+
+
 class DonationFormTests(SimpleTestCase):
     def test_intake_form_has_reference_style_sections(self):
         form = DonationForm()
@@ -79,9 +85,7 @@ class DonationIntakeViewTests(TestCase):
         return user, organization
 
     def select_organization(self, organization):
-        session = self.client.session
-        session[SESSION_KEY] = organization.pk
-        session.save()
+        select_client_organization(self.client, organization)
 
     def donation_post_data(self):
         data = {
@@ -123,6 +127,7 @@ class DonationIntakeViewTests(TestCase):
     def test_create_donation_saves_food_items(self):
         user, organization = self.create_user_with_org()
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.post(reverse("donations:create"), self.donation_post_data())
 
@@ -148,6 +153,7 @@ class DonationIntakeViewTests(TestCase):
     def test_logged_in_user_donation_is_attached_to_user_and_organization(self):
         user, organization = self.create_user_with_org()
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.post(reverse("donations:create"), self.donation_post_data())
 
@@ -179,6 +185,7 @@ class DonationIntakeViewTests(TestCase):
         )
         Membership.objects.create(user=user, organization=organization)
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:create"))
 
@@ -278,6 +285,7 @@ class DonationIntakeViewTests(TestCase):
             status=Donation.Status.SUBMITTED,
         )
         self.client.force_login(member)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:list"))
 
@@ -313,6 +321,7 @@ class DonationIntakeViewTests(TestCase):
             description="Other food",
         )
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:list"))
 
@@ -342,6 +351,7 @@ class DonationIntakeViewTests(TestCase):
             description="Mixed produce",
         )
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:list"))
 
@@ -456,6 +466,9 @@ class DonationIntakeViewTests(TestCase):
 
 
 class FoodRequestTests(TestCase):
+    def select_organization(self, organization):
+        select_client_organization(self.client, organization)
+
     def setUp(self):
         self.supplier = User.objects.create_user(
             email="supplier@example.com",
@@ -520,6 +533,7 @@ class FoodRequestTests(TestCase):
 
     def test_receiver_can_view_available_donation_list(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
         response = self.client.get(reverse("donations:available_list"))
 
         self.assertEqual(response.status_code, 200)
@@ -532,6 +546,7 @@ class FoodRequestTests(TestCase):
 
     def test_available_donation_list_can_filter_by_category(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         other_donation = Donation.objects.create(
             submitted_by=self.supplier,
@@ -585,6 +600,7 @@ class FoodRequestTests(TestCase):
             description="Milk",
         )
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.get(reverse("donations:available_list"))
 
@@ -594,6 +610,7 @@ class FoodRequestTests(TestCase):
 
     def test_available_donation_list_can_filter_by_allocation_status(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         food_request = FoodRequest.objects.create(
             donation=self.donation,
@@ -636,6 +653,7 @@ class FoodRequestTests(TestCase):
 
     def test_receiver_can_submit_food_request(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -720,6 +738,7 @@ class FoodRequestTests(TestCase):
         self.donation.receiver_limit = Donation.ReceiverLimit.ONE
         self.donation.save(update_fields=["receiver_limit"])
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -769,6 +788,7 @@ class FoodRequestTests(TestCase):
         second_organization = Organization.objects.create(name="Second Receiver", owner=second_receiver, is_active=True)
         Membership.objects.create(user=second_receiver, organization=second_organization)
         self.client.force_login(second_receiver)
+        self.select_organization(second_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -794,6 +814,7 @@ class FoodRequestTests(TestCase):
 
     def test_requesting_all_remaining_food_marks_donation_completed(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.post(
             reverse("donations:request_create", args=[self.donation.pk]),
@@ -822,6 +843,7 @@ class FoodRequestTests(TestCase):
         self.donation.save()
 
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
 
         response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 
