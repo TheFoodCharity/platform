@@ -39,7 +39,7 @@ projects:
                   property: connectionString
 
               - key: ALLOWED_HOSTS
-                value: thefoodcharity.ca
+                value: thefoodcharity.ca,*.onrender.com
 
               # TODO: add SMTP settings
 
