@@ -56,12 +56,16 @@
                     {% block sidenav %}
                         {% if not current_organization.is_anonymous %}
                             {% if current_organization.is_approved %}
-                                <li><a href="{% url 'donations:list' %}">
-                                    <span class="material-symbols-rounded">hand_package</span> Donations
-                                </a></li>
-                                <li><a href="{% url 'donations:available_list' %}">
-                                    <span class="material-symbols-rounded">volunteer_activism</span> Food Request
-                                </a></li>
+                                {% if perms.donations.view_donations %}
+                                    <li><a href="{% url 'donations:list' %}">
+                                        <span class="material-symbols-rounded">hand_package</span> Donations
+                                    </a></li>
+                                {% endif %}
+                                {% if perms.donations.view_available_donations %}
+                                    <li><a href="{% url 'donations:available_list' %}">
+                                        <span class="material-symbols-rounded">volunteer_activism</span> Food Request
+                                    </a></li>
+                                {% endif %}
                                 <li><a href="{% url 'storage:list' %}">
                                     <span class="material-symbols-rounded">warehouse</span> Storage
                                 </a></li>

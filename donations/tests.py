@@ -420,6 +420,37 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(other_detail_response.status_code, 200)
         self.assertEqual(create_response.status_code, 403)
 
+    def test_dashboard_shows_only_permitted_donation_nav_items(self):
+        donor_user, donor_organization = self.create_user_with_org()
+        self.client.force_login(donor_user)
+        self.select_organization(donor_organization)
+
+        donor_response = self.client.get(reverse("donations:list"))
+
+        self.assertContains(donor_response, "hand_package")
+        self.assertContains(donor_response, "> Donations")
+        self.assertNotContains(donor_response, "volunteer_activism")
+        self.assertNotContains(donor_response, "> Food Request")
+
+        receiver_user = User.objects.create_user(
+            email="receiver-nav@example.com",
+            password="password",
+            first_name="Receiver",
+            last_name="Nav",
+            email_verified=True,
+        )
+        receiver_organization = Organization.objects.create(name="Receiver Nav Org", owner=receiver_user)
+        grant_receiver_access(receiver_user, receiver_organization)
+        self.client.force_login(receiver_user)
+        self.select_organization(receiver_organization)
+
+        receiver_response = self.client.get(reverse("donations:available_list"))
+
+        self.assertNotContains(receiver_response, "hand_package")
+        self.assertNotContains(receiver_response, "> Donations")
+        self.assertContains(receiver_response, "volunteer_activism")
+        self.assertContains(receiver_response, "> Food Request")
+
     def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
         user, organization = self.create_user_with_org()
         deadline = timezone.now() - timezone.timedelta(days=1)
