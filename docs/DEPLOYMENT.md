@@ -29,6 +29,7 @@ running locally). See `.env.example` for a reference.
 | `SMTP__PASSWORD` | No       | SMTP authentication password                                                              |
 | `SMTP__SECURITY` | No       | Connection security: `smtps`, `starttls`, or `none` (default: `none`)                     |
 | `SMTP__TIMEOUT`  | No       | Connection timeout in seconds (default: none)                                             |
+| `HTTPS`          | No       | Set to `false` to disable SSL redirect and secure cookies (local testing only, default: `true`) |
 
 Generate a suitable `SECRET_KEY` with:
 

@@ -65,16 +65,16 @@ CLAMAV_TIMEOUT = env.clamav.timeout
 
 CRISPY_FAIL_SILENTLY = True
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = env.https
+SESSION_COOKIE_SECURE = env.https
 SESSION_COOKIE_HTTPONLY = True
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = env.https
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 # Render.com terminates TLS at its edge and forwards requests over HTTP with
 # X-Forwarded-Proto; this header must be trusted so SECURE_SSL_REDIRECT doesn't
 # infinite-loop and request.is_secure() returns True correctly.
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https") if env.https else None
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"

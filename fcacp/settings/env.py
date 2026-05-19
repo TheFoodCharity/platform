@@ -110,3 +110,5 @@ class DevelopmentEnvironment(BaseEnvironment):
 
 class ProductionEnvironment(BaseEnvironment):
     secret_key: Annotated[SecretStr, BeforeValidator(_blank_to_none)]
+
+    https: bool = True
