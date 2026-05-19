@@ -360,6 +360,64 @@ class DonationIntakeViewTests(TestCase):
         self.assertContains(response, "Total:</span> 9 Boxes", html=False)
         self.assertContains(response, "Today, Before 5pm")
 
+    def test_read_only_organization_can_view_all_donation_history(self):
+        user = User.objects.create_user(
+            email="readonly@example.com",
+            password="password",
+            first_name="Read",
+            last_name="Only",
+            email_verified=True,
+        )
+        organization = Organization.objects.create(name="Read Only Org", owner=user, is_active=True)
+        grant_capabilities(organization, SystemCapability.READ_ONLY)
+        add_membership(user, organization)
+        donation = Donation.objects.create(
+            submitted_by=user,
+            supplier_organization=organization,
+            food_category=Donation.FoodCategory.PRODUCE,
+            food_type=[Donation.FoodCategory.PRODUCE],
+            quantity=12,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="123 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.DRY,
+            status=Donation.Status.SUBMITTED,
+        )
+        other_user = User.objects.create_user(
+            email="other-donor@example.com",
+            password="password",
+            first_name="Other",
+            last_name="Donor",
+            email_verified=True,
+        )
+        other_organization = Organization.objects.create(name="Other Donor Org", owner=other_user, is_active=True)
+        other_donation = Donation.objects.create(
+            submitted_by=other_user,
+            supplier_organization=other_organization,
+            food_category=Donation.FoodCategory.DAIRY,
+            food_type=[Donation.FoodCategory.DAIRY],
+            quantity=4,
+            unit=Donation.QuantityUnit.BOXES,
+            pickup_location="456 Main Street",
+            pickup_deadline=timezone.now() + timezone.timedelta(days=1),
+            storage_requirement=Donation.StorageRequirement.REFRIGERATED,
+            status=Donation.Status.SUBMITTED,
+        )
+        self.client.force_login(user)
+        self.select_organization(organization)
+
+        list_response = self.client.get(reverse("donations:list"))
+        detail_response = self.client.get(reverse("donations:detail", args=[donation.pk]))
+        other_detail_response = self.client.get(reverse("donations:detail", args=[other_donation.pk]))
+        create_response = self.client.get(reverse("donations:create"))
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, donation.ticket_number)
+        self.assertContains(list_response, other_donation.ticket_number)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertEqual(other_detail_response.status_code, 200)
+        self.assertEqual(create_response.status_code, 403)
+
     def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
         user, organization = self.create_user_with_org()
         deadline = timezone.now() - timezone.timedelta(days=1)
@@ -578,6 +636,26 @@ class FoodRequestTests(TestCase):
         self.assertContains(response, "Supplier Org")
         self.assertContains(response, "Available")
         self.assertContains(response, "Request this food")
+
+    def test_read_only_organization_can_view_available_donations_but_not_request(self):
+        read_only_user = User.objects.create_user(
+            email="readonly-receiver@example.com",
+            password="password",
+            first_name="Read",
+            last_name="Receiver",
+            email_verified=True,
+        )
+        read_only_organization = Organization.objects.create(name="Read Only Receiver", owner=read_only_user)
+        grant_capabilities(read_only_organization, SystemCapability.READ_ONLY)
+        add_membership(read_only_user, read_only_organization)
+        self.client.force_login(read_only_user)
+        self.select_organization(read_only_organization)
+
+        list_response = self.client.get(reverse("donations:available_list"))
+        request_response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
+
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(request_response.status_code, 403)
 
     def test_available_donation_list_can_filter_by_category(self):
         self.client.force_login(self.receiver)

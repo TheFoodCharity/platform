@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from organizations.decorators import organization_required
+from permissions import SystemCapability
 
 from .forms import DonationFoodItemFormSet, DonationForm, FoodRequestAllocationFormSet, FoodRequestForm
 from .models import Donation, DonationFoodItem, FoodRequest, FoodRequestAllocation
@@ -22,6 +23,10 @@ def require_permission(request, code, obj=None):
     """Raise a standard 403 when the donation permission cascade denies access."""
     if not request.user.has_perm(code, obj):
         raise PermissionDenied()
+
+
+def organization_has_capability(organization, capability):
+    return not organization.is_anonymous and organization.capabilities.filter(name=capability).exists()
 
 
 def expire_past_deadline_donations():
@@ -166,7 +171,7 @@ def donation_list(request):
     donations = Donation.objects.all().order_by("-created_at")
     organization = request.organization
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not organization_has_capability(organization, SystemCapability.READ_ONLY):
         donations = donations.filter(supplier_organization=organization)
 
     status = request.GET.get("status")

@@ -26,25 +26,25 @@ PERMISSIONS = [
         "donations.view_available_donations",
         "View available donation tickets for requesting food",
         [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
-        [SystemCapability.FOOD_RECEIVER],
+        [SystemCapability.FOOD_RECEIVER, SystemCapability.READ_ONLY],
     ),
     (
         "donations.view_donation_detail",
         "View donation ticket details owned by the current organization",
         [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
-        [SystemCapability.FOOD_DONOR],
+        [SystemCapability.FOOD_DONOR, SystemCapability.READ_ONLY],
     ),
     (
         "donations.view_donations",
         "View donation tickets for the current organization",
         [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
-        [SystemCapability.FOOD_DONOR],
+        [SystemCapability.FOOD_DONOR, SystemCapability.READ_ONLY],
     ),
     (
         "donations.view_food_request",
         "View food request details connected to the current organization",
         [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
-        [SystemCapability.FOOD_DONOR, SystemCapability.FOOD_RECEIVER],
+        [SystemCapability.FOOD_DONOR, SystemCapability.FOOD_RECEIVER, SystemCapability.READ_ONLY],
     ),
 ]
 
