@@ -1,7 +1,8 @@
 from datetime import datetime, time, timedelta
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -154,12 +155,13 @@ def sync_donation_status_from_allocations(donation):
 
 
 @organization_required
+@permission_required("donations.view_donations", raise_exception=True)
 def donation_list(request):
     expire_past_deadline_donations()
     donations = Donation.objects.all().order_by("-created_at")
     organization = request.organization
 
-    if not request.user.is_staff:
+    if not request.user.is_staff and not request.user.has_perm("donations.view_all_donations"):
         donations = donations.filter(supplier_organization=organization)
 
     status = request.GET.get("status")
@@ -171,8 +173,12 @@ def donation_list(request):
     if storage_requirement:
         donations = donations.filter(storage_requirement=storage_requirement)
 
+    donation_list = list(donations)
+    for donation in donation_list:
+        donation.can_edit_donation = request.user.has_perm("donations.edit_donation", donation)
+
     context = {
-        "donations": donations,
+        "donations": donation_list,
         "status_choices": Donation.Status.choices,
         "storage_requirement_choices": Donation.StorageRequirement.choices,
     }
@@ -181,6 +187,7 @@ def donation_list(request):
 
 
 @organization_required
+@permission_required("donations.create_donation", raise_exception=True)
 def donation_create(request):
     organization = request.organization
 
@@ -218,9 +225,12 @@ def donation_create(request):
     )
 
 
-@login_required
+@organization_required
+@permission_required("donations.edit_donation", raise_exception=True)
 def donation_edit(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
+    if not request.user.has_perm("donations.edit_donation", donation):
+        raise PermissionDenied()
 
     if request.method == "POST":
         form = DonationForm(request.POST, instance=donation)
@@ -249,7 +259,8 @@ def donation_edit(request, pk):
     )
 
 
-@login_required
+@organization_required
+@permission_required("donations.view_donation_detail", raise_exception=True)
 def donation_detail(request, pk):
     expire_past_deadline_donations()
     donation = get_object_or_404(
@@ -264,6 +275,11 @@ def donation_detail(request, pk):
         ),
         pk=pk,
     )
+    if not (
+        request.user.has_perm("donations.view_all_donations")
+        or request.user.has_perm("donations.view_donation_detail", donation)
+    ):
+        raise PermissionDenied()
 
     return render(
         request,
@@ -275,6 +291,7 @@ def donation_detail(request, pk):
 
 
 @organization_required
+@permission_required("donations.view_available_donations", raise_exception=True)
 def available_donation_list(request):
     expire_past_deadline_donations()
     donations = (
@@ -326,7 +343,8 @@ def available_donation_list(request):
     )
 
 
-@login_required
+@organization_required
+@permission_required("donations.view_available_donations", raise_exception=True)
 def available_donation_detail(request, pk):
     expire_past_deadline_donations()
     donation = get_object_or_404(
@@ -340,10 +358,17 @@ def available_donation_detail(request, pk):
         pk=pk,
     )
 
-    return render(request, "donations/available_donation_detail.html", {"donation": donation})
+    return render(
+        request,
+        "donations/available_donation_detail.html",
+        {
+            "donation": donation,
+        },
+    )
 
 
 @organization_required
+@permission_required("donations.request_donation", raise_exception=True)
 def food_request_create(request, pk):
     expire_past_deadline_donations()
     donation = get_object_or_404(Donation, pk=pk)
@@ -385,7 +410,8 @@ def food_request_create(request, pk):
     )
 
 
-@login_required
+@organization_required
+@permission_required("donations.view_food_request", raise_exception=True)
 def food_request_detail(request, pk):
     food_request = get_object_or_404(
         FoodRequest.objects.select_related(
@@ -408,13 +434,20 @@ def food_request_detail(request, pk):
     )
 
 
-@login_required
+@organization_required
+@permission_required("donations.view_food_request", raise_exception=True)
 def food_request_thanks(request, pk):
-    food_request = get_object_or_404(FoodRequest, pk=pk)
+    food_request = get_object_or_404(FoodRequest.objects.select_related("donation"), pk=pk)
     return render(request, "donations/food_request_thanks.html", {"food_request": food_request})
 
 
-@login_required
+@organization_required
+@permission_required("donations.view_donation_detail", raise_exception=True)
 def donation_thanks(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
+    if not (
+        request.user.has_perm("donations.view_all_donations")
+        or request.user.has_perm("donations.view_donation_detail", donation)
+    ):
+        raise PermissionDenied()
     return render(request, "donations/donation_thanks.html", {"donation": donation})
