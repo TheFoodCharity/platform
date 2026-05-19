@@ -69,65 +69,75 @@
                 </div>
 
                 <ul class="menu menu-lg flex-1 p-2 w-full">
-                    {% block sidenav %}
-                        {% if not current_organization.is_anonymous %}
-                            {% if current_organization.is_approved %}
-                                <li>
-                                    <a href="{% url 'dashboard' %}">
-                                        <span class="material-symbols-rounded">dashboard</span>
-                                        Dashboard
-                                    </a>
-                                </li>
+    {% block sidenav %}
+        {% if not current_organization.is_anonymous %}
+            {% if current_organization.is_approved %}
 
-                                <li>
-                                    <a href="{% url 'donations:list' %}">
-                                        <span class="material-symbols-rounded">hand_package</span>
-                                        Donations
-                                    </a>
-                                </li>
+                <li>
+                    <a href="{% url 'dashboard' %}">
+                        <span class="material-symbols-rounded">dashboard</span>
+                        Dashboard
+                    </a>
+                </li>
 
-                                <li>
-                                    <a href="{% url 'donations:available_list' %}">
-                                        <span class="material-symbols-rounded">volunteer_activism</span>
-                                        Food Request
-                                    </a>
-                                </li>
+                {% if perms.donations.view_donations %}
+                    <li>
+                        <a href="{% url 'donations:list' %}">
+                            <span class="material-symbols-rounded">hand_package</span>
+                            Donations
+                        </a>
+                    </li>
+                {% endif %}
 
-                                <li>
-                                    <a href="{% url 'storage:list' %}">
-                                        <span class="material-symbols-rounded">warehouse</span>
-                                        Storage
-                                    </a>
-                                </li>
+                {% if perms.donations.view_available_donations %}
+                    <li>
+                        <a href="{% url 'donations:available_list' %}">
+                            <span class="material-symbols-rounded">volunteer_activism</span>
+                            Food Request
+                        </a>
+                    </li>
+                {% endif %}
 
-                                <li>
-                                    <a href="{% url 'collaborations:list' %}">
-                                        <span class="material-symbols-rounded">handshake</span>
-                                        Collaborations
-                                    </a>
-                                </li>
+                <li>
+                    <a href="{% url 'storage:list' %}">
+                        <span class="material-symbols-rounded">warehouse</span>
+                        Storage
+                    </a>
+                </li>
 
-                                <li>
-                                    <a href="{% url 'forums:list' %}">
-                                        <span class="material-symbols-rounded">forum</span>
-                                        Forums
-                                    </a>
-                                </li>
-                            {% else %}
-                                <li>
-                                    <a href="{% url 'organizations:application' %}">
-                                        <span class="material-symbols-rounded">edit_note</span>
-                                        Application
-                                    </a>
-                                </li>
-                            {% endif %}
-                            <li><a href="{% url 'organizations:profile' %}">
-                                <span class="material-symbols-rounded">settings</span> Settings
-                            </a></li>
-                        {% endif %}
-                    {% endblock %}
-                </ul>
+                <li>
+                    <a href="{% url 'collaborations:list' %}">
+                        <span class="material-symbols-rounded">handshake</span>
+                        Collaborations
+                    </a>
+                </li>
 
+                <li>
+                    <a href="{% url 'forums:list' %}">
+                        <span class="material-symbols-rounded">forum</span>
+                        Forums
+                    </a>
+                </li>
+
+            {% else %}
+                <li>
+                    <a href="{% url 'organizations:application' %}">
+                        <span class="material-symbols-rounded">edit_note</span>
+                        Application
+                    </a>
+                </li>
+            {% endif %}
+
+            <li>
+                <a href="{% url 'organizations:profile' %}">
+                    <span class="material-symbols-rounded">settings</span>
+                    Settings
+                </a>
+            </li>
+
+        {% endif %}
+    {% endblock %}
+</ul>
                 <div class="p-4">
                     {% if user.is_authenticated %}
                         <div class="dropdown dropdown-top w-full">
