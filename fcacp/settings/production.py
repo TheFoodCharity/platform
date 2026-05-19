@@ -1,3 +1,5 @@
+from os import environ
+
 from .base import *  # noqa: F403
 from .env import ProductionEnvironment
 
@@ -8,6 +10,8 @@ DEBUG = False
 SECRET_KEY = env.secret_key.get_secret_value()
 
 ALLOWED_HOSTS = env.allowed_hosts
+if internal_name := environ.get("RENDER_SERVICE_NAME"):
+    ALLOWED_HOSTS.append(internal_name)
 
 DATABASES = {
     "default": {
