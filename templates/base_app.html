@@ -98,12 +98,14 @@
                     </li>
                 {% endif %}
 
-                <li>
-                    <a href="{% url 'storage:list' %}">
-                        <span class="material-symbols-rounded">warehouse</span>
-                        Storage
-                    </a>
-                </li>
+                {% if perms.storage.view_storage_locations %}
+                    <li>
+                        <a href="{% url 'storage:list' %}">
+                                <span class="material-symbols-rounded">warehouse</span>
+                                Storage
+                        </a>
+                    </li>
+                {% endif %}
 
                 <li>
                     <a href="{% url 'collaborations:list' %}">

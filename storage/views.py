@@ -1,11 +1,14 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.shortcuts import get_object_or_404, redirect, render
+
+from organizations.decorators import organization_required
 
 from .forms import StorageLocationForm
 from .models import StorageLocation
 
 
-@login_required
+@organization_required
+@permission_required("storage.view_storage_locations", raise_exception=True)
 def storage_list(request):
     locations = StorageLocation.objects.filter(is_active=True).order_by("name")
 
@@ -35,7 +38,8 @@ def storage_list(request):
     return render(request, "storage/storage_list.html", context)
 
 
-@login_required
+@organization_required
+@permission_required("storage.create_storage_location", raise_exception=True)
 def storage_create(request):
     if request.method == "POST":
         form = StorageLocationForm(request.POST)
@@ -53,7 +57,8 @@ def storage_create(request):
     )
 
 
-@login_required
+@organization_required
+@permission_required("storage.edit_storage_location", raise_exception=True)
 def storage_edit(request, pk):
     location = get_object_or_404(StorageLocation, pk=pk)
 
@@ -73,7 +78,8 @@ def storage_edit(request, pk):
     )
 
 
-@login_required
+@organization_required
+@permission_required("storage.view_storage_location_detail", raise_exception=True)
 def storage_detail(request, pk):
     location = get_object_or_404(StorageLocation, pk=pk)
 

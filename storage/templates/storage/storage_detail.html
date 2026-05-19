@@ -9,7 +9,11 @@
             </div>
             <div class="flex gap-2">
                 <a class="btn btn-outline btn-primary" href="{% url 'storage:list' %}">Back</a>
-                <a class="btn btn-primary" href="{% url 'storage:edit' location.id %}">Edit</a>
+                {% if perms.storage.edit_storage_location %}
+                    <a class="btn btn-primary" href="{% url 'storage:edit' location.id %}">Edit</a>
+                {% else %}
+                    <span class="btn btn-disabled">Edit</span>
+                {% endif %}
             </div>
         </div>
 
