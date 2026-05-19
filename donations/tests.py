@@ -414,6 +414,8 @@ class DonationIntakeViewTests(TestCase):
         self.assertEqual(list_response.status_code, 200)
         self.assertContains(list_response, donation.ticket_number)
         self.assertContains(list_response, other_donation.ticket_number)
+        self.assertContains(list_response, '<span class="btn btn-disabled">', html=False)
+        self.assertNotContains(list_response, reverse("donations:create"))
         self.assertEqual(detail_response.status_code, 200)
         self.assertEqual(other_detail_response.status_code, 200)
         self.assertEqual(create_response.status_code, 403)
@@ -652,9 +654,14 @@ class FoodRequestTests(TestCase):
         self.select_organization(read_only_organization)
 
         list_response = self.client.get(reverse("donations:available_list"))
+        detail_response = self.client.get(reverse("donations:available_detail", args=[self.donation.pk]))
         request_response = self.client.get(reverse("donations:request_create", args=[self.donation.pk]))
 
         self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, '<span class="btn btn-sm btn-disabled">Request this food</span>', html=False)
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(detail_response, '<span class="btn btn-disabled">', html=False)
+        self.assertNotContains(detail_response, reverse("donations:request_create", args=[self.donation.pk]))
         self.assertEqual(request_response.status_code, 403)
 
     def test_available_donation_list_can_filter_by_category(self):

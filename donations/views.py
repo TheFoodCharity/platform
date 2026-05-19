@@ -170,6 +170,7 @@ def donation_list(request):
     expire_past_deadline_donations()
     donations = Donation.objects.all().order_by("-created_at")
     organization = request.organization
+    can_create_donation = request.user.has_perm("donations.create_donation")
 
     if not request.user.is_staff and not organization_has_capability(organization, SystemCapability.READ_ONLY):
         donations = donations.filter(supplier_organization=organization)
@@ -183,8 +184,13 @@ def donation_list(request):
     if storage_requirement:
         donations = donations.filter(storage_requirement=storage_requirement)
 
+    donation_list = list(donations)
+    for donation in donation_list:
+        donation.can_edit_donation = request.user.has_perm("donations.edit_donation", donation)
+
     context = {
-        "donations": donations,
+        "can_create_donation": can_create_donation,
+        "donations": donation_list,
         "status_choices": Donation.Status.choices,
         "storage_requirement_choices": Donation.StorageRequirement.choices,
     }
@@ -293,6 +299,7 @@ def donation_detail(request, pk):
 def available_donation_list(request):
     require_permission(request, "donations.view_available_donations")
     expire_past_deadline_donations()
+    can_request_donation = request.user.has_perm("donations.request_donation")
     donations = (
         Donation.objects.exclude(
             status__in=[
@@ -328,12 +335,14 @@ def available_donation_list(request):
     receiver_organization = request.organization
     for donation in donation_list:
         donation.is_preferred_receiver_match = donation.preferred_receiver_organization_id == receiver_organization.id
+        donation.can_request_donation = can_request_donation
     donation_list.sort(key=lambda donation: not donation.is_preferred_receiver_match)
 
     return render(
         request,
         "donations/available_donation_list.html",
         {
+            "can_request_donation": can_request_donation,
             "donations": donation_list,
             "category_choices": Donation.FoodCategory.choices,
             "availability": availability,
@@ -346,6 +355,7 @@ def available_donation_list(request):
 def available_donation_detail(request, pk):
     require_permission(request, "donations.view_available_donations")
     expire_past_deadline_donations()
+    can_request_donation = request.user.has_perm("donations.request_donation")
     donation = get_object_or_404(
         Donation.objects.select_related(
             "submitted_by",
@@ -357,7 +367,14 @@ def available_donation_detail(request, pk):
         pk=pk,
     )
 
-    return render(request, "donations/available_donation_detail.html", {"donation": donation})
+    return render(
+        request,
+        "donations/available_donation_detail.html",
+        {
+            "can_request_donation": can_request_donation,
+            "donation": donation,
+        },
+    )
 
 
 @organization_required

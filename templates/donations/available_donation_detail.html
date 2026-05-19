@@ -14,6 +14,11 @@
         <span class="btn btn-disabled">Expired</span>
       {% elif donation.is_fully_requested %}
         <span class="btn btn-disabled">Fully requested</span>
+      {% elif not can_request_donation %}
+        <span class="btn btn-disabled">
+          <span class="material-symbols-rounded">volunteer_activism</span>
+          Request this food
+        </span>
       {% else %}
         <a class="btn btn-primary" href="{% url 'donations:request_create' donation.id %}">
           <span class="material-symbols-rounded">volunteer_activism</span>

@@ -1,6 +1,10 @@
 <a class="btn btn-sm btn-outline btn-primary" href="{% url 'donations:detail' donation.id %}">
   View
 </a>
-<a class="btn btn-sm btn-primary" href="{% url 'donations:edit' donation.id %}">
-  Edit
-</a>
+{% if donation.can_edit_donation %}
+  <a class="btn btn-sm btn-primary" href="{% url 'donations:edit' donation.id %}">
+    Edit
+  </a>
+{% else %}
+  <span class="btn btn-sm btn-disabled">Edit</span>
+{% endif %}
