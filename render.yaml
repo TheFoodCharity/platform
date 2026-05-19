@@ -1,0 +1,58 @@
+previews:
+  generation: automatic
+  expireAfterDays: 3
+
+projects:
+  - name: Platform
+    environments:
+      - name: Production
+        networking:
+          isolation: enabled
+        permissions:
+          protection: enabled
+
+        services:
+          - name: web
+            type: web
+            runtime: docker
+            region: oregon
+            plan: starter
+
+            repo: https://github.com/TheFoodCharity/platform
+            branch: ak/deployment # TODO: remove
+            autoDeployTrigger: checksPass # TODO: change to "commit"
+
+            renderSubdomainPolicy: disabled
+            domains:
+              - thefoodcharity.ca
+
+            preDeployCommand: python3 manage.py migrate
+            healthCheckPath: /healthz
+
+            envVars:
+              - key: SECRET_KEY
+                generateValue: true
+
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: database
+                  property: connectionString
+
+              - key: ALLOWED_HOSTS
+                value: thefoodcharity.ca
+
+              # TODO: add SMTP settings
+
+        databases:
+          - name: database
+            region: oregon
+            plan: basic-1gb
+            diskSizeGB: 15
+
+            previewPlan: basic-256mb
+            previewDiskSizeGB: 1
+
+            postgresMajorVersion: '18'
+            databaseName: fcacp_prod
+            user: fcacp
+            ipAllowList: [ ]
