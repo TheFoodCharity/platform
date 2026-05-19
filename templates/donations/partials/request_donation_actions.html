@@ -1,9 +1,9 @@
 {% if donation.is_fully_requested %}
   <span class="btn btn-sm btn-disabled">Fully requested</span>
-{% elif not donation.can_request_donation %}
-  <span class="btn btn-sm btn-disabled">Request this food</span>
-{% else %}
+{% elif perms.donations.request_donation %}
   <a class="btn btn-sm btn-primary" href="{% url 'donations:request_create' donation.id %}">
     Request this food
   </a>
+{% else %}
+  <span class="btn btn-sm btn-disabled">Request this food</span>
 {% endif %}

@@ -11,6 +11,12 @@ PERMISSIONS = [
         [SystemCapability.FOOD_DONOR],
     ),
     (
+        "donations.view_all_donations",
+        "View donation tickets across all organizations",
+        [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
+        [SystemCapability.READ_ONLY],
+    ),
+    (
         "donations.edit_donation",
         "Edit donation tickets owned by the current organization",
         [SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],

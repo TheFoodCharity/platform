@@ -3,6 +3,7 @@ from django.db import migrations
 from permissions import Scope, SystemCapability
 
 READ_ONLY_PERMISSIONS = [
+    "donations.view_all_donations",
     "donations.view_available_donations",
     "donations.view_donation_detail",
     "donations.view_donations",

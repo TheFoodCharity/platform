@@ -7,7 +7,7 @@
                 <p class="text-sm font-semibold uppercase tracking-wide text-primary">Donation management</p>
                 <h1 class="mt-2 text-4xl font-bold text-slate-950">Donations</h1>
             </div>
-            {% if can_create_donation %}
+            {% if perms.donations.create_donation %}
               <a class="btn btn-primary" href="{% url 'donations:create' %}">
                 <span class="material-symbols-rounded">add</span>
                 Create Donation

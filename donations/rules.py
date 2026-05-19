@@ -14,13 +14,6 @@ def donation_belongs_to_current_supplier(user, obj=None):
     return not organization.is_anonymous and getattr(obj, "supplier_organization_id", None) == organization.pk
 
 
-@rules.predicate
-def current_organization_is_read_only(user, obj=None):
-    """Allow global viewing when the acting organization has the Read-Only capability."""
-    organization = _current_organization(user)
-    return not organization.is_anonymous and organization.capabilities.filter(name=SystemCapability.READ_ONLY).exists()
-
-
 # Each registration participates in the permission cascade:
 # membership role grants intersect with the acting organization's capabilities.
 register_permission(
@@ -29,6 +22,14 @@ register_permission(
     rule=member_permission("donations.view_donations"),
     roles=[SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
     capabilities=[SystemCapability.FOOD_DONOR, SystemCapability.READ_ONLY],
+)
+
+register_permission(
+    "donations.view_all_donations",
+    "View donation tickets across all organizations",
+    rule=member_permission("donations.view_all_donations"),
+    roles=[SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
+    capabilities=[SystemCapability.READ_ONLY],
 )
 
 register_permission(
@@ -42,8 +43,7 @@ register_permission(
 register_permission(
     "donations.view_donation_detail",
     "View donation ticket details owned by the current organization",
-    rule=member_permission("donations.view_donation_detail")
-    & (donation_belongs_to_current_supplier | current_organization_is_read_only),
+    rule=member_permission("donations.view_donation_detail") & donation_belongs_to_current_supplier,
     roles=[SystemRole.ORGANIZATION_MANAGER, SystemRole.ORGANIZATION_USER],
     capabilities=[SystemCapability.FOOD_DONOR, SystemCapability.READ_ONLY],
 )
