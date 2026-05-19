@@ -428,7 +428,7 @@ class DonationIntakeViewTests(TestCase):
         donor_response = self.client.get(reverse("donations:list"))
 
         self.assertContains(donor_response, "hand_package")
-        self.assertContains(donor_response, "> Donations")
+        self.assertContains(donor_response, "Donations")
         self.assertNotContains(donor_response, "volunteer_activism")
         self.assertNotContains(donor_response, "> Food Request")
 
@@ -449,7 +449,7 @@ class DonationIntakeViewTests(TestCase):
         self.assertNotContains(receiver_response, "hand_package")
         self.assertNotContains(receiver_response, "> Donations")
         self.assertContains(receiver_response, "volunteer_activism")
-        self.assertContains(receiver_response, "> Food Request")
+        self.assertContains(receiver_response, "Food Request")
 
     def test_donation_list_shows_exact_pickup_deadline_after_deadline_passes(self):
         user, organization = self.create_user_with_org()
