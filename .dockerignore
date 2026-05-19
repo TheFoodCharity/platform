@@ -1,6 +1,8 @@
 .github/
 .venv/
 assets/
+theme/static/css/dist
+theme/static_src/node_modules
 .gitattributes
 .gitignore
 prek.toml
