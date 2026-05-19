@@ -20,7 +20,6 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = 89478485
 
 COMPRESSIBLE_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png"}
-IMAGE_COMPRESSION_ERRORS = (OSError, UnidentifiedImageError)
 MAX_COMPRESSED_IMAGE_SIZE = (1920, 1080)
 JPEG_COMPRESSION_QUALITY = 80
 
@@ -221,7 +220,7 @@ def _compress_image_content(source, content_type: str) -> ContentFile | None:
                 image.save(output, format="PNG", optimize=True)
             else:
                 return None
-    except IMAGE_COMPRESSION_ERRORS:
+    except OSError, UnidentifiedImageError:
         logger.exception("Could not compress image; retaining the scanned original file.")
         return None
 
