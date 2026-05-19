@@ -1,0 +1,126 @@
+{% load crispy_forms_tags %}
+
+<section id="linked-records" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+  <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-950">Linked Records</h2>
+      <p class="mt-2 text-slate-600">
+        Connect donations, storage locations, and food requests that are relevant to this collaboration.
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-6 overflow-x-auto rounded-xl border border-base-300 bg-base-100">
+    <table class="table">
+      <thead class="bg-white text-xs tracking-wide text-slate-500">
+        <tr>
+          <th>Name</th>
+          <th class="w-40">Type</th>
+          <th class="w-48">Linked By</th>
+          <th class="w-48">Linked At</th>
+          <th class="w-36">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in linked_record_rows %}
+          {% with linked_object=row.linked_object %}
+            <tr class="align-middle">
+              <td>
+                <div class="max-w-xs">
+                  <p class="truncate font-medium text-slate-950" title="{{ linked_object.label }}">
+                    {{ linked_object.label }}
+                  </p>
+                  {% if linked_object.notes %}
+                    <p class="mt-1 line-clamp-2 text-sm text-slate-500">{{ linked_object.notes }}</p>
+                  {% endif %}
+                </div>
+              </td>
+              <td class="text-sm text-slate-600">{{ linked_object.content_type.name|title }}</td>
+              <td class="text-sm text-slate-600">
+                {{ linked_object.created_by.get_full_name|default:linked_object.created_by }}
+              </td>
+              <td class="text-sm text-slate-600">{{ linked_object.created_at|date:"M d, Y" }}</td>
+              <td>
+                {% if row.record_url %}
+                  <a class="btn btn-sm btn-outline btn-primary" href="{{ row.record_url }}">
+                    <span class="material-symbols-rounded">open_in_new</span>
+                  </a>
+                {% else %}
+                  <span class="text-sm text-slate-400">Unavailable</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endwith %}
+        {% empty %}
+          <tr>
+            <td colspan="5" class="p-8 text-center text-slate-600">
+              No linked records yet.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if can_link_records %}
+    <form
+      class="{% if not linked_record_form.errors %}hidden {% endif %}mt-6 rounded-xl border border-base-300 bg-base-100 p-4"
+      method="post"
+      action="{% url 'collaborations:linked_record_create' space.id %}"
+      data-collaboration-linked-record-form
+    >
+      {% csrf_token %}
+      {% crispy linked_record_form %}
+      <div class="mt-4 flex justify-end gap-2">
+        <button class="btn btn-ghost" type="button" data-collaboration-linked-record-cancel>
+          Cancel
+        </button>
+        <button class="btn btn-primary" type="submit">
+          <span class="material-symbols-rounded">add_link</span>
+          Link Record
+        </button>
+      </div>
+    </form>
+  {% endif %}
+
+  {% if can_link_records %}
+    <div class="mt-6">
+      <button class="btn btn-primary" type="button" data-collaboration-linked-record-open>
+        <span class="material-symbols-rounded">add_link</span>
+        Add Linked Record
+      </button>
+    </div>
+  {% endif %}
+</section>
+
+{% if can_link_records %}
+  <script>
+    (() => {
+      const form = document.querySelector("[data-collaboration-linked-record-form]");
+      const openButton = document.querySelector("[data-collaboration-linked-record-open]");
+      const cancelButton = document.querySelector("[data-collaboration-linked-record-cancel]");
+      if (!form || !openButton || !cancelButton) {
+        return;
+      }
+
+      const firstInput = form.querySelector("select, input, textarea");
+      if (!form.classList.contains("hidden")) {
+        openButton.classList.add("hidden");
+      }
+
+      openButton.addEventListener("click", () => {
+        form.classList.remove("hidden");
+        openButton.classList.add("hidden");
+        if (firstInput) {
+          firstInput.focus();
+        }
+      });
+
+      cancelButton.addEventListener("click", () => {
+        form.classList.add("hidden");
+        openButton.classList.remove("hidden");
+        form.reset();
+      });
+    })();
+  </script>
+{% endif %}

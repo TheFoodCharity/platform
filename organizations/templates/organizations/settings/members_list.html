@@ -1,0 +1,38 @@
+{% extends "organizations/settings/base.html" %}
+
+{% block card_title %}Members{% endblock %}
+{% block card_subtitle %}Manage your organization's members{% endblock %}
+
+{% block card_header_actions %}
+    {% if perms.organizations.invite_member %}
+        <a class="btn btn-primary" hx-get="{% url 'organizations:invitations_create' %}" hx-target="#invite-section">Invite</a>
+    {% endif %}
+{% endblock %}
+
+{% block card_body %}
+    <div id="invite-section"></div>
+    <table class="mt-6 table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th><span class="sr-only">Actions</span></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for member in members %}
+            <tr>
+                <td>{{ member.user.get_full_name }}</td>
+                <td>{{ member.user.email }}</td>
+                <td>{{ member.role.name }}</td>
+                <td>
+                    <a class="link link-primary link-hover" href="{% url 'organizations:member' member.pk %}">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

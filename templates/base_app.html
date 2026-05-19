@@ -14,9 +14,13 @@
                         <span class="material-symbols-rounded">menu</span>
                     </label>
                 </div>
+
                 <div class="flex-1 px-2">
-                    <span class="font-semibold text-lg">{% block page_title %}{% endblock %}</span>
+                    <span class="font-semibold text-lg">
+                        {% block page_title %}{% endblock %}
+                    </span>
                 </div>
+
                 <div class="flex-none gap-2">
                     {% block page_actions %}{% endblock %}
                 </div>
@@ -31,76 +35,140 @@
         {# Sidebar #}
         <div class="drawer-side z-20">
             <label for="sidebar-toggle" aria-label="Close menu" class="drawer-overlay"></label>
+
             <aside class="bg-base-100 border-r border-base-200 divide-y divide-base-200 w-64 min-h-screen flex flex-col">
                 <div class="p-4">
                     <a href="/" class="font-bold text-xl text-primary">FCACP</a>
                 </div>
+
                 <div class="flex items-center gap-3 w-full py-2 pl-3 pr-1"
                      style="anchor-name:--organization-selector-anchor">
                     <div class="flex-1 min-w-0 text-left">
-                        <span class="font-medium truncate">{{ current_organization.name }}</span>
+                        <span class="font-medium truncate">
+                            {{ current_organization.name }}
+                        </span>
+
                         {% if current_organization.organization_type %}
                             <p class="text-xs text-base-content/50 font-normal mt-0.5">
                                 {{ current_organization.organization_type }}
                             </p>
                         {% endif %}
                     </div>
-                    <button class="btn btn-ghost btn-xs" popovertarget="organization-selector"
-                            hx-get="{% url 'organizations:select' %}" hx-target="#organization-selector">
+
+                    <button class="btn btn-ghost btn-xs"
+                            popovertarget="organization-selector"
+                            hx-get="{% url 'organizations:select' %}"
+                            hx-target="#organization-selector">
                         Switch
                     </button>
-                    <div class="dropdown rounded-box shadow-2xl ml-2" id="organization-selector"
-                         style="position-anchor:--organization-selector-anchor" popover></div>
+
+                    <div class="dropdown rounded-box shadow-2xl ml-2"
+                         id="organization-selector"
+                         style="position-anchor:--organization-selector-anchor"
+                         popover></div>
                 </div>
+
                 <ul class="menu menu-lg flex-1 p-2 w-full">
-                    {% block sidenav %}
-                        {% if not current_organization.is_anonymous %}
-                            {% if current_organization.is_approved %}
-                                {% if perms.donations.view_donations %}
-                                    <li><a href="{% url 'donations:list' %}">
-                                        <span class="material-symbols-rounded">hand_package</span> Donations
-                                    </a></li>
-                                {% endif %}
-                                {% if perms.donations.view_available_donations %}
-                                    <li><a href="{% url 'donations:available_list' %}">
-                                        <span class="material-symbols-rounded">volunteer_activism</span> Food Request
-                                    </a></li>
-                                {% endif %}
-                                <li><a href="{% url 'storage:list' %}">
-                                    <span class="material-symbols-rounded">warehouse</span> Storage
-                                </a></li>
-                                <li><a href="{% url 'collaborations:list' %}">
-                                    <span class="material-symbols-rounded">handshake</span> Collaborations
-                                </a></li>
-                                <li><a href="{% url 'forums:list' %}">
-                                    <span class="material-symbols-rounded">forum</span> Forums
-                                </a></li>
-                            {% else %}
-                                <li><a href="{% url 'organizations:application' %}">
-                                    <span class="material-symbols-rounded">edit_note</span> Application
-                                </a></li>
-                            {% endif %}
-                        {% endif %}
-                    {% endblock %}
-                </ul>
+    {% block sidenav %}
+        {% if not current_organization.is_anonymous %}
+            {% if current_organization.is_approved %}
+
+                <li>
+                    <a href="{% url 'dashboard' %}">
+                        <span class="material-symbols-rounded">dashboard</span>
+                        Dashboard
+                    </a>
+                </li>
+
+                {% if perms.donations.view_donations %}
+                    <li>
+                        <a href="{% url 'donations:list' %}">
+                            <span class="material-symbols-rounded">hand_package</span>
+                            Donations
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% if perms.donations.view_available_donations %}
+                    <li>
+                        <a href="{% url 'donations:available_list' %}">
+                            <span class="material-symbols-rounded">volunteer_activism</span>
+                            Food Request
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li>
+                    <a href="{% url 'storage:list' %}">
+                        <span class="material-symbols-rounded">warehouse</span>
+                        Storage
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{% url 'collaborations:list' %}">
+                        <span class="material-symbols-rounded">handshake</span>
+                        Collaborations
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{% url 'forums:list' %}">
+                        <span class="material-symbols-rounded">forum</span>
+                        Forums
+                    </a>
+                </li>
+
+            {% else %}
+                <li>
+                    <a href="{% url 'organizations:application' %}">
+                        <span class="material-symbols-rounded">edit_note</span>
+                        Application
+                    </a>
+                </li>
+            {% endif %}
+
+            <li>
+                <a href="{% url 'organizations:profile' %}">
+                    <span class="material-symbols-rounded">settings</span>
+                    Settings
+                </a>
+            </li>
+
+        {% endif %}
+    {% endblock %}
+</ul>
                 <div class="p-4">
                     {% if user.is_authenticated %}
                         <div class="dropdown dropdown-top w-full">
-                            <div tabindex="0" role="button" class="btn btn-ghost w-full justify-start gap-2">
+                            <div tabindex="0"
+                                 role="button"
+                                 class="btn btn-ghost w-full justify-start gap-2">
                                 <span class="material-symbols-rounded">account_circle</span>
-                                <span class="truncate">{{ user.get_full_name|default:user.email }}</span>
-                                <span class="material-symbols-rounded ml-auto">expand_less</span>
+
+                                <span class="truncate">
+                                    {{ user.get_full_name|default:user.email }}
+                                </span>
+
+                                <span class="material-symbols-rounded ml-auto">
+                                    expand_less
+                                </span>
                             </div>
+
                             <ul tabindex="0"
                                 class="dropdown-content menu bg-base-100 rounded-box border border-base-200 z-10 w-full p-2 shadow-lg mb-1">
                                 <li>
                                     <a href="{% url 'accounts:profile' %}">
-                                        <span class="material-symbols-rounded">account_circle</span> Profile
+                                        <span class="material-symbols-rounded">account_circle</span>
+                                        Profile
                                     </a>
                                 </li>
+
                                 <li>
-                                    <button type="button" hx-post="{% url 'accounts:logout' %}">
-                                        <span class="material-symbols-rounded">logout</span> Sign out
+                                    <button type="button"
+                                            hx-post="{% url 'accounts:logout' %}">
+                                        <span class="material-symbols-rounded">logout</span>
+                                        Sign out
                                     </button>
                                 </li>
                             </ul>

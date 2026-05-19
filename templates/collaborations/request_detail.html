@@ -1,94 +1,128 @@
 {% extends "base_app.html" %}
 
-{% block extra_head %}
-    {% include "collaborations/_styles.html" %}
+{% block page_title %}Collaboration Application{% endblock %}
+
+{% block page_actions %}
+  <a class="btn btn-ghost btn-sm" href="{% url 'collaborations:request_list' %}">Back</a>
 {% endblock %}
 
-{% block page_title %}Collaboration Request{% endblock %}
-
 {% block page_body %}
-    <main class="collab-shell">
-        <a class="collab-link" href="{% url 'collaborations:list' %}">Back to Collaborations</a>
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Collaboration management</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">{{ collaboration_request.title }}</h1>
+        <p class="mt-2 text-slate-600">Collaboration application detail and review status.</p>
+      </div>
+      <a class="btn btn-outline btn-primary" href="{% url 'collaborations:request_list' %}">Back to Applications</a>
+    </div>
 
-        <header class="collab-page-header" style="margin-top: 24px;">
+    {% include "collaborations/_nav.html" %}
+
+    <div class="mb-6 border-b border-base-300">
+      <div class="tabs tabs-border">
+        <a class="tab tab-active" href="#overview">Overview</a>
+        <a class="tab" href="#participants">Suggested Participants</a>
+        <a class="tab" href="#review">Admin Review</a>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <section id="overview" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-950">Request Overview</h2>
+            <p class="mt-2 text-sm text-slate-600">
+              Status:
+              {% if collaboration_request.status == "approved" %}
+                <span class="badge badge-success">{{ collaboration_request.get_status_display }}</span>
+              {% elif collaboration_request.status == "declined" %}
+                <span class="badge badge-error">{{ collaboration_request.get_status_display }}</span>
+              {% elif collaboration_request.status == "needs_info" %}
+                <span class="badge badge-warning">{{ collaboration_request.get_status_display }}</span>
+              {% else %}
+                <span class="badge badge-warning">In review</span>
+              {% endif %}
+            </p>
+          </div>
+          {% if collaboration_request.space %}
+            <a class="btn btn-primary btn-sm" href="{% url 'collaborations:detail_chat' collaboration_request.space.id %}">
+              Open Collaboration
+            </a>
+          {% endif %}
+        </div>
+
+        <dl class="mt-6 grid gap-4 md:grid-cols-2">
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Purpose</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.purpose }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Topic</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.get_topic_category_display }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Region</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.region|default:"Not specified" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Municipality</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.municipality|default:"Not specified" }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Visibility</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.get_visibility_preference_display }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Requested by</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.requested_by_user }}</dd>
+          </div>
+          <div>
+            <dt class="text-sm font-semibold text-slate-500">Organization</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.requested_by_org|default:"Not specified" }}</dd>
+          </div>
+          <div class="md:col-span-2">
+            <dt class="text-sm font-semibold text-slate-500">Reason</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.reason_for_request }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section id="participants" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="text-2xl font-bold text-slate-950">Suggested Participants</h2>
+        <p class="mt-4 text-slate-600">
+          {{ collaboration_request.suggested_participants|linebreaksbr|default:"No suggestions provided." }}
+        </p>
+      </section>
+
+      <section id="review" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+        <h2 class="text-2xl font-bold text-slate-950">Admin Review</h2>
+        <dl class="mt-6 grid gap-4 md:grid-cols-2">
+          {% if collaboration_request.reviewed_by %}
             <div>
-                <h1>{{ collaboration_request.title }}</h1>
-                <p><strong>Status:</strong> <span
-                        class="collab-status">{{ collaboration_request.get_status_display }}</span></p>
+              <dt class="text-sm font-semibold text-slate-500">Reviewed by</dt>
+              <dd class="mt-1 text-slate-950">{{ collaboration_request.reviewed_by }}</dd>
             </div>
-        </header>
-
-        <section class="collab-detail-layout">
-            <aside class="collab-sidebar">
-                <nav>
-                    <a href="#home">Home</a>
-                    <a href="#participants">Suggested Participants</a>
-                    <a href="#review">Admin Review</a>
-                </nav>
-            </aside>
-
-            <div class="collab-content">
-                <section id="home" class="collab-card">
-                    <h2>Request Overview</h2>
-                    <dl class="collab-meta">
-                        <dt>Purpose</dt>
-                        <dd>{{ collaboration_request.purpose }}</dd>
-                        <dt>Topic</dt>
-                        <dd>{{ collaboration_request.get_topic_category_display }}</dd>
-                        <dt>Region</dt>
-                        <dd>{{ collaboration_request.region|default:"Not specified" }}</dd>
-                        <dt>Municipality</dt>
-                        <dd>{{ collaboration_request.municipality|default:"Not specified" }}</dd>
-                        <dt>Visibility</dt>
-                        <dd>{{ collaboration_request.get_visibility_preference_display }}</dd>
-                        <dt>Reason</dt>
-                        <dd>{{ collaboration_request.reason_for_request }}</dd>
-                        <dt>Requested by</dt>
-                        <dd>{{ collaboration_request.requested_by_user }}</dd>
-                        <dt>Organization</dt>
-                        <dd>{{ collaboration_request.requested_by_org|default:"Not specified" }}</dd>
-                    </dl>
-                </section>
-
-                <section id="participants" class="collab-card collab-section">
-                    <h2>Suggested Participants</h2>
-                    <p>{{ collaboration_request.suggested_participants|linebreaksbr|default:"No suggestions provided." }}</p>
-                </section>
-
-                <section id="review" class="collab-card collab-section">
-                    <h2>Admin Review</h2>
-                    <dl class="collab-meta">
-                        {% if collaboration_request.reviewed_by %}
-                            <dt>Reviewed by</dt>
-                            <dd>{{ collaboration_request.reviewed_by }}</dd>
-                            <dt>Reviewed at</dt>
-                            <dd>{{ collaboration_request.reviewed_at }}</dd>
-                        {% endif %}
-                        <dt>Admin notes</dt>
-                        <dd>{{ collaboration_request.admin_notes|linebreaksbr|default:"None" }}</dd>
-                    </dl>
-
-                    {% if request.user.is_staff %}
-                        <p>
-                            <a
-                                    class="collab-link"
-                                    href="{% url 'admin:collaborations_collaborationspacerequest_change' collaboration_request.id %}"
-                            >
-                                Open this request in Django admin
-                            </a>
-                        </p>
-                    {% endif %}
-
-                    {% if collaboration_request.space %}
-                        <p>
-                            <a class="collab-link"
-                               href="{% url 'collaborations:detail' collaboration_request.space.id %}">
-                                Open Created Collaboration Space
-                            </a>
-                        </p>
-                    {% endif %}
-                </section>
+            <div>
+              <dt class="text-sm font-semibold text-slate-500">Reviewed at</dt>
+              <dd class="mt-1 text-slate-950">{{ collaboration_request.reviewed_at|date:"M j, Y g:i A" }}</dd>
             </div>
-        </section>
-    </main>
-{% endblock page_body %}
+          {% endif %}
+          <div class="md:col-span-2">
+            <dt class="text-sm font-semibold text-slate-500">Admin notes</dt>
+            <dd class="mt-1 text-slate-950">{{ collaboration_request.admin_notes|linebreaksbr|default:"None" }}</dd>
+          </div>
+        </dl>
+
+        {% if request.user.is_staff %}
+          <div class="mt-6">
+            <a class="btn btn-outline btn-primary"
+               href="{% url 'admin:collaborations_collaborationspacerequest_change' collaboration_request.id %}">
+              Open this request in Django admin
+            </a>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+{% endblock %}

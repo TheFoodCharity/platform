@@ -1,0 +1,75 @@
+<div
+  id="collaboration-upload-widget"
+  class="fixed bottom-6 right-6 z-40 {% if not upload_widget.items %}hidden {% endif %}overflow-hidden rounded-lg border border-base-300 bg-white shadow-xl"
+  style="width: 24rem; max-width: calc(100vw - 2rem);"
+  {% if upload_widget.has_active_uploads %}
+    hx-get="{% url 'collaborations:upload_widget' space.id %}"
+    hx-trigger="every 2s"
+    hx-swap="outerHTML"
+  {% endif %}
+>
+  {% if upload_widget.items %}
+    {% if upload_widget.trigger_table_refresh %}
+      <span
+        class="hidden"
+        hx-get="{% url 'collaborations:files_table' space.id %}"
+        hx-trigger="load"
+        hx-target="#collaboration-files-table"
+        hx-swap="outerHTML"
+      ></span>
+    {% endif %}
+    <div class="flex items-center gap-2 border-b border-base-200 bg-base-100 px-4 py-3">
+      <p class="font-semibold text-slate-950">
+        {% if upload_widget.items|length == 1 %}1 upload{% else %}{{ upload_widget.items|length }} uploads{% endif %}
+      </p>
+      <div class="ml-auto flex items-center gap-1">
+        <button
+          class="btn btn-ghost btn-xs btn-square"
+          type="button"
+          aria-label="Minimize upload widget"
+          onclick="this.closest('#collaboration-upload-widget').querySelector('[data-upload-widget-body]').classList.toggle('hidden')"
+        >
+          <span class="material-symbols-rounded text-base">keyboard_arrow_down</span>
+        </button>
+        <button
+          class="btn btn-ghost btn-xs btn-square"
+          type="button"
+          aria-label="Close upload widget"
+          hx-post="{% url 'collaborations:upload_widget_clear' space.id %}"
+          hx-target="#collaboration-upload-widget"
+          hx-swap="outerHTML"
+        >
+          <span class="material-symbols-rounded text-base">close</span>
+        </button>
+      </div>
+    </div>
+    <div class="divide-y divide-base-200" data-upload-widget-body>
+      {% for item in upload_widget.items %}
+        <div class="flex items-center gap-3 px-4 py-3">
+          {% if item.state == "uploading" %}
+            <span class="loading loading-spinner loading-sm text-primary"></span>
+          {% elif item.state == "completed" %}
+            <span class="material-symbols-rounded text-success">check_circle</span>
+          {% else %}
+            <span class="material-symbols-rounded text-error">cancel</span>
+          {% endif %}
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium text-slate-800" title="{{ item.filename }}">
+              {{ item.filename }}
+            </p>
+            <p class="text-xs text-slate-500">
+              {% if item.state == "uploading" %}
+                Uploading
+              {% elif item.state == "completed" %}
+                Completed
+              {% else %}
+                Failed
+              {% endif %}
+              {% if item.size %} - {{ item.size|filesizeformat }}{% endif %}
+            </p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>

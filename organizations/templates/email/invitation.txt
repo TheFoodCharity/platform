@@ -1,0 +1,9 @@
+{% extends "email/base.txt" %}
+
+{% block preheader %}Use this link to join {{ organization.name }}. The link is valid for {{ expires_at|timeuntil }}.{% endblock %}
+
+{% block content %}
+{{ invited_by.get_full_name }} invited you to join {{ organization.name }} on the Food Charity Association. Use the link below to join. This invitation is only valid for {{ expires_at|timeuntil }}.
+
+Join ( {{ join_url }} )
+{% endblock %}

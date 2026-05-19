@@ -54,11 +54,7 @@ class User(AbstractUser):
 
     def send_verification_email(self, request) -> None:
         token = TimestampSigner(salt=VERIFICATION_TOKEN_SALT).sign(self.pk)
-        _instance, code = VerificationCode.issue(
-            self,
-            VerificationCode.Purpose.EMAIL_VERIFICATION,
-            ttl=VERIFICATION_TTL,
-        )
+        _instance, code = VerificationCode.issue(self, ttl=VERIFICATION_TTL)
 
         verify_url_base = reverse("accounts:verify")
         verify_url = request.build_absolute_uri(f"{verify_url_base}?code={code}&token={token}")
@@ -91,32 +87,22 @@ class User(AbstractUser):
 
 
 class VerificationCode(models.Model):
-    class Purpose(models.IntegerChoices):
-        EMAIL_VERIFICATION = 1, "Email verification"
-
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="verification_codes")
-    purpose = models.PositiveSmallIntegerField(choices=Purpose.choices)
     code_hash = models.CharField(max_length=128)
     expires_at = models.DateTimeField()
     remaining_attempts = models.PositiveSmallIntegerField(default=VERIFICATION_MAX_ATTEMPTS)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "purpose"],
-                name="unique_active_code_per_user_purpose",
-            )
-        ]
+        constraints = [models.UniqueConstraint(fields=["user"], name="unique_active_code_per_user")]
 
     def __str__(self) -> str:
-        return f"{self.get_purpose_display()} for {self.user} (expires {self.expires_at:%Y-%m-%d %H:%M} UTC)"
+        return f"{self.user} (expires {self.expires_at:%Y-%m-%d %H:%M} UTC)"
 
     @classmethod
     def issue(
         cls,
         user: User,
-        purpose: "VerificationCode.Purpose",
         *,
         ttl: timedelta,
         max_attempts: int = VERIFICATION_MAX_ATTEMPTS,
@@ -124,10 +110,9 @@ class VerificationCode(models.Model):
         plaintext = "".join(secrets.choice(VERIFICATION_CODE_ALPHABET) for _ in range(VERIFICATION_CODE_LENGTH))
 
         with transaction.atomic():
-            cls.objects.filter(user=user, purpose=purpose).delete()
+            cls.objects.filter(user=user).delete()
             instance = cls.objects.create(
                 user=user,
-                purpose=purpose,
                 code_hash=make_password(plaintext),
                 expires_at=timezone.now() + ttl,
                 remaining_attempts=max_attempts,
@@ -135,12 +120,12 @@ class VerificationCode(models.Model):
         return instance, plaintext
 
     @classmethod
-    def verify(cls, user: User, purpose: "VerificationCode.Purpose", code: str) -> None:
+    def verify(cls, user: User, code: str) -> None:
         from .exceptions import VerificationExpired, VerificationInvalid, VerificationLocked
 
         code = code.strip().upper()
         try:
-            instance = cls.objects.get(user=user, purpose=purpose)
+            instance = cls.objects.get(user=user)
         except cls.DoesNotExist:
             raise VerificationInvalid
 

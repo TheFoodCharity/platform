@@ -1,0 +1,40 @@
+{% extends "email/base.html" %}
+
+{% block preheader %}Use this link to join {{ organization.name }}. The link is valid for {{ expires_at|timeuntil }}.{% endblock %}
+
+{% block content %}
+    <p>
+        {{ invited_by.get_full_name }} invited you to join {{ organization.name }} on the Food Charity Association. Use
+        the button below to join. <strong>This invitation is only valid for {{ expires_at|timeuntil }}.</strong>
+    </p>
+    <!-- Action -->
+    <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation">
+        <tr>
+            <td align="center">
+                <!-- Border based button -->
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                    <tr>
+                        <td align="center">
+                            <a href="{{ join_url }}" class="f-fallback button button--green" target="_blank">
+                                Join
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+{% endblock %}
+
+{% block subcopy %}
+    <table class="body-sub" role="presentation">
+        <tr>
+            <td>
+                <p class="f-fallback sub">
+                    If you’re having trouble with the button above, copy and paste the URL below into your web browser.
+                </p>
+                <p class="f-fallback sub">{{ join_url }}</p>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

@@ -11,4 +11,4 @@ class VerificationLocked(VerificationError):
 
 
 class VerificationInvalid(VerificationError):
-    """No active code exists for this user/purpose, or the supplied code is wrong."""
+    """No active code exists for this user, or the supplied code is wrong."""

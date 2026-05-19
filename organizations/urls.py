@@ -9,6 +9,14 @@ from .views import (
     ApplicationOperationsView,
     ApplyView,
     DispatchView,
+    InvitationAcceptView,
+    InvitationRemoveView,
+    InvitationsSendView,
+    InvitationsView,
+    MemberDetailView,
+    MemberRemoveView,
+    MembersView,
+    ProfileView,
     SelectView,
 )
 
@@ -24,4 +32,12 @@ urlpatterns = [
     path("application/location", ApplicationLocationView.as_view(), name="application_location"),
     path("application/contact", ApplicationContactView.as_view(), name="application_contact"),
     path("application/operations", ApplicationOperationsView.as_view(), name="application_operations"),
+    path("profile", ProfileView.as_view(), name="profile"),
+    path("members", MembersView.as_view(), name="members"),
+    path("members/<int:pk>", MemberDetailView.as_view(), name="member"),
+    path("members/<int:pk>/remove", MemberRemoveView.as_view(), name="member_remove"),
+    path("invitations", InvitationsView.as_view(), name="invitations"),
+    path("invitations/send", InvitationsSendView.as_view(), name="invitations_create"),
+    path("invitations/<int:pk>/remove", InvitationRemoveView.as_view(), name="invitations_remove"),
+    path("invitations/accept/<str:invb64>/<str:token>", InvitationAcceptView.as_view(), name="invitation_accept"),
 ]

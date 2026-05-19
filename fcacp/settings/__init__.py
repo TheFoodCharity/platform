@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "rules.apps.AutodiscoverRulesConfig",
     "tailwind",
+    "storages",
     # 1st-party
     "accounts",
     "collaborations",
@@ -193,6 +195,8 @@ LOGOUT_REDIRECT_URL = "accounts:login"
 
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 1 day
 
+INVITATION_TTL = timedelta(hours=72)
+
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -208,3 +212,51 @@ EMAIL_TIMEOUT = environment.smtp.timeout
 
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
+
+# Background jobs
+CELERY_BROKER_URL = environment.celery_broker_url
+CELERY_TASK_IGNORE_RESULT = True
+
+# Malware scanning
+CLAMAV_HOST = environment.clamav_host
+CLAMAV_PORT = environment.clamav_port
+CLAMAV_TIMEOUT = environment.clamav_timeout
+
+# Upload limits
+COLLABORATION_FILE_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
+PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
+
+# File storage directory
+if environment.aws_storage_bucket_name:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": environment.aws_storage_bucket_name,
+                "region_name": environment.aws_s3_region_name or None,
+                "access_key": environment.aws_s3_access_key_id or None,
+                "secret_key": environment.aws_s3_secret_access_key or None,
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": PRIVATE_MEDIA_ROOT,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }

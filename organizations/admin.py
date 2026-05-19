@@ -106,7 +106,18 @@ class OrganizationAdmin(admin.ModelAdmin):
         ),
         (
             "Location",
-            {"fields": ["address_line_1", "address_line_2", "municipality", "region", "postal_code", "service_area"]},
+            {
+                "fields": [
+                    "address_line_1",
+                    "address_line_2",
+                    "municipality",
+                    "region",
+                    "postal_code",
+                    "service_area",
+                    "latitude",
+                    "longitude",
+                ]
+            },
         ),
         (
             "Public contact",
@@ -173,5 +184,5 @@ class MembershipAdmin(admin.ModelAdmin):
 
 @admin.register(Invitation)
 class InvitationAdmin(admin.ModelAdmin):
-    list_display = ("invitee_identifier", "invited_by", "created")
-    readonly_fields = ("guid", "created")
+    list_display = ("email", "invited_by", "organization", "role", "expires_at", "accepted_at", "created")
+    readonly_fields = ("created", "accepted_at")

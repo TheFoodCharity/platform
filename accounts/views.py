@@ -118,11 +118,7 @@ class VerifyView(EmailUnverifiedMixin, FormView):
             return self.form_invalid(form)
 
         try:
-            VerificationCode.verify(
-                user,
-                VerificationCode.Purpose.EMAIL_VERIFICATION,
-                form.cleaned_data["code"],
-            )
+            VerificationCode.verify(user, form.cleaned_data["code"])
         except VerificationExpired:
             form.add_error("code", "This code has expired. Request a new one below.")
             return self.form_invalid(form)
