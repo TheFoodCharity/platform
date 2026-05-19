@@ -6,6 +6,10 @@ from organizations.models import Organization
 from storage.models import StorageLocation
 
 
+def healthcheck(request):
+    return HttpResponse(status=204)
+
+
 def home(request):
     return render(request, "public/landing.html")
 
