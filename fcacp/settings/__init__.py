@@ -39,8 +39,9 @@ INSTALLED_APPS = [
     "django_htmx",
     "phonenumber_field",
     "rules.apps.AutodiscoverRulesConfig",
-    "tailwind",
     "storages",
+    "tailwind",
+    "whitenoise.runserver_nostatic",
     # 1st-party
     "accounts",
     "collaborations",
@@ -68,6 +69,7 @@ if DEBUG:
 MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -116,6 +118,46 @@ DATABASES = {
         **environment.database_url.to_django(),
     }
 }
+
+# Storage
+# https://docs.djangoproject.com/en/6.0/ref/settings/#storages
+COLLABORATION_FILE_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
+
+PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
+
+if environment.aws_storage_bucket_name:
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": environment.aws_storage_bucket_name,
+                "region_name": environment.aws_s3_region_name or None,
+                "access_key": environment.aws_s3_access_key_id or None,
+                "secret_key": environment.aws_s3_secret_access_key or None,
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": PRIVATE_MEDIA_ROOT,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -220,42 +262,3 @@ CELERY_TASK_IGNORE_RESULT = True
 CLAMAV_HOST = environment.clamav_host
 CLAMAV_PORT = environment.clamav_port
 CLAMAV_TIMEOUT = environment.clamav_timeout
-
-# Upload limits
-COLLABORATION_FILE_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
-
-PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
-
-# File storage directory
-if environment.aws_storage_bucket_name:
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "bucket_name": environment.aws_storage_bucket_name,
-                "region_name": environment.aws_s3_region_name or None,
-                "access_key": environment.aws_s3_access_key_id or None,
-                "secret_key": environment.aws_s3_secret_access_key or None,
-                "default_acl": None,
-                "querystring_auth": True,
-                "file_overwrite": False,
-            },
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
-else:
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-            "OPTIONS": {
-                "location": PRIVATE_MEDIA_ROOT,
-            },
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
