@@ -1,7 +1,7 @@
 from datetime import datetime, time, timedelta
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -16,6 +16,12 @@ PICKUP_END_HOURS = {
     Donation.PickupEndTime.BEFORE_4PM: 16,
     Donation.PickupEndTime.BEFORE_5PM: 17,
 }
+
+
+def require_permission(request, code, obj=None):
+    """Raise a standard 403 when the donation permission cascade denies access."""
+    if not request.user.has_perm(code, obj):
+        raise PermissionDenied()
 
 
 def expire_past_deadline_donations():
@@ -155,6 +161,7 @@ def sync_donation_status_from_allocations(donation):
 
 @organization_required
 def donation_list(request):
+    require_permission(request, "donations.view_donations")
     expire_past_deadline_donations()
     donations = Donation.objects.all().order_by("-created_at")
     organization = request.organization
@@ -182,6 +189,7 @@ def donation_list(request):
 
 @organization_required
 def donation_create(request):
+    require_permission(request, "donations.create_donation")
     organization = request.organization
 
     if request.method == "POST":
@@ -218,9 +226,10 @@ def donation_create(request):
     )
 
 
-@login_required
+@organization_required
 def donation_edit(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
+    require_permission(request, "donations.edit_donation", donation)
 
     if request.method == "POST":
         form = DonationForm(request.POST, instance=donation)
@@ -249,7 +258,7 @@ def donation_edit(request, pk):
     )
 
 
-@login_required
+@organization_required
 def donation_detail(request, pk):
     expire_past_deadline_donations()
     donation = get_object_or_404(
@@ -264,6 +273,7 @@ def donation_detail(request, pk):
         ),
         pk=pk,
     )
+    require_permission(request, "donations.view_donation_detail", donation)
 
     return render(
         request,
@@ -276,6 +286,7 @@ def donation_detail(request, pk):
 
 @organization_required
 def available_donation_list(request):
+    require_permission(request, "donations.view_available_donations")
     expire_past_deadline_donations()
     donations = (
         Donation.objects.exclude(
@@ -326,8 +337,9 @@ def available_donation_list(request):
     )
 
 
-@login_required
+@organization_required
 def available_donation_detail(request, pk):
+    require_permission(request, "donations.view_available_donations")
     expire_past_deadline_donations()
     donation = get_object_or_404(
         Donation.objects.select_related(
@@ -345,6 +357,7 @@ def available_donation_detail(request, pk):
 
 @organization_required
 def food_request_create(request, pk):
+    require_permission(request, "donations.request_donation")
     expire_past_deadline_donations()
     donation = get_object_or_404(Donation, pk=pk)
     organization = request.organization
@@ -385,7 +398,7 @@ def food_request_create(request, pk):
     )
 
 
-@login_required
+@organization_required
 def food_request_detail(request, pk):
     food_request = get_object_or_404(
         FoodRequest.objects.select_related(
@@ -398,6 +411,7 @@ def food_request_detail(request, pk):
         ),
         pk=pk,
     )
+    require_permission(request, "donations.view_food_request", food_request)
     return render(
         request,
         "donations/food_request_detail.html",
@@ -408,13 +422,15 @@ def food_request_detail(request, pk):
     )
 
 
-@login_required
+@organization_required
 def food_request_thanks(request, pk):
-    food_request = get_object_or_404(FoodRequest, pk=pk)
+    food_request = get_object_or_404(FoodRequest.objects.select_related("donation"), pk=pk)
+    require_permission(request, "donations.view_food_request", food_request)
     return render(request, "donations/food_request_thanks.html", {"food_request": food_request})
 
 
-@login_required
+@organization_required
 def donation_thanks(request, pk):
     donation = get_object_or_404(Donation, pk=pk)
+    require_permission(request, "donations.view_donation_detail", donation)
     return render(request, "donations/donation_thanks.html", {"donation": donation})

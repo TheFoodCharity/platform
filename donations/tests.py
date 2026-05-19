@@ -6,6 +6,8 @@ from django.utils.formats import date_format
 
 from organizations.models import Membership, Organization
 from organizations.services import SESSION_KEY
+from permissions import Scope, SystemCapability, SystemRole
+from permissions.models import PermissionGroup
 from storage.models import StorageLocation
 
 from .forms import (
@@ -24,6 +26,36 @@ def select_client_organization(client, organization):
     session = client.session
     session[SESSION_KEY] = organization.pk
     session.save()
+
+
+def permission_group(name, scope):
+    return PermissionGroup.objects.get(name=name, scope=scope)
+
+
+def grant_capabilities(organization, *capabilities):
+    organization.status = Organization.Status.APPROVED
+    organization.is_active = True
+    organization.save(update_fields=["status", "is_active"])
+    for capability in capabilities:
+        organization.capabilities.add(permission_group(capability, Scope.ORGANIZATION))
+
+
+def add_membership(user, organization, role=SystemRole.ORGANIZATION_USER):
+    return Membership.objects.create(
+        user=user,
+        organization=organization,
+        role=permission_group(role, Scope.USER),
+    )
+
+
+def grant_donor_access(user, organization):
+    grant_capabilities(organization, SystemCapability.FOOD_DONOR)
+    return add_membership(user, organization)
+
+
+def grant_receiver_access(user, organization):
+    grant_capabilities(organization, SystemCapability.FOOD_RECEIVER)
+    return add_membership(user, organization)
 
 
 class DonationFormTests(SimpleTestCase):
@@ -81,7 +113,7 @@ class DonationIntakeViewTests(TestCase):
             email_verified=True,
         )
         organization = Organization.objects.create(name=organization_name, owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=organization)
+        grant_donor_access(user, organization)
         return user, organization
 
     def select_organization(self, organization):
@@ -183,7 +215,7 @@ class DonationIntakeViewTests(TestCase):
             email="donations@supplier.example",
             phone="6045550100",
         )
-        Membership.objects.create(user=user, organization=organization)
+        grant_donor_access(user, organization)
         self.client.force_login(user)
         self.select_organization(organization)
 
@@ -209,7 +241,7 @@ class DonationIntakeViewTests(TestCase):
             postal_code="V5A 1A1",
             email="second@example.com",
         )
-        Membership.objects.create(user=user, organization=second_organization)
+        grant_donor_access(user, second_organization)
         self.client.force_login(user)
         self.select_organization(second_organization)
 
@@ -221,7 +253,7 @@ class DonationIntakeViewTests(TestCase):
     def test_created_donation_uses_current_switched_organization(self):
         user, first_organization = self.create_user_with_org(organization_name="First Org")
         second_organization = Organization.objects.create(name="Second Org", owner=user, is_active=True)
-        Membership.objects.create(user=user, organization=second_organization)
+        grant_donor_access(user, second_organization)
         self.client.force_login(user)
         self.select_organization(second_organization)
 
@@ -256,9 +288,9 @@ class DonationIntakeViewTests(TestCase):
         )
         organization = Organization.objects.create(name="Shared Org", owner=owner, is_active=True)
         other_organization = Organization.objects.create(name="Other Org", owner=other_user, is_active=True)
-        Membership.objects.create(user=owner, organization=organization)
-        Membership.objects.create(user=member, organization=organization)
-        Membership.objects.create(user=other_user, organization=other_organization)
+        grant_donor_access(owner, organization)
+        add_membership(member, organization)
+        grant_donor_access(other_user, other_organization)
         Donation.objects.create(
             submitted_by=owner,
             supplier_organization=organization,
@@ -375,6 +407,7 @@ class DonationIntakeViewTests(TestCase):
             status=Donation.Status.AVAILABLE,
         )
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:detail", args=[donation.pk]))
 
@@ -397,6 +430,7 @@ class DonationIntakeViewTests(TestCase):
             status=Donation.Status.AVAILABLE,
         )
         self.client.force_login(user)
+        self.select_organization(organization)
 
         response = self.client.get(reverse("donations:detail", args=[donation.pk]))
 
@@ -414,7 +448,7 @@ class DonationIntakeViewTests(TestCase):
             email_verified=True,
         )
         receiver_organization = Organization.objects.create(name="Receiver Org", owner=receiver, is_active=True)
-        Membership.objects.create(user=receiver, organization=receiver_organization)
+        grant_receiver_access(receiver, receiver_organization)
         donation = Donation.objects.create(
             submitted_by=supplier,
             supplier_organization=supplier_organization,
@@ -447,6 +481,7 @@ class DonationIntakeViewTests(TestCase):
             quantity=4,
         )
         self.client.force_login(supplier)
+        self.select_organization(supplier_organization)
 
         response = self.client.get(reverse("donations:detail", args=[donation.pk]))
 
@@ -483,7 +518,7 @@ class FoodRequestTests(TestCase):
             is_active=True,
             phone="6045550199",
         )
-        Membership.objects.create(user=self.supplier, organization=self.supplier_organization)
+        grant_donor_access(self.supplier, self.supplier_organization)
 
         self.donation = Donation.objects.create(
             submitted_by=self.supplier,
@@ -529,7 +564,7 @@ class FoodRequestTests(TestCase):
             owner=self.receiver,
             is_active=True,
         )
-        Membership.objects.create(user=self.receiver, organization=self.receiver_organization)
+        grant_receiver_access(self.receiver, self.receiver_organization)
 
     def test_receiver_can_view_available_donation_list(self):
         self.client.force_login(self.receiver)
@@ -639,6 +674,7 @@ class FoodRequestTests(TestCase):
 
     def test_receiver_can_view_available_donation_detail(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
         response = self.client.get(reverse("donations:available_detail", args=[self.donation.pk]))
 
         self.assertEqual(response.status_code, 200)
@@ -693,6 +729,7 @@ class FoodRequestTests(TestCase):
 
     def test_receiver_can_view_food_request_detail(self):
         self.client.force_login(self.receiver)
+        self.select_organization(self.receiver_organization)
         self.receiver_organization.address_line_1 = "555 Receiver Road"
         self.receiver_organization.municipality = "Vancouver"
         self.receiver_organization.region = "BC"
@@ -786,7 +823,7 @@ class FoodRequestTests(TestCase):
             email_verified=True,
         )
         second_organization = Organization.objects.create(name="Second Receiver", owner=second_receiver, is_active=True)
-        Membership.objects.create(user=second_receiver, organization=second_organization)
+        grant_receiver_access(second_receiver, second_organization)
         self.client.force_login(second_receiver)
         self.select_organization(second_organization)
 
