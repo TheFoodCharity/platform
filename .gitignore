@@ -16,3 +16,6 @@ wheels/
 
 # Secrets
 .env
+
+# Local Storage
+private_media/

@@ -1,0 +1,41 @@
+<section id="admin" class="rounded-2xl border border-base-300 bg-white p-6 shadow-sm">
+  <h2 class="text-2xl font-bold text-slate-950">Admin</h2>
+  <dl class="mt-6 grid gap-4 md:grid-cols-2">
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Status</dt>
+      <dd class="mt-1 text-slate-950"><span class="badge badge-ghost">{{ space.get_status_display }}</span></dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Topic</dt>
+      <dd class="mt-1 text-slate-950">{{ space.get_topic_category_display }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Region</dt>
+      <dd class="mt-1 text-slate-950">{{ space.region|default:"Not specified" }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Municipality</dt>
+      <dd class="mt-1 text-slate-950">{{ space.municipality|default:"Not specified" }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Visibility</dt>
+      <dd class="mt-1 text-slate-950">{{ space.get_visibility_level_display }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Owner</dt>
+      <dd class="mt-1 text-slate-950">{{ space.owner }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Moderator</dt>
+      <dd class="mt-1 text-slate-950">{{ space.moderator|default:"Not assigned" }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Last activity</dt>
+      <dd class="mt-1 text-slate-950">{{ space.last_activity_at|date:"M j, Y g:i A" }}</dd>
+    </div>
+    <div>
+      <dt class="text-sm font-semibold text-slate-500">Created from application</dt>
+      <dd class="mt-1 text-slate-950">{{ space.created_from_request|default:"No" }}</dd>
+    </div>
+  </dl>
+</section>

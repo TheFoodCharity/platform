@@ -1,0 +1,12 @@
+<nav class="mb-6 border-b border-base-300" aria-label="Collaboration module sections">
+  <div class="tabs tabs-border">
+    <a class="tab {% if collaboration_nav_active == 'collaborations' %}tab-active{% endif %}"
+       href="{% url 'collaborations:list' %}">
+      Collaboration Spaces
+    </a>
+    <a class="tab {% if collaboration_nav_active == 'applications' %}tab-active{% endif %}"
+       href="{% url 'collaborations:request_list' %}">
+      Applications
+    </a>
+  </div>
+</nav>

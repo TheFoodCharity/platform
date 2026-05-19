@@ -65,3 +65,14 @@ class Environment(BaseSettings):
     database_url: DatabaseUrl = Field(default="postgresql://fcacp:super-secure-password@127.0.0.1:5432/fcacp")
 
     smtp: SmtpSettings = SmtpSettings()
+
+    aws_storage_bucket_name: str = ""
+    aws_s3_region_name: str = ""
+    aws_s3_access_key_id: str = ""
+    aws_s3_secret_access_key: str = ""
+
+    celery_broker_url: str = "redis://127.0.0.1:6379/0"
+
+    clamav_host: str = "127.0.0.1"
+    clamav_port: int = 3310
+    clamav_timeout: int = 60

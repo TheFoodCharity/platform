@@ -1,99 +1,72 @@
 {% extends "base_app.html" %}
 
-{% block extra_head %}
-    {% include "collaborations/_styles.html" %}
-{% endblock %}
-
-{% block page_title %}Collaborations{% endblock %}
+{% block page_title %}Collaboration Spaces{% endblock %}
 
 {% block page_body %}
-    <main class="collab-shell">
-        <header class="collab-page-header">
-            <div>
-                <h1>Collaborations</h1>
-                <p>Working groups, shared requests, and active coordination spaces.</p>
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Collaboration management</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">Collaboration Spaces</h1>
+        <p class="mt-2 text-slate-600">Browse coordination spaces by topic, region, and visibility.</p>
+      </div>
+      <a class="btn btn-primary" href="{% url 'collaborations:request_create' %}">
+        <span class="material-symbols-rounded">add</span>
+        New Application
+      </a>
+    </div>
+
+    {% include "collaborations/_nav.html" %}
+
+    <div class="space-y-4">
+      {% for space in spaces %}
+        <article class="rounded-2xl border border-base-300 bg-white p-5 shadow-sm">
+          <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div class="min-w-0">
+              <div class="flex items-start gap-3">
+                <div class="avatar avatar-placeholder shrink-0">
+                  <div class="w-11 rounded-xl bg-primary text-primary-content">
+                    <span>{{ space.get_topic_category_display|slice:":1" }}</span>
+                  </div>
+                </div>
+                <div class="min-w-0">
+                  <h2 class="text-2xl font-bold text-slate-950">
+                    <a class="hover:text-primary" href="{% url 'collaborations:detail_overview' space.id %}">
+                      {{ space.title }}
+                    </a>
+                  </h2>
+                  <p class="mt-2 text-slate-600">{{ space.purpose|truncatewords:28 }}</p>
+                </div>
+              </div>
+
+              <div class="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-3">
+                <p><span class="font-semibold text-slate-900">Topic:</span> {{ space.get_topic_category_display }}</p>
+                <p><span class="font-semibold text-slate-900">Visibility:</span> {{ space.get_visibility_level_display }}</p>
+                <p><span class="font-semibold text-slate-900">Region:</span> {{ space.region|default:"No region" }}</p>
+                <p class="sm:col-span-2 lg:col-span-3">
+                  <p><span class="font-semibold text-slate-900">Messages:</span> {{ space.message_count }}</p>
+                  <p><span class="font-semibold text-slate-900">Linked Records:</span> {{ space.linked_record_count|default:0 }}</p>
+                  <p><span class="font-semibold text-slate-900">Files:</span> {{ space.file_count|default:0 }}</p>
+                </p>
+                <p class="sm:col-span-2 lg:col-span-6">
+                  <span class="font-semibold text-slate-900">Created:</span> {{ space.created_at|date:"M j, Y" }}
+                </p>
+              </div>
             </div>
-            <a class="collab-button" href="{% url 'collaborations:request_create' %}">Request New Collaboration</a>
-        </header>
 
-        {% if request.user.is_staff %}
-            <section class="collab-section">
-                <h2 class="collab-section-title">Pending Requests</h2>
-                {% for collaboration_request in pending_requests %}
-                    <article class="collab-card" style="margin-bottom: 12px;">
-                        <h3>
-                            <a class="collab-link"
-                               href="{% url 'collaborations:request_detail' collaboration_request.id %}">
-                                {{ collaboration_request.title }}
-                            </a>
-                        </h3>
-                        <p><strong>Status:</strong> <span
-                                class="collab-status">{{ collaboration_request.get_status_display }}</span></p>
-                        <p><strong>Requested by:</strong> {{ collaboration_request.requested_by_user }}</p>
-                        <p><strong>Region:</strong> {{ collaboration_request.region|default:"Not specified" }}</p>
-                    </article>
-                {% empty %}
-                    <p class="collab-empty">No pending collaboration requests.</p>
-                {% endfor %}
-            </section>
-        {% endif %}
-
-        <section class="collab-section">
-            <h2 class="collab-section-title">Visible Collaboration Spaces</h2>
-            <div class="collab-grid">
-                {% for space in spaces %}
-                    <article class="collab-card">
-                        <h3>
-                            <a class="collab-link" href="{% url 'collaborations:detail' space.id %}">
-                                {{ space.title }}
-                            </a>
-                        </h3>
-                        <p><strong>Status:</strong> <span class="collab-status">{{ space.get_status_display }}</span>
-                        </p>
-                        <p><strong>Topic:</strong> {{ space.get_topic_category_display }}</p>
-                        <p><strong>Region:</strong> {{ space.region|default:"Not specified" }}</p>
-                        <p><strong>Visibility:</strong> {{ space.get_visibility_level_display }}</p>
-                        <a class="collab-link" href="{% url 'collaborations:detail' space.id %}">Open Detail</a>
-                    </article>
-                {% empty %}
-                    <p class="collab-empty">No collaboration spaces are visible to you yet.</p>
-                {% endfor %}
+            <div class="flex shrink-0 gap-2">
+              <span class="badge badge-ghost">{{ space.get_status_display }}</span>
+              <a class="btn btn-sm btn-outline btn-primary" href="{% url 'collaborations:detail_overview' space.id %}">
+                View
+              </a>
             </div>
-        </section>
-
-        <section class="collab-section">
-            <h2 class="collab-section-title">Your Requests</h2>
-            <table class="collab-table">
-                <thead>
-                <tr>
-                    <th>Title</th>
-                    <th>Status</th>
-                    <th>Submitted</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for collaboration_request in user_requests %}
-                    <tr>
-                        <td>
-                            <a class="collab-link"
-                               href="{% url 'collaborations:request_detail' collaboration_request.id %}">
-                                {{ collaboration_request.title }}
-                            </a>
-                        </td>
-                        <td>
-                            <span class="collab-status">{{ collaboration_request.get_status_display }}</span>
-                        </td>
-                        <td>
-                            {{ collaboration_request.created_at }}
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="3">You have not submitted a collaboration request yet.</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    </main>
-{% endblock page_body %}
+          </div>
+        </article>
+      {% empty %}
+        <div class="rounded-2xl border border-base-300 bg-white p-8 text-center text-slate-600 shadow-sm">
+          No collaboration spaces are visible to you yet.
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

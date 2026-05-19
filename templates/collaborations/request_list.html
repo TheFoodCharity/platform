@@ -1,0 +1,85 @@
+{% extends "base_app.html" %}
+
+{% block page_title %}Collaboration Applications{% endblock %}
+
+{% block page_body %}
+  <div class="mx-auto max-w-5xl">
+    <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-primary">Collaboration management</p>
+        <h1 class="mt-2 text-4xl font-bold text-slate-950">Applications</h1>
+        <p class="mt-2 text-slate-600">Submit, track, and review requests for new collaboration spaces.</p>
+      </div>
+      <a class="btn btn-primary" href="{% url 'collaborations:request_create' %}">
+        <span class="material-symbols-rounded">add</span>
+        New Application
+      </a>
+    </div>
+
+    {% include "collaborations/_nav.html" %}
+
+    <div class="overflow-x-auto rounded-2xl border border-base-300 bg-white shadow-sm">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            {% if request.user.is_staff %}
+              <th>Requested by</th>
+            {% endif %}
+            <th>Status</th>
+            <th>Topic</th>
+            <th>Submitted</th>
+            <th>Collaboration Space</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for collaboration_request in applications %}
+            <tr>
+              <td>
+                <a class="link link-hover font-semibold text-slate-950"
+                   href="{% url 'collaborations:request_detail' collaboration_request.id %}">
+                  {{ collaboration_request.title }}
+                </a>
+              </td>
+              {% if request.user.is_staff %}
+                <td>{{ collaboration_request.requested_by_user.get_full_name|default:collaboration_request.requested_by_user }}</td>
+              {% endif %}
+              <td>
+                {% if collaboration_request.status == "approved" %}
+                  <span class="badge badge-success">{{ collaboration_request.get_status_display }}</span>
+                {% elif collaboration_request.status == "declined" %}
+                  <span class="badge badge-error">{{ collaboration_request.get_status_display }}</span>
+                {% elif collaboration_request.status == "needs_info" %}
+                  <span class="badge badge-warning">{{ collaboration_request.get_status_display }}</span>
+                {% else %}
+                  <span class="badge badge-warning">In review</span>
+                {% endif %}
+              </td>
+              <td>{{ collaboration_request.get_topic_category_display }}</td>
+              <td>{{ collaboration_request.created_at|date:"M j, Y" }}</td>
+              <td>
+                {% if collaboration_request.space %}
+                  <a class="btn btn-sm btn-primary" href="{% url 'collaborations:detail_chat' collaboration_request.space.id %}">
+                    Open Collaboration
+                  </a>
+                {% else %}
+                  <span class="text-slate-500">Not created</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td class="py-8 text-center text-slate-600" colspan="{% if request.user.is_staff %}6{% else %}5{% endif %}">
+                {% if request.user.is_staff %}
+                  No collaboration applications have been submitted yet.
+                {% else %}
+                  You have not submitted a collaboration application yet.
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

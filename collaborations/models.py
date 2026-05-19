@@ -1,4 +1,5 @@
 import uuid
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -350,3 +351,65 @@ class CollaborationChatMessage(models.Model):
 
     def __str__(self):
         return f"Chat message by {self.author} in {self.space}"
+
+
+def collaboration_file_upload_to(instance, filename):
+    ext = Path(filename).suffix.lower()
+    return f"quarantine/collaborations/{instance.space_id}/files/{instance.id}{ext}"
+
+
+def collaboration_clean_file_path(instance):
+    ext = Path(instance.original_filename).suffix.lower()
+    return f"clean/collaborations/{instance.space_id}/files/{instance.id}{ext}"
+
+
+class CollaborationFile(models.Model):
+    class ScanStatus(models.TextChoices):
+        PENDING = "pending", "Pending scan"
+        SCANNING = "scanning", "Scanning"
+        CLEAN = "clean", "Clean"
+        INFECTED = "infected", "Infected"
+        FAILED = "failed", "Scan failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    space = models.ForeignKey(CollaborationSpace, related_name="files", on_delete=models.CASCADE)
+    file = models.FileField(upload_to=collaboration_file_upload_to, max_length=255)
+    original_filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=255)
+    size = models.PositiveBigIntegerField()
+    scan_status = models.CharField(
+        max_length=20,
+        choices=ScanStatus.choices,
+        default=ScanStatus.PENDING,
+        db_index=True,
+    )
+    scan_result = models.CharField(max_length=255, blank=True)
+    scan_error = models.TextField(blank=True)
+    scan_attempts = models.PositiveSmallIntegerField(default=0)
+    scan_started_at = models.DateTimeField(null=True, blank=True)
+    scanned_at = models.DateTimeField(null=True, blank=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="uploaded_collaboration_files",
+        on_delete=models.PROTECT,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "original_filename"]
+
+    def __str__(self):
+        return self.original_filename
+
+    def get_scan_status_class(self):
+        match self.scan_status:
+            case self.ScanStatus.CLEAN:
+                return "badge-success"
+            case self.ScanStatus.INFECTED:
+                return "badge-error"
+            case self.ScanStatus.FAILED:
+                return "badge-warning"
+            case self.ScanStatus.SCANNING:
+                return "badge-info"
+            case _:
+                return "badge-ghost"
