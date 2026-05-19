@@ -51,7 +51,6 @@ def dashboard(request):
     pending_donations_count = Donation.objects.filter(
         status__in=[
             Donation.Status.SUBMITTED,
-            Donation.Status.PENDING,
             Donation.Status.AVAILABLE,
         ],
     ).count()
