@@ -60,4 +60,4 @@ WORKDIR /app
 ENV DJANGO_SETTINGS_MODULE=fcacp.settings.production
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["sh", "-c", "gunicorn fcacp.wsgi --bind 0.0.0.0:${PORT:-8000}"]
+CMD ["gunicorn", "fcacp.wsgi"]

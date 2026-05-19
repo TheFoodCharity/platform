@@ -62,11 +62,11 @@ The server binds to `0.0.0.0:8000` by default. Override the port with the
 `gunicorn.conf.py` is picked up automatically. The worker count defaults to
 `cpu_count * 2 + 1`. Override via:
 
-| Variable             | Default   | Description                                                     |
-|----------------------|-----------|-----------------------------------------------------------------|
-| `GUNICORN_HOST`      | `0.0.0.0` | Bind address                                                    |
-| `GUNICORN_PORT`      | `8000`    | Bind port                                                       |
-| `GUNICORN_LOG_LEVEL` | `info`    | Log verbosity (`debug`, `info`, `warning`, `error`, `critical`) |
+| Variable                 | Default   | Description                                                     |
+|--------------------------|-----------|-----------------------------------------------------------------|
+| `GUNICORN_HOST`          | `0.0.0.0` | Bind address                                                    |
+| `PORT` / `GUNICORN_PORT` | `8000`    | Bind port                                                       |
+| `GUNICORN_LOG_LEVEL`     | `info`    | Log verbosity (`debug`, `info`, `warning`, `error`, `critical`) |
 
 ---
 
