@@ -23,16 +23,11 @@ environment = Environment()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+SECRET_KEY = environment.secret_key.get_secret_value()
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ibsjbhz&kkkot0b751u1*wjo@2pn9cpd&=y!ou0f!e_csxs&1x"
+DEBUG = environment.debug
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = environment.allowed_hosts
 INTERNAL_IPS = ["127.0.0.1", "::1"]
 
 # Application definition
@@ -212,6 +207,10 @@ EMAIL_TIMEOUT = environment.smtp.timeout
 
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
+
+# Cookies
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 
 # Background jobs
 CELERY_BROKER_URL = environment.celery_broker_url

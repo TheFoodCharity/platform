@@ -1,8 +1,9 @@
 from enum import StrEnum, auto
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic.networks import PostgresDsn
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class DatabaseUrl(PostgresDsn):
@@ -62,6 +63,11 @@ class SmtpSettings(BaseModel):
 class Environment(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_nested_delimiter="__")
 
+    debug: bool = False
+    secret_key: SecretStr
+
+    allowed_hosts: Annotated[list[str], NoDecode] = []
+
     database_url: DatabaseUrl = Field(default="postgresql://fcacp:super-secure-password@127.0.0.1:5432/fcacp")
 
     smtp: SmtpSettings = SmtpSettings()
@@ -76,3 +82,8 @@ class Environment(BaseSettings):
     clamav_host: str = "127.0.0.1"
     clamav_port: int = 3310
     clamav_timeout: int = 60
+
+    @field_validator("allowed_hosts", mode="before")
+    @classmethod
+    def decode_allowed_hosts(cls, v: str) -> list[str]:
+        return [i.strip() for i in v.split(",")]
