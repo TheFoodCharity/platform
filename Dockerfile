@@ -9,6 +9,7 @@ ENV UV_NO_DEV=1
 ENV UV_PYTHON_INSTALL_DIR=/python
 ENV UV_PYTHON_PREFERENCE=only-managed
 
+ENV DJANGO_SETTINGS_MODULE=fcacp.settings.build
 
 RUN set -ex; \
     apt-get update; \
@@ -39,9 +40,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY . /app
 
-ENV DEBUG=false
-ENV SECRET_KEY=django-insecure-docker-build
-
 RUN set -ex; \
     mkdir -p assets; \
     uv run manage.py tailwind build; \
@@ -59,6 +57,7 @@ COPY --from=builder --chown=nonroot:nonroot /app /app
 USER nonroot
 WORKDIR /app
 
+ENV DJANGO_SETTINGS_MODULE=fcacp.settings.production
 ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["gunicorn", "fcacp.wsgi"]
+CMD ["sh", "-c", "gunicorn fcacp.wsgi --bind 0.0.0.0:${PORT:-8000}"]

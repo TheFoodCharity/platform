@@ -1,8 +1,11 @@
 .github/
+.git/
 .venv/
+__pycache__/
 assets/
 theme/static/css/dist
 theme/static_src/node_modules
+.env
 .gitattributes
 .gitignore
 prek.toml
