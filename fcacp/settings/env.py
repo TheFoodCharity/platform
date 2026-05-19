@@ -1,9 +1,24 @@
 from enum import StrEnum, auto
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
-from pydantic.networks import PostgresDsn
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, model_validator
+from pydantic.networks import PostgresDsn, RedisDsn
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+
+def _split_comma_list(v: object) -> object:
+    if isinstance(v, str):
+        return [item.strip() for item in v.split(",")]
+    return v
+
+
+def _blank_to_none(v: object) -> object:
+    if isinstance(v, str) and not v.strip():
+        return None
+    return v
+
+
+CommaSeparatedList = Annotated[list[str], NoDecode, BeforeValidator(_split_comma_list)]
 
 
 class DatabaseUrl(PostgresDsn):
@@ -60,30 +75,38 @@ class SmtpSettings(BaseModel):
         return self.security == SmtpSecurity.SMTPS
 
 
-class Environment(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", env_nested_delimiter="__")
+class ClamAVSettings(BaseModel):
+    model_config = ConfigDict(validate_default=True)
 
-    debug: bool = False
-    secret_key: SecretStr
+    host: str = Field(default="127.0.0.1")
+    port: int = Field(default=3310)
+    timeout: int = Field(default=60)
 
-    allowed_hosts: Annotated[list[str], NoDecode] = []
 
+class BaseEnvironment(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        extra="ignore",
+    )
+
+    allowed_hosts: CommaSeparatedList = []
     database_url: DatabaseUrl = Field(default="postgresql://fcacp:super-secure-password@127.0.0.1:5432/fcacp")
+    broker_url: RedisDsn = Field(default="redis://127.0.0.1:6379/0")
 
     smtp: SmtpSettings = SmtpSettings()
+    clamav: ClamAVSettings = ClamAVSettings()
 
     aws_storage_bucket_name: str = ""
     aws_s3_region_name: str = ""
     aws_s3_access_key_id: str = ""
     aws_s3_secret_access_key: str = ""
 
-    celery_broker_url: str = "redis://127.0.0.1:6379/0"
 
-    clamav_host: str = "127.0.0.1"
-    clamav_port: int = 3310
-    clamav_timeout: int = 60
+class DevelopmentEnvironment(BaseEnvironment):
+    secret_key: Annotated[SecretStr | None, BeforeValidator(_blank_to_none)] = None
 
-    @field_validator("allowed_hosts", mode="before")
-    @classmethod
-    def decode_allowed_hosts(cls, v: str) -> list[str]:
-        return [i.strip() for i in v.split(",")]
+
+class ProductionEnvironment(BaseEnvironment):
+    secret_key: Annotated[SecretStr, BeforeValidator(_blank_to_none)]
