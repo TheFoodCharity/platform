@@ -14,18 +14,6 @@ Prerequisites:
 
 You'll need to have a Postgres database accessible. If you do not, one can be started using `docker compose up -d`.
 
-Redis and ClamAV are **not** started by this repository's Compose file. They must be reachable from your machine through port forwarding, and the app should point at those forwarded ports through environment variables.
-
-For local Django development, keep these values in `.env`:
-
-```shell
-CELERY_BROKER_URL=redis://127.0.0.1:6379/0
-CLAMAV_HOST=127.0.0.1
-CLAMAV_PORT=3310
-```
-
-If your forwarded ports are different, update the values in `.env` to match your local mapping.
-
 ```shell
 # Install dependencies and a compatible Python interpreter
 uv sync --dev
@@ -46,13 +34,17 @@ uv run ./manage.py migrate
 uv run ./manage.py runserver
 ```
 
-
-
 In a second terminal, start the Tailwind watcher while working on templates or CSS:
 
 ```shell
 cd theme/static_src
 npm run dev
+```
+
+If you're doing any uploads, you'll need to start a Celery worker in a separate terminal as well:
+
+```shell
+uv run celery -A fcacp worker -l info
 ```
 
 If the UI looks like plain HTML, the Tailwind CSS probably needs to be rebuilt:
