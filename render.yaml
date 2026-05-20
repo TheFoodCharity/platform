@@ -43,6 +43,28 @@ projects:
 
               # TODO: add SMTP settings
 
+          - name: clamav
+            type: pserv
+            runtime: image
+            region: oregon
+            plan: standard
+
+            image:
+              url: docker.io/clamav/clamav:stable
+
+            disk:
+              name: signatures
+              mountPath: /var/lib/clamav
+              sizeGB: 1
+
+          - name: cache
+            type: keyvalue
+            region: oregon
+            plan: starter
+
+            maxmemoryPolicy: allkeys-lru
+            ipAllowList: [ ]
+
         databases:
           - name: database
             region: oregon
