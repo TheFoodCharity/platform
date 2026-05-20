@@ -14,6 +14,8 @@ projects:
         envVarGroups:
           - name: smtp
             envVars:
+              - key: SMTP__FROM_EMAIL
+                value: The Food Charity <no-reply@thefoodcharity.ca>
               - key: SMTP__HOST
                 value: smtp.postmarkapp.com
               - key: SMTP__PORT
