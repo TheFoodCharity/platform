@@ -11,6 +11,16 @@ projects:
         permissions:
           protection: enabled
 
+        envVarGroups:
+          - name: smtp
+            envVars:
+              - key: SMTP__HOST
+                value: smtp.postmarkapp.com
+              - key: SMTP__PORT
+                value: 587
+              - key: SMTP__SECURITY
+                value: starttls
+
         services:
           - name: web
             type: web
@@ -47,7 +57,11 @@ projects:
               - key: ALLOWED_HOSTS
                 value: thefoodcharity.ca,*.onrender.com
 
-              # TODO: add SMTP settings
+              - fromGroup: smtp
+              - key: SMTP__USERNAME
+                sync: false
+              - key: SMTP__PASSWORD
+                sync: false
 
           - name: worker
             type: worker
@@ -93,6 +107,12 @@ projects:
               # https://render.com/docs/blueprint-spec#web-concurrency
               - key: WORKER_CONCURRENCY
                 value: 1
+
+              - fromGroup: smtp
+              - key: SMTP__USERNAME
+                sync: false
+              - key: SMTP__PASSWORD
+                sync: false
 
           - name: clamav
             type: pserv
