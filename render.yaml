@@ -31,7 +31,6 @@ projects:
             plan: starter
 
             repo: https://github.com/TheFoodCharity/platform
-            branch: ak/deployment # TODO: remove
             autoDeployTrigger: commit
 
             renderSubdomainPolicy: disabled
@@ -72,7 +71,6 @@ projects:
             plan: starter
 
             repo: https://github.com/TheFoodCharity/platform
-            branch: ak/deployment # TODO: remove
             autoDeployTrigger: commit
 
             dockerCommand: celery -A fcacp.celery worker -l info
