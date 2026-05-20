@@ -59,6 +59,8 @@ projects:
             branch: ak/deployment # TODO: remove
             autoDeployTrigger: checksPass # TODO: change to "commit"
 
+            dockerCommand: celery -A fcacp.celery -l info
+
             envVars:
               - key: SECRET_KEY
                 generateValue: true
