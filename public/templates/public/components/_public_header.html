@@ -20,6 +20,31 @@
         <!-- RIGHT -->
         <div class="flex items-center flex-nowrap text-primary font-medium tracking-wide">
             <div class="flex items-center space-x-8">
+
+                <!-- SUPPORT US DROPDOWN -->
+                <div class="dropdown dropdown-hover">
+                    <label tabindex="0" class="cursor-pointer hover:opacity-70 whitespace-nowrap">
+                        Support Us
+                    </label>
+                    <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-white rounded-box w-56 text-primary">
+                        <li>
+                            <a href="https://www.zeffy.com/en-CA/donation-form/a199f93a-ab7c-4c50-942a-c077efccc880" target="_blank">
+                                Donate Monthly
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.zeffy.com/en-CA/donation-form/a199f93a-ab7c-4c50-942a-c077efccc880" target="_blank">
+                                Make a One-Time Donation
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'accounts:register' %}">
+                                Donate Food / Supplies
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
                 {% if user.is_authenticated %}
                     <a href="{% url 'dashboard' %}" class="text-sm hover:opacity-70 transition whitespace-nowrap">
                         Dashboard
@@ -45,11 +70,22 @@
             <details class="md:hidden relative ml-4">
                 <summary class="btn btn-ghost">☰</summary>
                 <div class="absolute right-0 mt-3 w-56 bg-white shadow-lg rounded-lg p-3 text-primary">
+
                     <a href="{% url 'food_help_map' %}" class="block p-2 hover:bg-base-200 rounded">Food Map</a>
                     <a href="{% url 'storage:list' %}" class="block p-2 hover:bg-base-200 rounded">Storage</a>
                     <a href="{% url 'donations:available_list' %}" class="block p-2 hover:bg-base-200 rounded">Listings</a>
                     <a href="{% url 'donations:create' %}" class="block p-2 font-semibold hover:bg-base-200 rounded">Donate</a>
+
                     <hr class="my-2">
+
+                    <!-- MOBILE SUPPORT US -->
+                    <p class="px-2 text-xs font-semibold text-gray-500">Support Us</p>
+                    <a href="https://www.zeffy.com/en-CA/donation-form/a199f93a-ab7c-4c50-942a-c077efccc880" class="block p-2 hover:bg-base-200 rounded">Donate Monthly</a>
+                    <a href="https://www.zeffy.com/en-CA/donation-form/a199f93a-ab7c-4c50-942a-c077efccc880" class="block p-2 hover:bg-base-200 rounded">One-Time Donation</a>
+                    <a href="{% url 'accounts:register' %}" class="block p-2 hover:bg-base-200 rounded">Donate Food / Supplies</a>
+
+                    <hr class="my-2">
+
                     {% if user.is_authenticated %}
                         <a href="{% url 'dashboard' %}" class="block p-2 hover:bg-base-200 rounded">Dashboard</a>
                     {% else %}
