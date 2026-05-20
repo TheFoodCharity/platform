@@ -20,6 +20,32 @@ STORAGES["staticfiles"] = {  # noqa: F405
 
 CRISPY_FAIL_SILENTLY = True
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
+
 CSRF_COOKIE_SECURE = _env.https
 SESSION_COOKIE_SECURE = _env.https
 SESSION_COOKIE_HTTPONLY = True
