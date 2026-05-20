@@ -30,7 +30,7 @@ projects:
 
             repo: https://github.com/TheFoodCharity/platform
             branch: ak/deployment # TODO: remove
-            autoDeployTrigger: checksPass # TODO: change to "commit"
+            autoDeployTrigger: commit
 
             renderSubdomainPolicy: disabled
             domains:
@@ -71,7 +71,7 @@ projects:
 
             repo: https://github.com/TheFoodCharity/platform
             branch: ak/deployment # TODO: remove
-            autoDeployTrigger: checksPass # TODO: change to "commit"
+            autoDeployTrigger: commit
 
             dockerCommand: celery -A fcacp.celery worker -l info
 
