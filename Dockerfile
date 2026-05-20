@@ -48,6 +48,9 @@ RUN set -ex; \
 FROM debian:trixie-slim
 
 RUN set -ex; \
+    apt-get update; \
+    apt-get install --yes --no-install-recommends ca-certificates; \
+    rm -rf /var/lib/apt/lists/*; \
     groupadd --system --gid 999 nonroot; \
     useradd --system --gid 999 --uid 999 --create-home nonroot
 
