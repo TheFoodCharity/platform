@@ -1,0 +1,15 @@
+{% extends "base_app.html" %}
+
+{% block page_title %}Error{% endblock %}
+
+{% block page_body %}
+    <div class="mt-16 mx-auto max-w-5xl text-center">
+        <h1 class="text-4xl font-bold text-slate-950">Permission Denied</h1>
+        <p class="mt-2 text-sm font-semibold tracking-wide text-error">
+            You don't have permission to access this page. Please contact your organization administrator if you believe
+            this is a mistake.
+        </p>
+
+        <a href="{% url 'dashboard' %}" class="mt-10 btn btn-primary">Back to dashboard</a>
+    </div>
+{% endblock %}
