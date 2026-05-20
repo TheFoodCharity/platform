@@ -59,6 +59,8 @@ class SmtpSecurity(StrEnum):
 class SmtpSettings(BaseModel):
     model_config = ConfigDict(validate_default=True)
 
+    from_email: str = Field(default="no-reply@fcacp.local")
+
     host: str = Field(default="127.0.0.1")
     port: int = Field(default=1025)
     username: str = Field(default="fcacp")

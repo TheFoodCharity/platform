@@ -160,11 +160,6 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 1 day
 
 INVITATION_TTL = timedelta(hours=72)
 
-# Email
-# https://docs.djangoproject.com/en/6.0/topics/email/
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-DEFAULT_FROM_EMAIL = "no-reply@fcacp.local"
-
 # Debugging
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
 
@@ -185,6 +180,9 @@ DATABASES = {
 
 # Email
 # https://docs.djangoproject.com/en/6.0/topics/email/
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+DEFAULT_FROM_EMAIL = _env.smtp.from_email
+
 EMAIL_HOST = _env.smtp.host
 EMAIL_PORT = _env.smtp.port
 EMAIL_HOST_USER = _env.smtp.username
