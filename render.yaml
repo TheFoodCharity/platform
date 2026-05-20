@@ -38,10 +38,53 @@ projects:
                   name: database
                   property: connectionString
 
+              - key: CELERY_BROKER_URL
+                fromService:
+                  type: keyvalue
+                  name: cache
+                  property: connectionString
+
               - key: ALLOWED_HOSTS
                 value: thefoodcharity.ca,*.onrender.com
 
               # TODO: add SMTP settings
+
+          - name: worker
+            type: worker
+            runtime: docker
+            region: oregon
+            plan: starter
+
+            repo: https://github.com/TheFoodCharity/platform
+            branch: ak/deployment # TODO: remove
+            autoDeployTrigger: checksPass # TODO: change to "commit"
+
+            envVars:
+              - key: SECRET_KEY
+                generateValue: true
+
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: database
+                  property: connectionString
+
+              - key: CELERY_BROKER_URL
+                fromService:
+                  type: keyvalue
+                  name: cache
+                  property: connectionString
+
+              - key: CLAMAV_HOST
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: host
+
+              - key: CLAMAV_PORT
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: port
 
           - name: clamav
             type: pserv
