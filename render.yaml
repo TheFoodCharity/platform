@@ -1,0 +1,151 @@
+previews:
+  generation: automatic
+  expireAfterDays: 3
+
+projects:
+  - name: Platform
+    environments:
+      - name: Production
+        networking:
+          isolation: enabled
+        permissions:
+          protection: enabled
+
+        envVarGroups:
+          - name: smtp
+            envVars:
+              - key: SMTP__FROM_EMAIL
+                value: The Food Charity <no-reply@thefoodcharity.ca>
+              - key: SMTP__HOST
+                value: smtp.postmarkapp.com
+              - key: SMTP__PORT
+                value: 587
+              - key: SMTP__SECURITY
+                value: starttls
+
+        services:
+          - name: web
+            type: web
+            runtime: docker
+            region: oregon
+            plan: starter
+
+            repo: https://github.com/TheFoodCharity/platform
+            autoDeployTrigger: commit
+
+            renderSubdomainPolicy: disabled
+            domains:
+              - thefoodcharity.ca
+
+            preDeployCommand: python3 manage.py migrate
+            healthCheckPath: /healthz
+
+            envVars:
+              - key: SECRET_KEY
+                generateValue: true
+
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: database
+                  property: connectionString
+
+              - key: CELERY_BROKER_URL
+                fromService:
+                  type: keyvalue
+                  name: cache
+                  property: connectionString
+
+              - key: ALLOWED_HOSTS
+                value: thefoodcharity.ca,*.onrender.com
+
+              - fromGroup: smtp
+              - key: SMTP__USERNAME
+                sync: false
+              - key: SMTP__PASSWORD
+                sync: false
+
+          - name: worker
+            type: worker
+            runtime: docker
+            region: oregon
+            plan: starter
+
+            repo: https://github.com/TheFoodCharity/platform
+            autoDeployTrigger: commit
+
+            dockerCommand: celery -A fcacp.celery worker -l info
+
+            envVars:
+              - key: SECRET_KEY
+                generateValue: true
+
+              - key: DATABASE_URL
+                fromDatabase:
+                  name: database
+                  property: connectionString
+
+              - key: CELERY_BROKER_URL
+                fromService:
+                  type: keyvalue
+                  name: cache
+                  property: connectionString
+
+              - key: CLAMAV_HOST
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: host
+
+              - key: CLAMAV_PORT
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: port
+
+              # This mimics WEB_CONCURRENCY which is auto-provided by Render for web services. It should be updated
+              # to an appropriate value whenever the plan changes.
+              # https://render.com/docs/blueprint-spec#web-concurrency
+              - key: WORKER_CONCURRENCY
+                value: 1
+
+              - fromGroup: smtp
+              - key: SMTP__USERNAME
+                sync: false
+              - key: SMTP__PASSWORD
+                sync: false
+
+          - name: clamav
+            type: pserv
+            runtime: image
+            region: oregon
+            plan: standard
+
+            image:
+              url: docker.io/clamav/clamav:stable
+
+            disk:
+              name: signatures
+              mountPath: /var/lib/clamav
+              sizeGB: 1
+
+          - name: cache
+            type: keyvalue
+            region: oregon
+            plan: starter
+
+            maxmemoryPolicy: allkeys-lru
+            ipAllowList: [ ]
+
+        databases:
+          - name: database
+            region: oregon
+            plan: basic-1gb
+            diskSizeGB: 15
+
+            previewPlan: basic-256mb
+            previewDiskSizeGB: 1
+
+            postgresMajorVersion: '18'
+            databaseName: fcacp_prod
+            user: fcacp
+            ipAllowList: [ ]

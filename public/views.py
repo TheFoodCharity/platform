@@ -6,6 +6,10 @@ from organizations.models import Organization
 from storage.models import StorageLocation
 
 
+def healthcheck(request):
+    return HttpResponse(status=204)
+
+
 def home(request):
     return render(request, "public/landing.html")
 
@@ -51,7 +55,6 @@ def dashboard(request):
     pending_donations_count = Donation.objects.filter(
         status__in=[
             Donation.Status.SUBMITTED,
-            Donation.Status.PENDING,
             Donation.Status.AVAILABLE,
         ],
     ).count()

@@ -26,20 +26,22 @@ services:
         target: 1025
         published: 1025
 
-  celery:
-    build: .
-    command: celery -A fcacp worker -l info
-    depends_on:
-      - database
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    environment:
-      DATABASE_URL: postgresql://fcacp:super-secure-password@database:5432/fcacp
-      CELERY_BROKER_URL: ${FCACP_DOCKER_CELERY_BROKER_URL:-redis://host.docker.internal:6379/0}
-      CLAMAV_HOST: ${FCACP_DOCKER_CLAMAV_HOST:-host.docker.internal}
-      CLAMAV_PORT: ${FCACP_DOCKER_CLAMAV_PORT:-3310}
+  redis:
+    image: redis:alpine
+    ports:
+      - protocol: tcp
+        target: 6379
+        published: 6379
+
+  clamav:
+    image: clamav/clamav:stable
+    ports:
+      - protocol: tcp
+        target: 3310
+        published: 3310
     volumes:
-      - ./private_media:/app/private_media
+      - clamav-db:/var/lib/clamav
 
 volumes:
   database:
+  clamav-db:
