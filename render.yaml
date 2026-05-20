@@ -88,6 +88,12 @@ projects:
                   name: clamav
                   property: port
 
+              # This mimics WEB_CONCURRENCY which is auto-provided by Render for web services. It should be updated
+              # to an appropriate value whenever the plan changes.
+              # https://render.com/docs/blueprint-spec#web-concurrency
+              - key: WORKER_CONCURRENCY
+                value: 1
+
           - name: clamav
             type: pserv
             runtime: image
