@@ -17,7 +17,7 @@ projects:
               - key: SMTP__FROM_EMAIL
                 value: The Food Charity <no-reply@thefoodcharity.ca>
               - key: SMTP__HOST
-                value: smtp.postmarkapp.com
+                value: smtp.sendgrid.net
               - key: SMTP__PORT
                 value: 587
               - key: SMTP__SECURITY
