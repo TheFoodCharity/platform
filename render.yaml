@@ -56,7 +56,18 @@ projects:
                   property: connectionString
 
               - key: ALLOWED_HOSTS
-                value: thefoodcharity.ca,*.onrender.com
+                value: thefoodcharity.ca
+
+              - key: CLAMAV__HOST
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: host
+              - key: CLAMAV__PORT
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: port
 
               - fromGroup: smtp
               - key: SMTP__USERNAME
@@ -122,7 +133,6 @@ projects:
                   type: pserv
                   name: clamav
                   property: host
-
               - key: CLAMAV__PORT
                 fromService:
                   type: pserv
