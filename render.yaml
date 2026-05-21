@@ -64,6 +64,33 @@ projects:
               - key: SMTP__PASSWORD
                 sync: false
 
+              - key: STORAGE__TYPE
+                value: s3
+              - key: STORAGE__BUCKET
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_BUCKET
+              - key: STORAGE__REGION
+                value: internal
+              - key: STORAGE__ACCESS_KEY_ID
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_ACCESS_KEY
+              - key: STORAGE__SECRET_ACCESS_KEY
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_SECRET_KEY
+              - key: STORAGE__PROTOCOL
+                value: http
+              - key: STORAGE__ENDPOINT
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  property: hostport
+
           - name: worker
             type: worker
             runtime: docker
@@ -113,6 +140,33 @@ projects:
                 sync: false
               - key: SMTP__PASSWORD
                 sync: false
+
+              - key: STORAGE__TYPE
+                value: s3
+              - key: STORAGE__BUCKET
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_BUCKET
+              - key: STORAGE__REGION
+                value: internal
+              - key: STORAGE__ACCESS_KEY_ID
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_ACCESS_KEY
+              - key: STORAGE__SECRET_ACCESS_KEY
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_SECRET_KEY
+              - key: STORAGE__PROTOCOL
+                value: http
+              - key: STORAGE__ENDPOINT
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  property: hostport
 
           - name: clamav
             type: pserv
