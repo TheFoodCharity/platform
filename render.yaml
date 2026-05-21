@@ -219,9 +219,6 @@ projects:
               sizeGB: 5
 
             envVars:
-              - key: GARAGE_RPC_SECRET
-                generateValue: true
-
               - key: GARAGE_DEFAULT_ACCESS_KEY
                 generateValue: true
               - key: GARAGE_DEFAULT_SECRET_KEY

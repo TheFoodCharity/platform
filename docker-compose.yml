@@ -45,7 +45,6 @@ services:
   garage:
     build: services/garage
     environment:
-      GARAGE_RPC_SECRET: 92976c95ab06eb8e216b6d863506407b69e11b89716339be8b68e58e19f9b379 # Dummy dev secret, needs to be 32 bits of hex
       GARAGE_DEFAULT_BUCKET: thefoodcharity-dev
       GARAGE_DEFAULT_ACCESS_KEY: gk-dev-access-key
       GARAGE_DEFAULT_SECRET_KEY: dev-secret-access-key

@@ -4,7 +4,10 @@ db_engine = "sqlite"
 
 replication_factor = 1
 
+# We don't do any clustering so this is technically safe
 rpc_bind_addr = "127.0.0.1:3901"
+rpc_public_addr = "127.0.0.1:3901"
+rpc_secret = "a34f08cbece5178003ea770f28f492194e23fa1e96f9256551b11cb0a59aac4e"
 
 [s3_api]
 api_bind_addr = "[::]:3900"
