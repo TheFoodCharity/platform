@@ -22,11 +22,17 @@
 
                 {# TODO(alex): add link to join organization #}
 
-                {% if organization_count > 0 %}
-                    <div class="card-actions justify-center border-t border-base-200 pt-2">
+                <div class="card-actions justify-evenly border-t border-base-200 pt-2">
+                    {% if organization_count > 0 %}
                         <a href="{% url 'dashboard' %}" class="btn btn-outline btn-sm">Back</a>
-                    </div>
-                {% endif %}
+                    {% endif %}
+                    {% if user.is_staff %}
+                        <a href="{% url 'admin:index' %}" hx-boost="false" class="btn btn-outline btn-sm">
+                            <span class="material-symbols-rounded">dashboard_2_gear</span>
+                            Admin dashboard
+                        </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </main>

@@ -42,4 +42,11 @@
         <span class="material-symbols-rounded">add</span>
         Apply for a new organization
     </a>
+
+    {% if user.is_staff %}
+        <a href="{% url 'admin:index' %}" hx-boost="false" class="btn btn-outline btn-sm">
+            <span class="material-symbols-rounded">dashboard_2_gear</span>
+            Admin dashboard
+        </a>
+    {% endif %}
 {% endblock %}
