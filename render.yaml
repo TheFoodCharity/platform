@@ -219,6 +219,9 @@ projects:
               sizeGB: 5
 
             envVars:
+              - key: PORT
+                value: 3900
+
               - key: GARAGE_DEFAULT_ACCESS_KEY
                 generateValue: true
               - key: GARAGE_DEFAULT_SECRET_KEY
