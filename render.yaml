@@ -224,8 +224,10 @@ projects:
 
               - key: GARAGE_DEFAULT_ACCESS_KEY
                 generateValue: true
+                previewValue: GKTESTKEYABCDEF0123456789
               - key: GARAGE_DEFAULT_SECRET_KEY
                 generateValue: true
+                previewValue: TESTSECRETKEYABCDEF0123456789
               - key: GARAGE_DEFAULT_BUCKET
                 value: thefoodcharity
 

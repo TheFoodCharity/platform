@@ -1,0 +1,6 @@
+{% if form_show_labels and field.label %}
+    <{{ tag }} for="{{ field.id_for_label }}" class="fieldset-legend">
+    {{ field.label }}
+    {% if field.field.required %}<span aria-hidden="true" class="text-error">*</span>{% endif %}
+    </{{ tag }}>
+{% endif %}

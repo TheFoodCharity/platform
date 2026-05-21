@@ -8,6 +8,7 @@
     {% block extra_head %}{% endblock %}
     {% tailwind_css %}
     {% htmx_script %}
+    <script type="module" src="{% static "js/theme.js" %}"></script>
 
     <script type="module">
       const CSRF_COOKIE_RE = /csrftoken=([^;]+)/;

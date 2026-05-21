@@ -70,6 +70,29 @@ def themed_field(parser: template.base.Parser, token: template.base.Token) -> Th
     return ThemedFieldNode(parts[1])
 
 
+class InnerFieldNode(template.Node):
+    def __init__(self, field_var: str, css: str) -> None:
+        self.field_var = template.Variable(field_var)
+        self.css = css
+
+    def render(self, context: template.Context) -> str:
+        field = self.field_var.resolve(context)
+        widget = field.field.widget
+        existing = widget.attrs.get("class", "")
+        widget.attrs["class"] = f"{existing} {self.css}".strip() if existing else self.css
+        return str(field)
+
+
+@register.tag(name="themed_field_raw")
+def themed_field_raw(parser: template.base.Parser, token: template.base.Token) -> InnerFieldNode:
+    """Render a field's widget with explicit CSS classes instead of the widget-type lookup.
+    Used when the DaisyUI 'input' class belongs on a wrapper element, not the <input> itself."""
+    parts = token.split_contents()
+    if len(parts) != 3:
+        raise template.TemplateSyntaxError(f"'{parts[0]}' tag requires exactly two arguments: field and css classes")
+    return InnerFieldNode(parts[1], parts[2].strip("\"'"))
+
+
 @register.filter
 def is_checkbox(field: forms.BoundField) -> bool:
     return isinstance(field.field.widget, forms.CheckboxInput)
@@ -78,3 +101,8 @@ def is_checkbox(field: forms.BoundField) -> bool:
 @register.filter
 def is_radioselect(field: forms.BoundField) -> bool:
     return isinstance(field.field.widget, forms.RadioSelect)
+
+
+@register.filter
+def is_password(field: forms.BoundField) -> bool:
+    return isinstance(field.field.widget, forms.PasswordInput)
