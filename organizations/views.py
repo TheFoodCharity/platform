@@ -64,7 +64,7 @@ class DispatchView(LoginRequiredMixin, View):
                 accept_invitation(invitation=invitation, user=request.user)
                 set_current_organization(request, invitation.organization)
                 messages.success(request, f"Welcome! You've joined {invitation.organization}.")
-                return redirect("/")
+                return redirect(reverse("dashboard"))
             except Invitation.DoesNotExist, InvitationExpired, InvitationAlreadyAccepted:
                 pass
             except InvitationEmailMismatch:
@@ -79,8 +79,7 @@ class DispatchView(LoginRequiredMixin, View):
                 return redirect(reverse("organizations:apply"))
             case [organization]:
                 set_current_organization(request, organization)
-                # TODO(alex): redirect to that org's dashboard once it exists
-                return redirect(next_url or "/")
+                return redirect(next_url or reverse_lazy("dashboard"))
             case _:
                 select_url = reverse("organizations:select")
                 if next_url:
@@ -213,7 +212,7 @@ class SelectView(LoginRequiredMixin, ListView):
     def get(self, request, *args, **kwargs):
         if (not request.htmx or request.htmx.boosted) and not request.organization.is_anonymous:
             next_url = _safe_next(request, request.GET)
-            return redirect(next_url or "/")  # TODO(alex): redirect to dashboard
+            return redirect(next_url or reverse_lazy("dashboard"))
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -241,7 +240,7 @@ class ActivateView(LoginRequiredMixin, View):
 
         if was_anonymous:
             next_url = _safe_next(request, request.POST)
-            return HttpResponseClientRedirect(next_url or "/")
+            return HttpResponseClientRedirect(next_url or reverse_lazy("dashboard"))
         return HttpResponseClientRefresh()
 
 
@@ -464,7 +463,7 @@ class InvitationAcceptView(SingleObjectMixin, TemplateResponseMixin, View):
 
         set_current_organization(request, invitation.organization)
         messages.success(request, f"Welcome! You've joined {invitation.organization}.")
-        return redirect("/")
+        return redirect(reverse("dashboard"))
 
 
 class InvitationRemoveView(OrganizationRequiredMixin, PermissionRequiredMixin, View):
