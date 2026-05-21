@@ -210,6 +210,7 @@ projects:
             repo: https://github.com/TheFoodCharity/platform
             autoDeployTrigger: commit
 
+            dockerfilePath: services/garage/Dockerfile
             dockerContext: services/garage
 
             disk:
