@@ -1,0 +1,9 @@
+{% for message in messages %}
+    <div class="alert {{ message.tags }} toast-item animate-toast-dismiss shadow-lg" role="alert">
+        <span>{{ message }}</span>
+        <button type="button" class="btn btn-ghost btn-sm btn-circle ml-auto"
+                aria-label="Dismiss" onclick="this.closest('.toast-item').remove()">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+    </div>
+{% endfor %}

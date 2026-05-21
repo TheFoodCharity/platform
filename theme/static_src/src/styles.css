@@ -50,6 +50,15 @@
   */
 @source "../../../**/*.{html,py,js}";
 
+@theme {
+    --animate-toast-dismiss: toast-dismiss 3.3s ease-in forwards;
+}
+
+@keyframes toast-dismiss {
+    0%, 90.9% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 .material-symbols-outlined,
 .material-symbols-rounded {
     font-size: inherit;

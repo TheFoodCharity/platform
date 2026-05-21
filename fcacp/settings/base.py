@@ -69,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
+    "fcacp.middleware.HtmxMessagesMiddleware",
 ]
 
 ROOT_URLCONF = "fcacp.urls"
@@ -131,6 +132,7 @@ PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "assets"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Theming
 TAILWIND_APP_NAME = "theme"
