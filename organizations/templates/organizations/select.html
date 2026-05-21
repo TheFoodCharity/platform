@@ -33,6 +33,14 @@
                     {% include "components/_empty_state.html" with message="No organizations available." icon="apartment" %}
                 </li>
             {% endfor %}
+            {% if request.htmx and not request.htmx.boosted %}
+                <li>
+                    <a href="{% url 'organizations:apply' %}">
+                        <span class="material-symbols-rounded">add</span>
+                        New organization
+                    </a>
+                </li>
+            {% endif %}
         </ul>
     {% endpartialdef %}
 {% endblock %}
