@@ -90,13 +90,13 @@ projects:
                   name: cache
                   property: connectionString
 
-              - key: CLAMAV_HOST
+              - key: CLAMAV__HOST
                 fromService:
                   type: pserv
                   name: clamav
                   property: host
 
-              - key: CLAMAV_PORT
+              - key: CLAMAV__PORT
                 fromService:
                   type: pserv
                   name: clamav
