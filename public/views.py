@@ -1,8 +1,8 @@
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponse, redirect, render
 
 from collaborations.models import CollaborationSpace
 from donations.models import Donation
+from organizations.decorators import organization_required
 from organizations.models import Organization
 from storage.models import StorageLocation
 
@@ -57,7 +57,7 @@ def custom_404_view(request, exception=None):
     return redirect("home")
 
 
-@login_required
+@organization_required
 def dashboard(request):
     active_organizations_count = Organization.objects.filter(
         is_active=True,
