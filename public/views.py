@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.shortcuts import HttpResponse, redirect, render
 
 from collaborations.models import CollaborationSpace
@@ -52,6 +53,7 @@ def demo_interest(request):
 
 
 def custom_404_view(request, exception=None):
+    messages.error(request, "The page you're looking for doesn't exist!")
     if request.user.is_authenticated:
         return redirect("dashboard")
     return redirect("home")
