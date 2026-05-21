@@ -1,5 +1,7 @@
+from abc import ABC, abstractmethod
 from enum import StrEnum, auto
-from typing import Annotated
+from pathlib import Path
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, SecretStr, model_validator
 from pydantic.networks import PostgresDsn, RedisDsn
@@ -85,6 +87,64 @@ class ClamAVSettings(BaseModel):
     timeout: int = Field(default=60)
 
 
+class BaseStorage(ABC):
+    @abstractmethod
+    def to_django(self) -> dict: ...
+
+
+class LocalStorage(BaseStorage, BaseModel):
+    model_config = ConfigDict(validate_default=True)
+
+    type: Literal["local"] = "local"
+    path: Path = "./private_media"
+
+    def to_django(self) -> dict:
+        return {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "OPTIONS": {
+                "location": self.path.resolve(),
+            },
+        }
+
+
+class S3Protocol(StrEnum):
+    HTTP = auto()
+    HTTPS = auto()
+
+
+class S3Storage(BaseStorage, BaseModel):
+    type: Literal["s3"] = "s3"
+    bucket: str
+    region: str | None = None
+    access_key_id: str | None = None
+    secret_access_key: str | None = None
+
+    protocol: S3Protocol = S3Protocol.HTTPS
+    endpoint: str | None = None
+
+    def to_django(self) -> dict:
+        endpoint_url = None
+        if (endpoint := self.endpoint) is not None:
+            if endpoint.startswith("http") or endpoint.startswith("https"):
+                endpoint_url = endpoint
+            else:
+                endpoint_url = f"{self.protocol.value}://{endpoint}"
+
+        return {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": self.bucket,
+                "region_name": self.region,
+                "access_key": self.access_key_id,
+                "secret_key": self.secret_access_key,
+                "endpoint_url": endpoint_url,
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+            },
+        }
+
+
 class BaseEnvironment(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -99,6 +159,7 @@ class BaseEnvironment(BaseSettings):
 
     smtp: SmtpSettings = SmtpSettings()
     clamav: ClamAVSettings = ClamAVSettings()
+    storage: LocalStorage | S3Storage = Field(discriminator="type", default_factory=LocalStorage)
 
     aws_storage_bucket_name: str = ""
     aws_s3_region_name: str = ""

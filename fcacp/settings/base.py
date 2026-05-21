@@ -97,7 +97,12 @@ COLLABORATION_FILE_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024
 
-PRIVATE_MEDIA_ROOT = BASE_DIR / "private_media"
+STORAGES = {
+    "default": _env.storage.to_django(),
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -190,34 +195,6 @@ EMAIL_HOST_PASSWORD = _env.smtp.password.get_secret_value()
 EMAIL_USE_TLS = _env.smtp.use_tls
 EMAIL_USE_SSL = _env.smtp.use_ssl
 EMAIL_TIMEOUT = _env.smtp.timeout
-
-# Storage
-# https://docs.djangoproject.com/en/6.0/ref/settings/#storages
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-        "OPTIONS": {
-            "location": PRIVATE_MEDIA_ROOT,
-        },
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
-
-if _env.aws_storage_bucket_name:
-    STORAGES["default"] = {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "bucket_name": _env.aws_storage_bucket_name,
-            "region_name": _env.aws_s3_region_name or None,
-            "access_key": _env.aws_s3_access_key_id or None,
-            "secret_key": _env.aws_s3_secret_access_key or None,
-            "default_acl": None,
-            "querystring_auth": True,
-            "file_overwrite": False,
-        },
-    }
 
 # Celery
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html
