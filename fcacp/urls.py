@@ -32,6 +32,8 @@ urlpatterns = [
     *debug_toolbar_urls(),
 ]
 
+handler404 = "public.views.custom_404_view"
+
 if settings.DEBUG:
     # Include django_browser_reload URLs only in DEBUG mode
     urlpatterns += [

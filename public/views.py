@@ -51,6 +51,12 @@ def demo_interest(request):
     )
 
 
+def custom_404_view(request, exception=None):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    return redirect("home")
+
+
 @login_required
 def dashboard(request):
     active_organizations_count = Organization.objects.filter(
