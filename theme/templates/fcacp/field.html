@@ -17,6 +17,9 @@
         {% elif field|is_radioselect %}
             {% include "fcacp/layout/label.html" with tag="span" %}
             {% include "fcacp/layout/radioselect.html" %}
+        {% elif field|is_password %}
+            {% include "fcacp/layout/label.html" with tag="label" %}
+            {% include "fcacp/layout/passwordinput.html" %}
         {% else %}
             {% include "fcacp/layout/label.html" with tag="label" %}
             {% themed_field field %}
