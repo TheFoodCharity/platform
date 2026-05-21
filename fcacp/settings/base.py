@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from os import environ
 from pathlib import Path
 
 from django.contrib.messages import constants as message_constants
@@ -169,6 +170,8 @@ INVITATION_TTL = timedelta(hours=72)
 DEBUG_TOOLBAR_CONFIG = {"ROOT_TAG_EXTRA_ATTRS": "hx-preserve"}
 
 ALLOWED_HOSTS = _env.allowed_hosts
+if render_hostname := environ.get("RENDER_EXTERNAL_HOSTNAME"):
+    ALLOWED_HOSTS.append(render_hostname)
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
