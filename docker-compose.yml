@@ -42,6 +42,20 @@ services:
     volumes:
       - clamav-db:/var/lib/clamav
 
+  garage:
+    build: services/garage
+    environment:
+      GARAGE_DEFAULT_BUCKET: thefoodcharity-dev
+      GARAGE_DEFAULT_ACCESS_KEY: gk-dev-access-key
+      GARAGE_DEFAULT_SECRET_KEY: dev-secret-access-key
+    ports:
+      - protocol: tcp
+        target: 3900
+        published: 3900
+    volumes:
+      - garage:/var/lib/garage
+
 volumes:
   database:
   clamav-db:
+  garage:

@@ -56,13 +56,51 @@ projects:
                   property: connectionString
 
               - key: ALLOWED_HOSTS
-                value: thefoodcharity.ca,*.onrender.com
+                value: thefoodcharity.ca
+
+              - key: CLAMAV__HOST
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: host
+              - key: CLAMAV__PORT
+                fromService:
+                  type: pserv
+                  name: clamav
+                  property: port
 
               - fromGroup: smtp
               - key: SMTP__USERNAME
                 sync: false
               - key: SMTP__PASSWORD
                 sync: false
+
+              - key: STORAGE__TYPE
+                value: s3
+              - key: STORAGE__BUCKET
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_BUCKET
+              - key: STORAGE__REGION
+                value: internal
+              - key: STORAGE__ACCESS_KEY_ID
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_ACCESS_KEY
+              - key: STORAGE__SECRET_ACCESS_KEY
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_SECRET_KEY
+              - key: STORAGE__PROTOCOL
+                value: http
+              - key: STORAGE__ENDPOINT
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  property: hostport
 
           - name: worker
             type: worker
@@ -90,13 +128,12 @@ projects:
                   name: cache
                   property: connectionString
 
-              - key: CLAMAV_HOST
+              - key: CLAMAV__HOST
                 fromService:
                   type: pserv
                   name: clamav
                   property: host
-
-              - key: CLAMAV_PORT
+              - key: CLAMAV__PORT
                 fromService:
                   type: pserv
                   name: clamav
@@ -113,6 +150,33 @@ projects:
                 sync: false
               - key: SMTP__PASSWORD
                 sync: false
+
+              - key: STORAGE__TYPE
+                value: s3
+              - key: STORAGE__BUCKET
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_BUCKET
+              - key: STORAGE__REGION
+                value: internal
+              - key: STORAGE__ACCESS_KEY_ID
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_ACCESS_KEY
+              - key: STORAGE__SECRET_ACCESS_KEY
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  envVarKey: GARAGE_DEFAULT_SECRET_KEY
+              - key: STORAGE__PROTOCOL
+                value: http
+              - key: STORAGE__ENDPOINT
+                fromService:
+                  type: pserv
+                  name: object-storage
+                  property: hostport
 
           - name: clamav
             type: pserv
@@ -135,6 +199,35 @@ projects:
 
             maxmemoryPolicy: allkeys-lru
             ipAllowList: [ ]
+
+          # TODO: this can be removed once Render's object storage becomes generally available
+          # https://render.com/object-storage
+          - name: object-storage
+            type: pserv
+            runtime: docker
+            plan: starter
+
+            repo: https://github.com/TheFoodCharity/platform
+            autoDeployTrigger: commit
+
+            dockerfilePath: services/garage/Dockerfile
+            dockerContext: services/garage
+
+            disk:
+              name: storage
+              mountPath: /var/lib/garage
+              sizeGB: 5
+
+            envVars:
+              - key: PORT
+                value: 3900
+
+              - key: GARAGE_DEFAULT_ACCESS_KEY
+                generateValue: true
+              - key: GARAGE_DEFAULT_SECRET_KEY
+                generateValue: true
+              - key: GARAGE_DEFAULT_BUCKET
+                value: thefoodcharity
 
         databases:
           - name: database
