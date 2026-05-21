@@ -161,11 +161,6 @@ class BaseEnvironment(BaseSettings):
     clamav: ClamAVSettings = ClamAVSettings()
     storage: LocalStorage | S3Storage = Field(discriminator="type", default_factory=LocalStorage)
 
-    aws_storage_bucket_name: str = ""
-    aws_s3_region_name: str = ""
-    aws_s3_access_key_id: str = ""
-    aws_s3_secret_access_key: str = ""
-
 
 class DevelopmentEnvironment(BaseEnvironment):
     secret_key: Annotated[SecretStr | None, BeforeValidator(_blank_to_none)] = None
