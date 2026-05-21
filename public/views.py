@@ -1,4 +1,5 @@
-from django.shortcuts import HttpResponse, render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import HttpResponse, redirect, render
 
 from collaborations.models import CollaborationSpace
 from donations.models import Donation
@@ -11,6 +12,9 @@ def healthcheck(request):
 
 
 def home(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
     return render(request, "public/landing.html")
 
 
@@ -47,6 +51,13 @@ def demo_interest(request):
     )
 
 
+def custom_404_view(request, exception=None):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    return redirect("home")
+
+
+@login_required
 def dashboard(request):
     active_organizations_count = Organization.objects.filter(
         is_active=True,
