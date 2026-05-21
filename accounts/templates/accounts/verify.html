@@ -4,11 +4,6 @@
 {% block page_title %}Verify your email{% endblock %}
 
 {% block page_content %}
-    {% if messages %}
-        {% for message in messages %}
-            <p class="text-center text-sm">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
     <p class="text-center text-sm text-base-content/60 mb-4">Enter the 6-character code sent to your email.</p>
 
     <form method="post" class="flex flex-col gap-2">
