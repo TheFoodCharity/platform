@@ -9,6 +9,7 @@
     {% tailwind_css %}
     {% htmx_script %}
     <script type="module" src="{% static "js/theme.js" %}"></script>
+    <script type="module" src="{% static "js/toasts.js" %}"></script>
 
     <script type="module">
       const CSRF_COOKIE_RE = /csrftoken=([^;]+)/;
@@ -19,6 +20,9 @@
     </script>
 </head>
 <body class="h-full bg-white text-slate-900 antialiased" hx-boost="true">
+<div id="toasts" class="toast toast-top toast-end z-50">
+    {% include "components/_toasts.html" %}
+</div>
 {% block content %}{% endblock %}
 </body>
 </html>
