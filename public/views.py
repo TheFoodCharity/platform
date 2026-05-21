@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import HttpResponse, render
+from django.shortcuts import HttpResponse, redirect, render
 
 from collaborations.models import CollaborationSpace
 from donations.models import Donation
@@ -12,6 +12,9 @@ def healthcheck(request):
 
 
 def home(request):
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
     return render(request, "public/landing.html")
 
 
