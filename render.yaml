@@ -136,6 +136,34 @@ projects:
             maxmemoryPolicy: allkeys-lru
             ipAllowList: [ ]
 
+          # TODO: this can be removed once Render's object storage becomes generally available
+          # https://render.com/object-storage
+          - name: object-storage
+            type: pserv
+            runtime: docker
+            plan: starter
+
+            repo: https://github.com/TheFoodCharity/platform
+            autoDeployTrigger: commit
+
+            dockerContext: services/garage
+
+            disk:
+              name: storage
+              mountPath: /var/lib/garage
+              sizeGB: 5
+
+            envVars:
+              - key: GARAGE_RPC_SECRET
+                generateValue: true
+
+              - key: GARAGE_DEFAULT_ACCESS_KEY
+                generateValue: true
+              - key: GARAGE_DEFAULT_SECRET_KEY
+                generateValue: true
+              - key: GARAGE_DEFAULT_BUCKET
+                value: thefoodcharity
+
         databases:
           - name: database
             region: oregon
