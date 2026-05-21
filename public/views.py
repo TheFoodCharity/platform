@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponse, render
 
 from collaborations.models import CollaborationSpace
@@ -47,6 +48,7 @@ def demo_interest(request):
     )
 
 
+@login_required
 def dashboard(request):
     active_organizations_count = Organization.objects.filter(
         is_active=True,
