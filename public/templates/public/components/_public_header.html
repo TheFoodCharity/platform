@@ -11,7 +11,10 @@
 
             <!-- NAV -->
             <nav class="hidden md:flex items-center space-x-12 text-primary font-medium tracking-wide">
-                <a href="{% url 'food_help_map' %}" class="hover:opacity-60 transition whitespace-nowrap">Food Map</a>
+                <a href="{% url 'food_help_map' %}" class="hover:opacity-60 transition whitespace-nowrap"
+                   hx-boost="false">
+                    Food Map
+                </a>
 
                 <!-- SUPPORT US DROPDOWN -->
                 <div class="dropdown dropdown-hover">
@@ -66,7 +69,9 @@
                 <summary class="btn btn-ghost">☰</summary>
                 <div class="absolute right-0 mt-3 w-56 bg-white shadow-lg rounded-lg p-3 text-primary">
 
-                    <a href="{% url 'food_help_map' %}" class="block p-2 hover:bg-base-200 rounded">Food Map</a>
+                    <a href="{% url 'food_help_map' %}" class="block p-2 hover:bg-base-200 rounded" hx-boost="false">
+                        Food Map
+                    </a>
 
                     <hr class="my-2">
 
